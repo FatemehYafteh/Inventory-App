@@ -31,3 +31,6 @@ Thumbs.db
 # Claude Code local state
 .claude/worktrees/
 .claude/settings.local.json
+
+# Local dev database (npm run db:dev)
+server/.dev-db/
