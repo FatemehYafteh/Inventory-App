@@ -9,6 +9,8 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   server: {
+    // IPv4 loopback: Vite otherwise binds only [::1], which is unreachable on some Windows setups.
+    host: '127.0.0.1',
     port: 5173,
     // Same-site in development: the browser only talks to :5173, so SameSite=Strict cookies work.
     proxy: { '/api': 'http://localhost:4000' },

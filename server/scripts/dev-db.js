@@ -9,7 +9,7 @@ mkdirSync(dbPath, { recursive: true });
 
 const replSet = await MongoMemoryReplSet.create({
   replSet: { name: 'rs0', count: 1, storageEngine: 'wiredTiger' },
-  instanceOpts: [{ port: 27017, dbPath }],
+  instanceOpts: [{ port: 27018, dbPath }],
 });
 
 console.log(`MongoDB replica set running: ${replSet.getUri('inventory')}`);
