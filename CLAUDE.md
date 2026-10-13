@@ -42,6 +42,13 @@ await StockMovement.create([{ product: _id, type, quantityChange: delta,
 ```
 "Adjust" computes the delta from the requested absolute quantity inside the transaction.
 
+## Seed data (every feature)
+Every feature that adds or changes a model also updates the seed in the same change:
+- Data lives in `server/seed/data/*.js` (plain objects); `server/seed/seed.js` inserts it. Run with `npm run seed -w server` (adds what is missing) or `npm run seed:reset -w server` (wipe and reseed). Never runs in production.
+- Seed data must obey the PRD rules: product stock comes only from replayed movement history, receives record the product's supplier, performers are active, profile-complete users.
+- Cover the edge cases the UI must show (each role/status, each stock status, archived, inactive or unused records, empty states).
+- Extend `server/tests/seed/seed.test.js` so the new data is checked against the rules.
+
 ## Testing
 - Vitest or Jest + supertest + mongodb-memory-server started as a replica set.
 - Test the happy path, validation errors, each role/status gate, and concurrency for stock changes.
