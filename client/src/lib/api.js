@@ -1,7 +1,8 @@
-const BASE_URL = '/api';
+import axios from 'axios';
 
 // Auth calls whose 401 means "bad credentials" or "no session", not "access token expired".
 const NO_REFRESH_PATHS = new Set(['/auth/login', '/auth/refresh', '/auth/logout']);
+const NETWORK_ERROR = 'Could not reach the server. Check your connection and try again.';
 
 export class ApiError extends Error {
   constructor(status, body) {
@@ -20,24 +21,20 @@ export function setSessionExpiredHandler(handler) {
   onSessionExpired = handler;
 }
 
-function send(path, { method = 'GET', body } = {}) {
-  return fetch(`${BASE_URL}${path}`, {
-    method,
-    credentials: 'include',
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest',
-      ...(body !== undefined && { 'Content-Type': 'application/json' }),
-    },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-}
+// Cookies carry the session (httpOnly); X-Requested-With is part of the CSRF defence.
+const http = axios.create({
+  baseURL: '/api',
+  withCredentials: true,
+  headers: { 'X-Requested-With': 'XMLHttpRequest' },
+});
 
 // One refresh at a time: parallel 401s share it, so a rotated token is never presented twice.
 let refreshInFlight = null;
 
 function refreshSession() {
-  refreshInFlight ??= send('/auth/refresh', { method: 'POST' })
-    .then((res) => res.ok)
+  refreshInFlight ??= http
+    .post('/auth/refresh')
+    .then(() => true)
     .catch(() => false)
     .finally(() => {
       refreshInFlight = null;
@@ -45,32 +42,26 @@ function refreshSession() {
   return refreshInFlight;
 }
 
-async function parse(res) {
-  if (res.status === 204) return null;
-  const text = await res.text();
-  if (!text) return null;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
+// On a 401, refresh the session once and retry the request; every failure becomes an ApiError
+// carrying the server's { message, code, errors }.
+http.interceptors.response.use(undefined, async (error) => {
+  const { config, response } = error;
+  if (!response) throw new ApiError(0, { message: NETWORK_ERROR });
+
+  const canRefresh = response.status === 401 && !NO_REFRESH_PATHS.has(config.url);
+  if (canRefresh && !config.retriedAfterRefresh) {
+    if (await refreshSession()) return http({ ...config, retriedAfterRefresh: true });
   }
-}
+  if (canRefresh) onSessionExpired();
+
+  throw new ApiError(response.status, response.data);
+});
 
 /**
- * fetch wrapper for the API: sends cookies and the CSRF header, retries once after a 401
- * by refreshing the session, and throws ApiError with the server's { message, code, errors }.
+ * Calls the API and returns the parsed JSON body (null when empty). Throws ApiError on failure.
+ * Pages use it through TanStack Query hooks, never directly in components.
  */
-export async function api(path, options = {}) {
-  let res = await send(path, options);
-
-  if (res.status === 401 && !NO_REFRESH_PATHS.has(path)) {
-    if (await refreshSession()) {
-      res = await send(path, options);
-    }
-    if (res.status === 401) onSessionExpired();
-  }
-
-  const body = await parse(res);
-  if (!res.ok) throw new ApiError(res.status, body);
-  return body;
+export async function api(path, { method = 'GET', body } = {}) {
+  const { data } = await http.request({ url: path, method, data: body });
+  return data && typeof data === 'object' ? data : null;
 }

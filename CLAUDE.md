@@ -57,3 +57,13 @@ Every feature that adds or changes a model also updates the seed in the same cha
 ## Env
 All variables are listed in `docs/PRD.md` section 9 and mirrored in `server/.env.example`.
 With no SMTP configured in development, `mail.service` logs emails (and their links) instead of sending. Production fails fast without SMTP settings.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues for `FatemehYafteh/Inventory-App`, using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.

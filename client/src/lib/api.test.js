@@ -83,6 +83,35 @@ describe('api', () => {
     setSessionExpiredHandler(() => {});
   });
 
+  it('refreshes only once when the retried request is still unauthorized', async () => {
+    const onExpired = vi.fn();
+    setSessionExpiredHandler(onExpired);
+    const refresh = vi.fn(() => new HttpResponse(null, { status: 204 }));
+    server.use(
+      http.get('*/api/data', () => HttpResponse.json({}, { status: 401 })),
+      http.post('*/api/auth/refresh', refresh),
+    );
+
+    await expect(api('/data')).rejects.toMatchObject({ status: 401 });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(onExpired).toHaveBeenCalledTimes(1);
+    setSessionExpiredHandler(() => {});
+  });
+
+  it('turns a network failure into an ApiError', async () => {
+    server.use(http.get('*/api/data', () => HttpResponse.error()));
+
+    const error = await api('/data').catch((err) => err);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 0, message: expect.stringMatching(/reach the server/) });
+  });
+
+  it('returns null for an empty response', async () => {
+    server.use(http.post('*/api/auth/logout', () => new HttpResponse(null, { status: 204 })));
+
+    expect(await api('/auth/logout', { method: 'POST' })).toBeNull();
+  });
+
   it('does not try to refresh after a failed login', async () => {
     const refresh = vi.fn(() => new HttpResponse(null, { status: 204 }));
     server.use(

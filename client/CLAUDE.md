@@ -20,7 +20,7 @@ client/src/
 - Server data: TanStack Query only. Query keys are arrays like `['products', filters]`. No data fetching in components with `useEffect`.
 - Tables: TanStack Table in manual mode (`manualSorting`, `manualPagination`, `manualFiltering`). Sorting, filters, search and page live in the URL query string and are sent to the server.
 - Forms: React Hook Form + `zodResolver` using the schemas from `shared/schemas`. Show server errors on the matching field.
-- API client: `fetch` with `credentials: 'include'`, header `X-Requested-With`, and one automatic retry after a 401 by calling `POST /auth/refresh`; redirect to login if refresh fails.
+- API client: one Axios instance (`withCredentials: true`, header `X-Requested-With`) in `lib/api.js`. A response interceptor retries once after a 401 by calling `POST /auth/refresh` and turns every failure into `ApiError` (`{ message, code, errors }`); if refresh fails, the session-expired handler sends the user to login. Pages call `api()` through TanStack Query hooks, never Axios directly.
 - Never store tokens anywhere in the client. There are none to store, they are httpOnly cookies.
 - Route guards follow the server gates: not logged in goes to Login; incomplete profile goes to Complete profile; `pending` goes to Awaiting approval; `rejected` sees access denied; admin-only pages hide for staff.
 - Role-based UI is only a convenience. The server enforces everything (staff must never see the Archive action).

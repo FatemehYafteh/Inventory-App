@@ -20,6 +20,11 @@ This comes from reading the code; the tests haven't been run.
 - **04 Roles:** the client route guards and the Awaiting approval page exist. Missing: the server gates, admin bootstrap and Users management.
 - **05–08:** the Category, Supplier, Product and StockMovement models and the seed data exist. Missing: their APIs and pages.
 
+## Scaffold (2026-10-12)
+- **Dependencies:** all the libraries the PRD needs are installed. Client: Radix dialog, select, tabs, dropdown-menu, alert-dialog and popover; `lucide-react`, `cmdk`, `input-otp`, `@daypicker/react`, `date-fns`, `react-hot-toast`, `axios` (the API client in `lib/api.js`). Server: `grammy`.
+- **shadcn components** in `client/src/components/ui`: badge, dialog, sheet, alert-dialog, select, tabs, dropdown-menu, popover, command, input-otp, calendar and a `react-hot-toast` toaster (`toaster.jsx`), with smoke tests in `ui.test.jsx`.
+- **Placeholder folders**, each with a README: `client/src/components/{products,categories,suppliers,users}`, `client/src/mocks` and `server/src/bot`.
+
 ---
 
 ## M1: Foundation (finish) [sub-PRD 01](../docs/prds/01-foundation.md)
@@ -27,7 +32,8 @@ This comes from reading the code; the tests haven't been run.
 | Phase | Task | Status |
 |---|---|---|
 | 1.1 | Add TanStack Table and the shadcn Table component | ✅ Done |
-| 1.2 | Build the reusable `data-table` (sort, pagination, toolbar), with a test | ⬜ To do |
+| 1.2 | Build the reusable `data-table` (sort, pagination, toolbar), with a test | ✅ Done |
+| 1.3 | Switch the API client to Axios: one instance with a response interceptor for errors and refresh-and-retry; `api()` and `ApiError` unchanged; docs updated | ✅ Done |
 
 ## M2: Password reset [sub-PRD 02](../docs/prds/02-auth-email-sessions.md)
 

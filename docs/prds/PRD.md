@@ -32,6 +32,7 @@ A web app for tracking products, categories, suppliers and stock levels. Users c
 |---|---|
 | Client | React (Vite), Tailwind CSS, shadcn/ui, React Router |
 | Server state | TanStack Query (fetching, caching, mutations, optimistic updates) |
+| HTTP client | Axios (one instance; a response interceptor handles errors and refresh-and-retry) |
 | Tables | TanStack Table (headless; sorting, pagination and filters are server-driven via manual mode), rendered with shadcn Table |
 | Forms | React Hook Form with `@hookform/resolvers/zod` |
 | Validation | Zod. Schemas live in a shared package or folder used by both client and server so rules are defined once |
@@ -237,7 +238,7 @@ Password reset works only through email. There is no reset through Telegram.
 **Refresh and logout**
 - `POST /auth/refresh` reads the refresh cookie, validates it, and issues a new access and refresh token. The old refresh token is revoked (rotation).
 - If a revoked refresh token is presented again (reuse), the whole token family is revoked and the user must log in again.
-- The client's API layer (TanStack Query + fetch wrapper) retries a failed request once after a 401 by calling refresh, and redirects to login if refresh fails.
+- The client's API layer (TanStack Query + an Axios instance whose response interceptor handles errors and refresh) retries a failed request once after a 401 by calling refresh, and redirects to login if refresh fails.
 - `POST /auth/logout` revokes the refresh token and clears both cookies.
 
 **Access enforcement**

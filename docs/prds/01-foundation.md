@@ -15,7 +15,7 @@ Set up the repository, the Express + MongoDB server, the shared Zod package and 
 - Server skeleton: `app.js` (builds the app, registers routers), `index.js` (starts the server and optionally the bot), env validation that fails fast.
 - MongoDB connection through Mongoose. A **replica set** is required (transactions), both locally and in tests.
 - Cross-cutting middleware: `validate` (Zod), `error` (single `AppError` handler), `rateLimit`, `csrf` (Origin check + required `X-Requested-With`), helmet, strict same-site CORS.
-- Client shell: Vite + React, Tailwind, shadcn/ui, React Router, TanStack Query client, an API fetch wrapper (refresh-retry logic is added in 02), app layout with navigation.
+- Client shell: Vite + React, Tailwind, shadcn/ui, React Router, TanStack Query client, an Axios API client (its refresh-retry interceptor is added in 02), app layout with navigation.
 - Reusable `data-table` component (TanStack Table in manual/server mode: header sort, pagination, toolbar) rendered with shadcn Table.
 - Tooling: ESLint, Prettier, test runner (Vitest or Jest), supertest, mongodb-memory-server started as a replica set.
 - `server/.env.example` listing every variable below.
@@ -29,6 +29,7 @@ Set up the repository, the Express + MongoDB server, the shared Zod package and 
 |---|---|
 | Client | React (Vite), Tailwind CSS, shadcn/ui, React Router |
 | Server state | TanStack Query |
+| HTTP client | Axios (one instance with response interceptors) |
 | Tables | TanStack Table, manual server-side mode, shadcn Table |
 | Forms | React Hook Form + `@hookform/resolvers/zod` |
 | Validation | Zod, shared by client and server |

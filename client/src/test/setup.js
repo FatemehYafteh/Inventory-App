@@ -3,14 +3,27 @@ import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { server } from './server';
 
-const nodeFetch = globalThis.fetch;
+// Browser APIs jsdom lacks that cmdk, Radix popovers and react-hot-toast call; no-ops are
+// enough for tests.
+window.matchMedia ??= (query) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addEventListener() {},
+  removeEventListener() {},
+  addListener() {},
+  removeListener() {},
+  dispatchEvent: () => false,
+});
+globalThis.ResizeObserver ??= class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+Element.prototype.scrollIntoView ??= function scrollIntoView() {};
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' });
-  // Node's fetch needs absolute URLs; the app uses relative '/api/...' like a browser would.
-  const mswFetch = globalThis.fetch;
-  globalThis.fetch = (input, init) =>
-    mswFetch(typeof input === 'string' ? new URL(input, window.location.origin) : input, init);
 });
 
 afterEach(() => {
@@ -20,5 +33,4 @@ afterEach(() => {
 
 afterAll(() => {
   server.close();
-  globalThis.fetch = nodeFetch;
 });
