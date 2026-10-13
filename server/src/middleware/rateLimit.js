@@ -31,5 +31,9 @@ export const authLimits = {
   register: () => ({ ip: perIp(HOUR, 20), email: perEmail(HOUR, 5) }),
   resendVerification: () => ({ ip: perIp(HOUR, 20), email: perEmail(HOUR, 5) }),
   verifyEmail: () => perIp(15 * MINUTE, 30),
+  // PRD: 5 reset emails per hour per email and per IP. A team behind one office IP shares
+  // the per-IP budget; raise `ip` here if that becomes a problem.
+  forgotPassword: () => ({ ip: perIp(HOUR, 5), email: perEmail(HOUR, 5) }),
+  resetPassword: () => perIp(15 * MINUTE, 30),
   refresh: () => perIp(15 * MINUTE, 100),
 };

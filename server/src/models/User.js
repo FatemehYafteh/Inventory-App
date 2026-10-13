@@ -20,6 +20,8 @@ const userSchema = new mongoose.Schema(
     failedLoginCount: { type: Number, default: 0 },
     lockedUntil: Date,
     lastLoginAt: Date,
+    // Access tokens issued before this second are refused (set by a password reset).
+    sessionsRevokedAt: Date,
   },
   { timestamps: true },
 );

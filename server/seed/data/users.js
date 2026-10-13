@@ -1,5 +1,6 @@
 // One account per state the app must handle (PRD section 3): each role, each status,
-// an unverified email and a Telegram-only signup with an incomplete profile.
+// an unverified email, a Telegram signup with no password yet, and a Telegram-only signup
+// with an incomplete profile.
 // `password: true` means the account gets the shared seed password.
 export const users = [
   {
@@ -59,6 +60,18 @@ export const users = [
     password: true,
     role: 'staff',
     status: 'pending',
+  },
+  {
+    // Signed up through Telegram and completed the profile, but never set a password:
+    // can set a first password through Forgot password.
+    key: 'telegramNoPassword',
+    name: 'Theo Telegram',
+    email: 'telegram-nopass@example.com',
+    emailVerified: true,
+    telegramId: '100000003',
+    telegramUsername: 'theo_tg',
+    role: 'staff',
+    status: 'active',
   },
   {
     key: 'telegramOnly',

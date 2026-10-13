@@ -25,3 +25,36 @@ export function verifyEmailTemplate({ name, link }) {
     ),
   };
 }
+
+/** `hasPassword` false means a first password (e.g. a Telegram signup), so it says "set". */
+export function resetPasswordTemplate({ name, link, hasPassword }) {
+  const greeting = name ? `Hi ${name},` : 'Hi,';
+  const verb = hasPassword ? 'reset' : 'set';
+  const intro = hasPassword
+    ? 'We received a request to reset the password for your Inventory account.'
+    : 'We received a request to set a password for your Inventory account. Once set, you can also log in with your email.';
+  const footer = `This link expires in 30 minutes and can be used once. If you did not ask to ${verb} your password, ignore this email.`;
+  return {
+    subject: hasPassword ? 'Reset your password' : 'Set your password',
+    text: `${greeting}\n\n${intro}\n${link}\n\n${footer}`,
+    html: layout(
+      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(intro)}</p>${button(link, hasPassword ? 'Reset password' : 'Set password')}<p>${escapeHtml(footer)}</p>`,
+    ),
+  };
+}
+
+/** Sent after a reset. `firstPassword` true when the account had no password before. */
+export function passwordChangedTemplate({ name, forgotLink, firstPassword }) {
+  const greeting = name ? `Hi ${name},` : 'Hi,';
+  const what = firstPassword
+    ? 'A password was set for your Inventory account. You can now log in with your email.'
+    : 'Your Inventory account password was changed and you were logged out on every device.';
+  const warning = "If this wasn't you, reset your password now:";
+  return {
+    subject: firstPassword ? 'Your password was set' : 'Your password was changed',
+    text: `${greeting}\n\n${what}\n\n${warning}\n${forgotLink}`,
+    html: layout(
+      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(what)}</p><p>${escapeHtml(warning)}</p>${button(forgotLink, 'Reset password')}`,
+    ),
+  };
+}

@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import {
+  forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resendVerificationSchema,
+  resetPasswordSchema,
   verifyEmailSchema,
 } from '@inventory/shared/schemas';
 import * as auth from '../controllers/auth.controller.js';
@@ -33,6 +35,23 @@ export function authRoutes(config) {
     validate(resendVerificationSchema),
     resend.email,
     auth.resendVerification,
+  );
+
+  // Also serves as "resend": the service skips sending within the 60 s cooldown.
+  const forgot = authLimits.forgotPassword();
+  router.post(
+    '/forgot-password',
+    forgot.ip,
+    validate(forgotPasswordSchema),
+    forgot.email,
+    auth.forgotPassword,
+  );
+
+  router.post(
+    '/reset-password',
+    authLimits.resetPassword(),
+    validate(resetPasswordSchema),
+    auth.resetPassword,
   );
 
   router.post('/refresh', authLimits.refresh(), auth.refresh);

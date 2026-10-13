@@ -3,9 +3,11 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { RequireActive, RequireGuest, RequirePending } from '@/lib/guards';
 import { AwaitingApprovalPage } from '@/pages/AwaitingApprovalPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RegisterPage } from '@/pages/RegisterPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 
 export function App() {
@@ -17,6 +19,8 @@ export function App() {
       </Route>
       {/* Opened from an email link, whether or not the person is signed in. */}
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route element={<RequirePending />}>
         <Route path="/awaiting-approval" element={<AwaitingApprovalPage />} />
       </Route>

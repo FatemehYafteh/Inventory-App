@@ -54,3 +54,22 @@ export const registerSchema = z
 export const verifyEmailSchema = z.object({ token: tokenSchema });
 
 export const resendVerificationSchema = z.object({ email: emailSchema });
+
+export const forgotPasswordSchema = z.object({ email: emailSchema });
+
+const newPasswordFields = {
+  password: passwordSchema,
+  confirmPassword: z.string({ required_error: 'Confirm your password' }),
+};
+
+const passwordsMatch = [
+  (data) => data.password === data.confirmPassword,
+  { path: ['confirmPassword'], message: 'Passwords do not match' },
+];
+
+/** The ResetPassword form; the token comes from the link, not the form. */
+export const newPasswordSchema = z.object(newPasswordFields).refine(...passwordsMatch);
+
+export const resetPasswordSchema = z
+  .object({ token: tokenSchema, ...newPasswordFields })
+  .refine(...passwordsMatch);

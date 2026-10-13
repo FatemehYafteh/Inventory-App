@@ -50,6 +50,21 @@ export function useResendVerification() {
   });
 }
 
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (email) => api('/auth/forgot-password', { method: 'POST', body: { email } }),
+  });
+}
+
+export function useResetPassword() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values) => api('/auth/reset-password', { method: 'POST', body: values }),
+    // A reset ends every session, so the cached user may no longer be signed in.
+    onSuccess: () => queryClient.resetQueries({ queryKey: ME_QUERY_KEY }),
+  });
+}
+
 /**
  * Submits a verification link token once. It is a query (not an effect) so React Query
  * dedupes it: remounts and StrictMode never spend the single-use token twice.

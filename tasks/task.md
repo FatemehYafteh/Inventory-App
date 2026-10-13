@@ -2,7 +2,7 @@
 
 The Inventory App is built in small phases, following the eight sub-PRDs in `docs/prds/`. If a sub-PRD and `docs/prds/PRD.md` disagree, `PRD.md` wins.
 
-**Repo:** `C:\Users\hp\Desktop\Inventory-App-Ai` (current branch `feat/auth-login`)
+**Repo:** `C:\Users\hp\Desktop\Inventory-App-Ai` (current branch `feat/auth-password-reset`)
 **Stack:** React (Vite), Tailwind, shadcn/ui, TanStack Query and Table, Node.js, Express, MongoDB with Mongoose (replica set), Zod in `shared/schemas`
 
 ## Working rules
@@ -39,10 +39,10 @@ This comes from reading the code; the tests haven't been run.
 
 | Phase | Task | Status |
 |---|---|---|
-| 2.1 | `POST /auth/forgot-password`: same generic response every time, limited to 5 per hour per email and per IP | ⬜ To do |
-| 2.2 | `POST /auth/reset-password`: single-use 30-minute link, ends all sessions, sends a "password changed" email, doesn't log the user in | ⬜ To do |
-| 2.3 | ForgotPassword page, with a 60-second resend countdown | ⬜ To do |
-| 2.4 | ResetPassword page | ⬜ To do |
+| 2.1 | `POST /auth/forgot-password`: same generic response every time, limited to 5 per hour per email and per IP | ✅ Done |
+| 2.2 | `POST /auth/reset-password`: single-use 30-minute link, ends all sessions, sends a "password changed" email, doesn't log the user in | ✅ Done |
+| 2.3 | ForgotPassword page, with a 60-second resend countdown | ✅ Done |
+| 2.4 | ResetPassword page | ✅ Done |
 
 ## M3: Telegram login and identity linking [sub-PRD 03](../docs/prds/03-telegram-identity.md)
 

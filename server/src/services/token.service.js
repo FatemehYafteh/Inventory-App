@@ -20,12 +20,26 @@ export function signAccessToken(userId, config) {
 
 /** Returns the user id from a valid access token, or null. */
 export function verifyAccessToken(token, config) {
+  return readAccessToken(token, config)?.userId ?? null;
+}
+
+/** Returns `{ userId, issuedAt }` (issuedAt in whole seconds) from a valid access token, or null. */
+export function readAccessToken(token, config) {
   try {
     const payload = jwt.verify(token, config.jwt.accessSecret, { algorithms: ['HS256'] });
-    return payload.typ === 'access' ? payload.sub : null;
+    return payload.typ === 'access' ? { userId: payload.sub, issuedAt: payload.iat } : null;
   } catch {
     return null;
   }
+}
+
+/**
+ * True when the user ended all sessions after this access token was issued. Compared in
+ * whole seconds (the JWT `iat` precision), so a login right after a reset still works.
+ */
+export function isRevokedAccessToken(issuedAt, user) {
+  if (!user.sessionsRevokedAt || issuedAt === undefined) return false;
+  return issuedAt < Math.floor(user.sessionsRevokedAt.getTime() / 1000);
 }
 
 /** Creates a refresh token. A new login starts a new family; a rotation keeps the family. */
@@ -88,9 +102,10 @@ export async function revokeFamily(familyId) {
   await RefreshToken.updateMany({ familyId, revokedAt: null }, { $set: { revokedAt: new Date() } });
 }
 
-export async function revokeAllForUser(userId) {
+export async function revokeAllForUser(userId, { session } = {}) {
   await RefreshToken.updateMany(
     { user: userId, revokedAt: null },
     { $set: { revokedAt: new Date() } },
+    { session },
   );
 }

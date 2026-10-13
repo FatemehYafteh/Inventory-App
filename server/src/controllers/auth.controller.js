@@ -60,3 +60,18 @@ export async function verifyEmail(req, res) {
 export function me(req, res) {
   res.json({ user: toPublicUser(req.user) });
 }
+
+const RESET_SENT_MESSAGE =
+  'If an account can reset its password with this email, we have sent a link. Check your inbox.';
+
+export async function forgotPassword(req, res) {
+  const { config, mailer } = req.app.locals;
+  await authService.forgotPassword(req.body, { config, mailer });
+  res.status(202).json({ message: RESET_SENT_MESSAGE });
+}
+
+export async function resetPassword(req, res) {
+  const { config, mailer } = req.app.locals;
+  await authService.resetPassword(req.body, { config, mailer });
+  res.json({ message: 'Your password has been changed. Log in with your new password.' });
+}

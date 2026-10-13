@@ -2,10 +2,15 @@ import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 import { consumeEmailToken, isInCooldown, issueEmailToken } from './emailToken.service.js';
-import { verifyEmailTemplate } from './mail.templates.js';
+import {
+  passwordChangedTemplate,
+  resetPasswordTemplate,
+  verifyEmailTemplate,
+} from './mail.templates.js';
 import { hashPassword, verifyDummyPassword, verifyPassword } from './password.service.js';
 import {
   issueRefreshToken,
+  revokeAllForUser,
   revokeRefreshToken,
   rotateRefreshToken,
   signAccessToken,
@@ -159,4 +164,66 @@ export async function verifyEmail({ token }, config) {
   } finally {
     await session.endSession();
   }
+}
+
+/**
+ * Emails a reset link (or a "set your password" link for an account with no password yet).
+ * The caller always gets the same response; nothing is sent for unknown, unverified or
+ * rejected accounts, or within the resend cooldown.
+ */
+export async function forgotPassword({ email }, { config, mailer }) {
+  const user = await User.findOne({ email }).select('+passwordHash');
+  if (!user || !user.emailVerified || user.status === 'rejected') return;
+  if (await isInCooldown(user._id, 'reset_password')) return;
+
+  const token = await issueEmailToken(
+    { userId: user._id, type: 'reset_password', email: user.email },
+    config,
+  );
+  const link = `${config.appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+  mailer.sendInBackground({
+    to: user.email,
+    ...resetPasswordTemplate({ name: user.name, link, hasPassword: Boolean(user.passwordHash) }),
+  });
+}
+
+/**
+ * Sets a new password from a reset link, in one transaction: uses up the link, clears the
+ * login lock, and ends every session (refresh tokens revoked, older access tokens refused).
+ * Does not log the user in.
+ */
+export async function resetPassword({ token, password }, { config, mailer }) {
+  // Hash outside the transaction to keep it short.
+  const passwordHash = await hashPassword(password);
+  const session = await mongoose.startSession();
+  let before;
+  try {
+    await session.withTransaction(async () => {
+      const doc = await consumeEmailToken({ token, type: 'reset_password', session }, config);
+      // The same conditions as when the link was sent, checked again in case they changed.
+      before = await User.findOneAndUpdate(
+        { _id: doc.user, email: doc.email, emailVerified: true, status: { $ne: 'rejected' } },
+        {
+          $set: { passwordHash, sessionsRevokedAt: new Date(), failedLoginCount: 0 },
+          $unset: { lockedUntil: 1 },
+        },
+        { session, new: false },
+      ).select('+passwordHash');
+      if (!before) {
+        throw new AppError(400, 'INVALID_TOKEN', 'This link is invalid or has expired.');
+      }
+      await revokeAllForUser(before._id, { session });
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  mailer.sendInBackground({
+    to: before.email,
+    ...passwordChangedTemplate({
+      name: before.name,
+      forgotLink: `${config.appUrl}/forgot-password`,
+      firstPassword: !before.passwordHash,
+    }),
+  });
 }

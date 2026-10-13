@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@inventory/shared/schemas';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
@@ -11,11 +11,14 @@ import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
 export function LoginPage() {
   const login = useLogin();
+  // Set by pages that send the user here, e.g. after a password reset.
+  const notice = useLocation().state?.notice;
 
   const {
     register,
     handleSubmit,
     setError,
+    watch,
     formState: { errors },
   } = useForm({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } });
 
@@ -47,6 +50,7 @@ export function LoginPage() {
       }
     >
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        {!login.error && <FormAlert tone="success">{notice}</FormAlert>}
         <FormAlert>{formError}</FormAlert>
         <TextField
           id="email"
@@ -64,6 +68,13 @@ export function LoginPage() {
           error={errors.password}
           {...register('password')}
         />
+        <Link
+          to="/forgot-password"
+          state={{ email: watch('email').trim() }}
+          className="-mt-2 self-end text-sm underline"
+        >
+          Forgot password?
+        </Link>
         <Button type="submit" disabled={login.isPending}>
           {login.isPending ? 'Logging in…' : 'Log in'}
         </Button>

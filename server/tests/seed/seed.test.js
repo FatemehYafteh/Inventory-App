@@ -114,6 +114,40 @@ describe('seedDatabase', () => {
     expect((await login('pending@example.com')).body.user).toMatchObject({ status: 'pending' });
     expect((await login('unverified@example.com')).status).toBe(401);
     expect((await login('rejected@example.com')).status).toBe(403);
+    expect((await login('telegram-nopass@example.com')).status).toBe(401);
+  });
+
+  it('seeds a Telegram user who can set a first password through the reset flow', async () => {
+    await seedDatabase({ now });
+    const app = buildApp();
+    const post = (path, body) =>
+      request(app)
+        .post(path)
+        .set('Origin', ORIGIN)
+        .set('X-Requested-With', 'XMLHttpRequest')
+        .send(body);
+    const email = 'telegram-nopass@example.com';
+
+    const seeded = await User.findOne({ email }).select('+passwordHash');
+    expect(seeded).toMatchObject({ emailVerified: true, status: 'active' });
+    expect(seeded.telegramId).toBeDefined();
+    expect(seeded.passwordHash).toBeUndefined();
+    expect(seeded.sessionsRevokedAt).toBeUndefined();
+
+    expect((await post('/api/auth/forgot-password', { email })).status).toBe(202);
+    await app.locals.mailer.idle();
+    const [mail] = app.locals.mailer.outbox;
+    expect(mail.subject).toBe('Set your password');
+    const token = decodeURIComponent(mail.text.match(/reset-password\?token=(\S+)/)[1]);
+
+    const password = 'first-password-for-theo';
+    const reset = await post('/api/auth/reset-password', {
+      token,
+      password,
+      confirmPassword: password,
+    });
+    expect(reset.status).toBe(200);
+    expect((await post('/api/auth/login', { email, password })).status).toBe(200);
   });
 
   it('is safe to run again and keeps changes made since', async () => {
