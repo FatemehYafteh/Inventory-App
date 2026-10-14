@@ -1,5 +1,6 @@
 import cookieParser from 'cookie-parser';
 import express from 'express';
+import { webhookCallback } from 'grammy';
 import helmet from 'helmet';
 import { csrf } from './middleware/csrf.js';
 import { errorHandler, notFound } from './middleware/error.js';
@@ -13,7 +14,7 @@ import { createTelegramMessenger } from './services/telegram.service.js';
  */
 export function createApp(
   config,
-  { mailer = createMailer(config), telegram = createTelegramMessenger(config) } = {},
+  { mailer = createMailer(config), telegram = createTelegramMessenger(config), bot } = {},
 ) {
   const app = express();
   app.locals.config = config;
@@ -26,6 +27,18 @@ export function createApp(
   app.use(cookieParser());
 
   const api = express.Router();
+  if (bot && config.telegram.mode === 'webhook') {
+    // Before the CSRF check: Telegram sends no Origin, and proves itself with the secret
+    // token header instead (grammY answers 401 when it is missing or wrong).
+    api.post(
+      '/telegram/webhook',
+      webhookCallback(bot, 'express', {
+        secretToken: config.telegram.webhookSecret,
+        // A slow update still finishes; answering 200 stops Telegram delivering it again.
+        onTimeout: 'return',
+      }),
+    );
+  }
   api.use(csrf(config));
   api.get('/health', (_req, res) => res.json({ status: 'ok' }));
   api.use('/auth', authRoutes(config));

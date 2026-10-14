@@ -27,7 +27,11 @@ const envSchema = z
     APP_URL: z.string().trim().url('must be a URL'),
     TELEGRAM_BOT_TOKEN: optional,
     TELEGRAM_BOT_USERNAME: optional,
-    TELEGRAM_WEBHOOK_SECRET: optional,
+    // Telegram's rule for secret_token: 1-256 characters of A-Z, a-z, 0-9, _ and -.
+    TELEGRAM_WEBHOOK_SECRET: optional.refine(
+      (value) => value === undefined || /^[A-Za-z0-9_-]{1,256}$/.test(value),
+      'must be 1-256 characters of A-Z, a-z, 0-9, _ and -',
+    ),
     BOT_MODE: z.enum(['polling', 'webhook']).default('polling'),
     ADMIN_TELEGRAM_IDS: csv,
     ADMIN_EMAILS: csv,
@@ -38,8 +42,32 @@ const envSchema = z
     EMAIL_FROM: optional,
   })
   .superRefine((env, ctx) => {
+    // Telegram verifies webhook calls with this secret, so a webhook never runs without one.
+    if (env.TELEGRAM_BOT_TOKEN && env.BOT_MODE === 'webhook' && !env.TELEGRAM_WEBHOOK_SECRET) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['TELEGRAM_WEBHOOK_SECRET'],
+        message: 'is required when BOT_MODE=webhook',
+      });
+    }
+
     if (env.NODE_ENV !== 'production') return;
-    for (const key of ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'EMAIL_FROM']) {
+    if (env.BOT_MODE !== 'webhook') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['BOT_MODE'],
+        message: 'must be webhook in production',
+      });
+    }
+    for (const key of [
+      'SMTP_HOST',
+      'SMTP_USER',
+      'SMTP_PASS',
+      'EMAIL_FROM',
+      'TELEGRAM_BOT_TOKEN',
+      'TELEGRAM_BOT_USERNAME',
+      'TELEGRAM_WEBHOOK_SECRET',
+    ]) {
       if (!env[key]) {
         ctx.addIssue({ code: 'custom', path: [key], message: 'is required in production' });
       }
