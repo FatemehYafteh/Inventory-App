@@ -3,9 +3,10 @@ import { ApiError, api } from './api';
 
 export const ME_QUERY_KEY = ['auth', 'me'];
 
-/** The signed-in user, or null when there is no session. */
-export function useMe() {
+/** The signed-in user, or null when there is no session. `options` adds query options. */
+export function useMe(options) {
   return useQuery({
+    ...options,
     queryKey: ME_QUERY_KEY,
     queryFn: async () => {
       try {
@@ -47,6 +48,31 @@ export function useRegister() {
 export function useResendVerification() {
   return useMutation({
     mutationFn: (email) => api('/auth/resend-verification', { method: 'POST', body: { email } }),
+  });
+}
+
+/**
+ * Complete profile: saves the name and the email to verify. The answer is generic, so the
+ * cached user takes the submitted values (as the server stores them) and is then refetched.
+ */
+export function useCompleteProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values) => api('/auth/profile/complete', { method: 'POST', body: values }),
+    onSuccess: (_data, { name, email }) => {
+      queryClient.setQueryData(
+        ME_QUERY_KEY,
+        (user) => user && { ...user, name, pendingEmail: email },
+      );
+      return queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY });
+    },
+  });
+}
+
+/** Resend on the Complete profile "Check your email" screen (the server knows the email). */
+export function useResendProfileVerification() {
+  return useMutation({
+    mutationFn: () => api('/auth/profile/resend-verification', { method: 'POST' }),
   });
 }
 

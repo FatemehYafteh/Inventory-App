@@ -133,6 +133,20 @@ describe('seedDatabase', () => {
     expect(reply).toBe('Access denied, contact an admin.');
   });
 
+  it('seeds Placeholder users with and without an email waiting, and none has history', async () => {
+    await seedDatabase({ now });
+    const placeholders = await User.find({ telegramId: { $exists: true }, emailVerified: false });
+
+    expect(placeholders.some((user) => user.pendingEmail)).toBe(true);
+    expect(placeholders.some((user) => !user.pendingEmail)).toBe(true);
+    for (const user of placeholders) {
+      expect(user.email).toBeUndefined();
+      expect(user.status).toBe('pending');
+      expect(await StockMovement.exists({ performedBy: user._id })).toBeNull();
+      expect(await User.exists({ statusChangedBy: user._id })).toBeNull();
+    }
+  });
+
   it('creates accounts that work with the real login', async () => {
     await seedDatabase({ now });
     const app = buildApp();

@@ -92,3 +92,6 @@ export const telegramVerifySchema = z.object({
 });
 
 export const telegramResendSchema = z.object({ requestId: telegramRequestIdSchema });
+
+/** Complete profile (Telegram signups): the name to keep and the email to verify. */
+export const completeProfileSchema = z.object({ name: nameSchema, email: emailSchema });

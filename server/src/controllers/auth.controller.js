@@ -1,6 +1,7 @@
 import { REFRESH_COOKIE, clearSessionCookies, setSessionCookies } from '../config/cookies.js';
 import { telegramStatusQuerySchema } from '@inventory/shared/schemas';
 import * as authService from '../services/auth.service.js';
+import * as profileService from '../services/profile.service.js';
 import * as telegramAuth from '../services/telegramAuth.service.js';
 import { AppError } from '../utils/AppError.js';
 import { toPublicUser } from '../utils/publicUser.js';
@@ -56,8 +57,24 @@ export async function resendVerification(req, res) {
 }
 
 export async function verifyEmail(req, res) {
-  await authService.verifyEmail(req.body, req.app.locals.config);
-  res.json({ message: 'Your email is verified. You can now log in.' });
+  const { completedProfile } = await authService.verifyEmail(req.body, req.app.locals.config);
+  res.json({
+    message: completedProfile
+      ? 'Email verified. Return to the app or log in.'
+      : 'Your email is verified. You can now log in.',
+  });
+}
+
+export async function completeProfile(req, res) {
+  const { config, mailer } = req.app.locals;
+  await profileService.completeProfile(req.user, req.body, { config, mailer });
+  res.status(202).json({ message: CHECK_EMAIL_MESSAGE });
+}
+
+export async function resendProfileVerification(req, res) {
+  const { config, mailer } = req.app.locals;
+  await profileService.resendProfileEmail(req.user, { config, mailer });
+  res.status(202).json({ message: CHECK_EMAIL_MESSAGE });
 }
 
 export function me(req, res) {

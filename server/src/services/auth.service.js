@@ -102,15 +102,20 @@ export async function logout(refreshToken, config) {
   await revokeRefreshToken(refreshToken, config);
 }
 
-/** Issues a verification token and emails the link, unless one was sent within the cooldown. */
-async function sendVerificationEmail(user, { config, mailer }) {
-  if (await isInCooldown(user._id, 'verify_email')) return;
-  const token = await issueEmailToken(
-    { userId: user._id, type: 'verify_email', email: user.email },
-    config,
-  );
+/**
+ * Issues a single-use verification token for `email` (the user's email, or the pending one
+ * on Complete profile) and emails the link. Earlier unused links for the user stop working.
+ */
+export async function sendVerificationLink(user, email, { config, mailer }) {
+  const token = await issueEmailToken({ userId: user._id, type: 'verify_email', email }, config);
   const link = `${config.appUrl}/verify-email?token=${encodeURIComponent(token)}`;
-  mailer.sendInBackground({ to: user.email, ...verifyEmailTemplate({ name: user.name, link }) });
+  mailer.sendInBackground({ to: email, ...verifyEmailTemplate({ name: user.name, link }) });
+}
+
+/** Emails a verification link, unless one was sent within the cooldown. */
+async function sendVerificationEmail(user, deps) {
+  if (await isInCooldown(user._id, 'verify_email')) return;
+  await sendVerificationLink(user, user.email, deps);
 }
 
 /**
@@ -147,24 +152,36 @@ export async function resendVerification({ email }, { config, mailer }) {
   }
 }
 
-/** Consumes a verification link and marks the email verified, in one transaction. */
+/**
+ * Consumes a verification link and marks the email verified, in one transaction. For a
+ * Telegram signup (Complete profile) the link's address must still be the `pendingEmail`;
+ * it becomes the user's email, which fails if another User took it meanwhile.
+ * Returns whether this completed a Telegram signup's profile. Signs no one in.
+ */
 export async function verifyEmail({ token }, config) {
   const session = await mongoose.startSession();
+  let before;
   try {
     await session.withTransaction(async () => {
       const doc = await consumeEmailToken({ token, type: 'verify_email', session }, config);
-      const updated = await User.updateOne(
-        { _id: doc.user, email: doc.email },
-        { $set: { emailVerified: true } },
-        { session },
-      );
-      if (updated.matchedCount === 0) {
+      try {
+        before = await User.findOneAndUpdate(
+          { _id: doc.user, $or: [{ email: doc.email }, { pendingEmail: doc.email }] },
+          { $set: { email: doc.email, emailVerified: true }, $unset: { pendingEmail: 1 } },
+          { session, new: false },
+        );
+      } catch (err) {
+        if (err?.code !== 11000) throw err;
+        before = null; // Another User holds the address now.
+      }
+      if (!before) {
         throw new AppError(400, 'INVALID_TOKEN', 'This link is invalid or has expired.');
       }
     });
   } finally {
     await session.endSession();
   }
+  return { completedProfile: !before.email };
 }
 
 /**

@@ -27,3 +27,8 @@ const userSchema = new mongoose.Schema(
 );
 
 export const User = mongoose.model('User', userSchema);
+
+/** A usable profile: a name and a verified email (Telegram signups start without both). */
+export function isProfileComplete(user) {
+  return Boolean(user.name && user.emailVerified);
+}

@@ -98,6 +98,17 @@ export const users = [
     status: 'active',
   },
   {
+    // Telegram signup on the "Check your email" screen: entered an email, not verified yet.
+    // Resend on Complete profile sends the link.
+    key: 'telegramAwaitingEmail',
+    name: 'Pia Placeholder',
+    pendingEmail: 'pia@example.com',
+    telegramId: '100000006',
+    telegramUsername: 'pia_tg',
+    role: 'staff',
+    status: 'pending',
+  },
+  {
     key: 'telegramOnly',
     name: 'Tara Telegram',
     telegramId: '100000001',
