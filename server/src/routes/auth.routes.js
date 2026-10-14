@@ -13,7 +13,7 @@ import {
   verifyEmailSchema,
 } from '@inventory/shared/schemas';
 import * as auth from '../controllers/auth.controller.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, identify } from '../middleware/auth.js';
 import { authLimits } from '../middleware/rateLimit.js';
 import { requireIncompleteProfile, requireProfile } from '../middleware/requireProfile.js';
 import { validate } from '../middleware/validate.js';
@@ -61,7 +61,13 @@ export function authRoutes(config) {
   );
 
   router.post('/telegram/start', authLimits.telegramStart(), auth.telegramStart);
-  router.get('/telegram/status', authLimits.telegramStatus(), auth.telegramStatus);
+  // Shared by sign-in and Connect Telegram; a connect request is visible only to its user.
+  router.get(
+    '/telegram/status',
+    authLimits.telegramStatus(),
+    identify(config),
+    auth.telegramStatus,
+  );
   router.post(
     '/telegram/verify',
     authLimits.telegramVerify(),
@@ -71,8 +77,26 @@ export function authRoutes(config) {
   router.post(
     '/telegram/resend',
     authLimits.telegramResend(),
+    identify(config),
     validate(telegramResendSchema),
     auth.telegramResend,
+  );
+
+  // Connect Telegram (Profile page): the signed-in user adds a Telegram account.
+  router.post(
+    '/telegram/connect/start',
+    authLimits.telegramConnectStart(),
+    authenticate(config),
+    requireProfile,
+    auth.telegramConnectStart,
+  );
+  router.post(
+    '/telegram/connect/verify',
+    authLimits.telegramConnectVerify(),
+    authenticate(config),
+    requireProfile,
+    validate(telegramVerifySchema),
+    auth.telegramConnectVerify,
   );
 
   router.post('/refresh', authLimits.refresh(), auth.refresh);

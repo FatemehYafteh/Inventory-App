@@ -1,4 +1,5 @@
 import { updateProfileSchema } from '@inventory/shared/schemas';
+import { ConnectTelegram } from '@/components/auth/TelegramSignIn';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
@@ -66,14 +67,9 @@ function SignInMethods({ user }) {
           </span>
         </dd>
         <dt className="text-muted-foreground">Telegram</dt>
-        <dd className="flex flex-col items-start gap-2">
+        <dd className="flex flex-col items-stretch gap-2">
           <span>{telegram}</span>
-          {!user.telegramConnected && (
-            // Wired up with Connect Telegram (issue #7).
-            <Button type="button" variant="outline" size="sm" disabled>
-              Connect Telegram
-            </Button>
-          )}
+          {!user.telegramConnected && <ConnectTelegram />}
         </dd>
       </dl>
     </section>

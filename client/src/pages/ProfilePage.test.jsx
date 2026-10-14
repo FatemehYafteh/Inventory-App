@@ -40,6 +40,12 @@ function signInMethods() {
   return within(screen.getByRole('region', { name: 'Sign-in methods' }));
 }
 
+/** Opens Connect Telegram in the sign-in methods once the page has loaded. */
+async function startConnect(user) {
+  await screen.findByRole('heading', { name: 'Profile' });
+  await user.click(signInMethods().getByRole('button', { name: 'Connect Telegram' }));
+}
+
 describe('Profile page', () => {
   it('shows an active user their sign-in methods inside the app layout', async () => {
     profileHandlers(activeUser);
@@ -75,6 +81,98 @@ describe('Profile page', () => {
 
     await screen.findByRole('heading', { name: 'Profile' });
     expect(signInMethods().getByText('Connected')).toBeInTheDocument();
+  });
+
+  it('connects Telegram with the deep link and code, then shows it connected', async () => {
+    profileHandlers(activeUser);
+    const verifyBodies = [];
+    let polls = 0;
+    server.use(
+      http.post('*/api/auth/telegram/connect/start', () =>
+        HttpResponse.json(
+          { requestId: 'req-c', deepLink: 'https://t.me/test_bot?start=tok' },
+          { status: 201 },
+        ),
+      ),
+      http.get('*/api/auth/telegram/status', () => {
+        polls += 1;
+        // Pending until Start is pressed in Telegram, then the code is sent.
+        if (polls === 1) return HttpResponse.json({ status: 'pending' });
+        return HttpResponse.json({
+          status: 'otp_sent',
+          telegramUsername: 'ana_tg',
+          name: 'Ana',
+          codeSentAt: '2026-10-14T10:00:00.000Z',
+          codeExpiresIn: 120,
+          resendIn: 60,
+          attemptsLeft: 3,
+        });
+      }),
+      http.post('*/api/auth/telegram/connect/verify', async ({ request }) => {
+        verifyBodies.push(await request.json());
+        return HttpResponse.json({
+          user: { ...activeUser, telegramConnected: true, telegramUsername: 'ana_tg' },
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    renderApp({ route: '/profile' });
+
+    await startConnect(user);
+    expect(await screen.findByRole('link', { name: 'Open Telegram' })).toHaveAttribute(
+      'href',
+      'https://t.me/test_bot?start=tok',
+    );
+    await user.type(
+      await screen.findByLabelText('Code from Telegram', {}, { timeout: 4000 }),
+      '123456',
+    );
+    await user.click(screen.getByRole('button', { name: 'Verify' }));
+
+    expect(await signInMethods().findByText('Connected as @ana_tg')).toBeInTheDocument();
+    expect(verifyBodies).toEqual([{ requestId: 'req-c', otp: '123456' }]);
+  });
+
+  it('says to contact an admin when the Telegram account belongs to someone else', async () => {
+    profileHandlers(activeUser);
+    server.use(
+      http.post('*/api/auth/telegram/connect/start', () =>
+        HttpResponse.json(
+          { requestId: 'req-c', deepLink: 'https://t.me/b?start=t' },
+          { status: 201 },
+        ),
+      ),
+      http.get('*/api/auth/telegram/status', () =>
+        HttpResponse.json({
+          status: 'otp_sent',
+          telegramUsername: 'ana_tg',
+          codeSentAt: '2026-10-14T10:00:00.000Z',
+          codeExpiresIn: 120,
+          resendIn: 60,
+          attemptsLeft: 3,
+        }),
+      ),
+      http.post('*/api/auth/telegram/connect/verify', () =>
+        HttpResponse.json(
+          {
+            message: 'This Telegram account belongs to another user. Contact an admin.',
+            code: 'TELEGRAM_OWNED',
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp({ route: '/profile' });
+
+    await startConnect(user);
+    await user.type(await screen.findByLabelText('Code from Telegram'), '123456');
+    await user.click(screen.getByRole('button', { name: 'Verify' }));
+
+    expect(
+      await screen.findByText('This Telegram account belongs to another user. Contact an admin.'),
+    ).toBeInTheDocument();
+    expect(signInMethods().getByText('Not connected')).toBeInTheDocument();
   });
 
   it('saves a new name', async () => {

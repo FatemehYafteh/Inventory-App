@@ -8,6 +8,8 @@ import { useSecondsUntil } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import { errorMessage } from '@/lib/errors';
 import {
+  useTelegramConnectStart,
+  useTelegramConnectVerify,
   useTelegramResend,
   useTelegramStart,
   useTelegramStatus,
@@ -24,13 +26,29 @@ const REFUSALS = {
   rate_limited: 'Too many codes requested. Try again in an hour.',
 };
 
+// The two uses of the deep-link + code flow differ only in endpoints and wording.
+const FLOWS = {
+  login: {
+    useStart: useTelegramStart,
+    useVerify: useTelegramVerify,
+    startLabel: 'Continue with Telegram',
+    expired: 'This sign-in link has expired.',
+  },
+  connect: {
+    useStart: useTelegramConnectStart,
+    useVerify: useTelegramConnectVerify,
+    startLabel: 'Connect Telegram',
+    expired: 'This link has expired.',
+  },
+};
+
 /** "@username", or the display name when the Telegram account has no username. */
 function telegramHandle({ telegramUsername, name }) {
   return telegramUsername ? `@${telegramUsername}` : name || 'you';
 }
 
-function CodeForm({ requestId }) {
-  const verify = useTelegramVerify();
+function CodeForm({ requestId, useVerify }) {
+  const verify = useVerify();
   const {
     control,
     handleSubmit,
@@ -38,7 +56,8 @@ function CodeForm({ requestId }) {
     formState: { errors },
   } = useZodForm(codeSchema, { defaultValues: { otp: '' } });
 
-  // On success useTelegramVerify stores the user, and the route guards move them on.
+  // On success the verify hook stores the user: sign-in moves on through the route guards,
+  // Connect Telegram shows Telegram as connected.
   const onSubmit = ({ otp }) => {
     verify.mutate(
       { requestId, otp },
@@ -125,7 +144,7 @@ function ResendButton({ requestId, resendAt }) {
 }
 
 /** The code sent to Telegram: entry form, expiry countdown and resend. */
-function CodeStep({ requestId, status }) {
+function CodeStep({ requestId, status, useVerify }) {
   const codeSecondsLeft = useSecondsUntil(status.codeExpiresAt);
   const tooManyWrong = status.attemptsLeft === 0;
 
@@ -141,7 +160,7 @@ function CodeStep({ requestId, status }) {
           <p className="text-sm text-muted-foreground">
             Code expires in {minutesAndSeconds(codeSecondsLeft)}
           </p>
-          <CodeForm requestId={requestId} />
+          <CodeForm requestId={requestId} useVerify={useVerify} />
         </>
       )}
       <ResendButton requestId={requestId} resendAt={status.resendAt} />
@@ -151,7 +170,16 @@ function CodeStep({ requestId, status }) {
 
 /** Telegram sign-in on the Login and Register pages (sign-in and sign-up are one flow). */
 export function TelegramSignIn() {
-  const start = useTelegramStart();
+  return <TelegramFlow flow={FLOWS.login} />;
+}
+
+/** Connect Telegram on the Profile page: the same deep link and code, for the signed-in user. */
+export function ConnectTelegram() {
+  return <TelegramFlow flow={FLOWS.connect} />;
+}
+
+function TelegramFlow({ flow }) {
+  const start = flow.useStart();
   const requestId = start.data?.requestId;
   const status = useTelegramStatus(requestId);
   const current = status.data?.status;
@@ -161,7 +189,7 @@ export function TelegramSignIn() {
       <div className="flex flex-col gap-2">
         <FormAlert>{start.error && errorMessage(start.error)}</FormAlert>
         <Button type="button" onClick={() => start.mutate()} disabled={start.isPending}>
-          {start.isPending ? 'Starting…' : 'Continue with Telegram'}
+          {start.isPending ? 'Starting…' : flow.startLabel}
         </Button>
       </div>
     );
@@ -170,7 +198,7 @@ export function TelegramSignIn() {
   if (current === 'expired') {
     return (
       <div className="flex flex-col gap-2">
-        <p className="text-sm">This sign-in link has expired.</p>
+        <p className="text-sm">{flow.expired}</p>
         <Button type="button" variant="outline" onClick={() => start.mutate()}>
           Start again
         </Button>
@@ -184,7 +212,14 @@ export function TelegramSignIn() {
 
   if (current === 'otp_sent') {
     // Remount for each new code so the form starts empty (polls keep what was typed).
-    return <CodeStep key={status.data.codeSentAt} requestId={requestId} status={status.data} />;
+    return (
+      <CodeStep
+        key={status.data.codeSentAt}
+        requestId={requestId}
+        status={status.data}
+        useVerify={flow.useVerify}
+      />
+    );
   }
 
   return (

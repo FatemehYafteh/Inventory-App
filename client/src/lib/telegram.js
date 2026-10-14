@@ -24,11 +24,18 @@ function withDeadlines(status) {
   };
 }
 
+function useStartRequest(path) {
+  return useMutation({ mutationFn: () => api(path, { method: 'POST' }) });
+}
+
 /** Continue with Telegram: creates a sign-in request and returns `{ requestId, deepLink }`. */
 export function useTelegramStart() {
-  return useMutation({
-    mutationFn: () => api('/auth/telegram/start', { method: 'POST' }),
-  });
+  return useStartRequest('/auth/telegram/start');
+}
+
+/** Connect Telegram (Profile page): the same, for the signed-in user. */
+export function useTelegramConnectStart() {
+  return useStartRequest('/auth/telegram/connect/start');
 }
 
 /**
@@ -57,9 +64,18 @@ export function useTelegramResend(requestId) {
 
 /** Sends the code. On success the user is stored and the route guards move them on. */
 export function useTelegramVerify() {
+  return useVerifyCode('/auth/telegram/verify');
+}
+
+/** Connect Telegram: sends the code; on success the stored user shows Telegram connected. */
+export function useTelegramConnectVerify() {
+  return useVerifyCode('/auth/telegram/connect/verify');
+}
+
+function useVerifyCode(path) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (values) => api('/auth/telegram/verify', { method: 'POST', body: values }),
+    mutationFn: (values) => api(path, { method: 'POST', body: values }),
     onSuccess: ({ user }) => queryClient.setQueryData(ME_QUERY_KEY, user),
     onError: (error, { requestId }) => {
       if (error.code !== 'TOO_MANY_ATTEMPTS') return;

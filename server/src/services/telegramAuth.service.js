@@ -1,9 +1,12 @@
 import { randomInt, timingSafeEqual } from 'node:crypto';
+import mongoose from 'mongoose';
 import { AuthRequest } from '../models/AuthRequest.js';
-import { User } from '../models/User.js';
+import { EmailToken } from '../models/EmailToken.js';
+import { User, isPlaceholder } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 import { hashToken, randomToken } from '../utils/crypto.js';
 import { startSession } from './auth.service.js';
+import { revokeAllForUser } from './token.service.js';
 
 export const REQUEST_TTL_MS = 10 * 60 * 1000;
 export const OTP_TTL_MS = 2 * 60 * 1000;
@@ -20,9 +23,13 @@ export const START_REPLIES = {
   rate_limited: 'Too many codes requested. Try again in an hour.',
 };
 
-function codeMessage(code, config) {
+function codeMessage(code, purpose, config) {
+  const intro =
+    purpose === 'connect'
+      ? `Your code to connect Telegram to your account is ${code}.`
+      : `Your sign-in code is ${code}.`;
   return (
-    `Your sign-in code is ${code}. It expires in 2 minutes. ` +
+    `${intro} It expires in 2 minutes. ` +
     `Only enter it on ${config.appUrl}. Never share it with anyone.`
   );
 }
@@ -54,9 +61,12 @@ function telegramName(firstName, lastName) {
  * instead of sending one (`refused` or `rate_limited`). Sends are counted over the requests of the last hour (the TTL
  * index removes older ones, but runs only once a minute).
  */
-async function sendRefusal(telegramId, now) {
-  // A rejected User never gets a code, so they never see a code form.
-  if (await User.exists({ telegramId, status: 'rejected' })) return 'refused';
+async function sendRefusal(telegramId, purpose, now) {
+  // A rejected User never gets a sign-in code. Connect Telegram checks who owns the ID only
+  // after the code is accepted, so its requests never reveal an owner here.
+  if (purpose === 'login' && (await User.exists({ telegramId, status: 'rejected' }))) {
+    return 'refused';
+  }
 
   const [sent] = await AuthRequest.aggregate([
     { $match: { telegramId, createdAt: { $gt: new Date(now.getTime() - SEND_WINDOW_MS) } } },
@@ -82,8 +92,39 @@ function sameHash(a, b) {
   return left.length === right.length && left.length > 0 && timingSafeEqual(left, right);
 }
 
+/**
+ * The request as `viewer` may see it, or null: anyone holding a sign-in request's id, but
+ * only the signed-in `connectUser` for a Connect Telegram request. A connect request with
+ * no signed-in viewer is a 401, so a client whose access token expired mid-flow refreshes
+ * its session and tries again instead of reading the request as expired.
+ */
+async function findVisibleRequest(filter, viewer) {
+  const request = await AuthRequest.findOne(filter);
+  if (!request || request.purpose === 'login') return request;
+  if (!viewer) throw new AppError(401, 'NOT_AUTHENTICATED', 'Please log in to continue.');
+  return request.connectUser?.equals(viewer._id) ? request : null;
+}
+
 /** Continue with Telegram: creates the request and the deep link the browser opens. */
-export async function startLogin({ ip, userAgent }, config, { logger = console } = {}) {
+export function startLogin(meta, config, options) {
+  return startRequest({ ...meta, purpose: 'login' }, config, options);
+}
+
+function telegramAlreadyConnected() {
+  return new AppError(409, 'TELEGRAM_ALREADY_CONNECTED', 'Your account already has Telegram.');
+}
+
+/** Connect Telegram on the Profile page: the same deep link, for the signed-in user. */
+export function startConnect(user, meta, config, options) {
+  if (user.telegramId) throw telegramAlreadyConnected();
+  return startRequest({ ...meta, purpose: 'connect', connectUser: user._id }, config, options);
+}
+
+async function startRequest(
+  { purpose, connectUser, ip, userAgent },
+  config,
+  { logger = console } = {},
+) {
   const bot = config.telegram.botUsername;
   // Never guess a bot: a made-up username could belong to someone else and receive the token.
   if (!bot) {
@@ -93,7 +134,8 @@ export async function startLogin({ ip, userAgent }, config, { logger = console }
   const startToken = randomToken(32);
   const request = await AuthRequest.create({
     requestId: randomToken(24),
-    purpose: 'login',
+    purpose,
+    connectUser,
     startTokenHash: hashToken(startToken, config.jwt.refreshSecret),
     ip,
     userAgent,
@@ -126,14 +168,15 @@ export async function handleStart(
   const startTokenHash = hashToken(startToken, config.jwt.refreshSecret);
   const now = new Date();
   const pending = { startTokenHash, status: 'pending', expiresAt: { $gt: now } };
-  if (!(await AuthRequest.exists(pending))) return START_REPLIES.expired;
+  const request = await AuthRequest.findOne(pending).select('purpose');
+  if (!request) return START_REPLIES.expired;
 
   const identity = {
     telegramId: String(telegramId),
     telegramUsername: username || undefined,
     name: telegramName(firstName, lastName),
   };
-  const refusal = await sendRefusal(identity.telegramId, now);
+  const refusal = await sendRefusal(identity.telegramId, request.purpose, now);
   if (refusal) {
     const claimed = await AuthRequest.findOneAndUpdate(pending, {
       $set: { ...identity, status: refusal },
@@ -145,7 +188,7 @@ export async function handleStart(
   update.$set = { ...update.$set, ...identity, status: 'otp_sent' };
   // Atomic claim: only the first /start for a pending, unexpired request wins.
   const claimed = await AuthRequest.findOneAndUpdate(pending, update);
-  return claimed ? codeMessage(code, config) : START_REPLIES.expired;
+  return claimed ? codeMessage(code, request.purpose, config) : START_REPLIES.expired;
 }
 
 /** A new code for a request, and the update that stores it (old code out, tries reset). */
@@ -169,25 +212,24 @@ function codeSend(startTokenHash, now, config) {
  * Sends a new code 60 s after the last send (also after 3 wrong tries). The old code stops
  * working and the tries start over; the 10-minute request is not extended.
  */
-export async function resendCode({ requestId }, config, { messenger }) {
+export async function resendCode({ requestId }, config, { messenger, viewer }) {
   const now = new Date();
-  const request = await AuthRequest.findOne({
-    requestId,
-    status: 'otp_sent',
-    expiresAt: { $gt: now },
-  });
+  const request = await findVisibleRequest(
+    { requestId, status: 'otp_sent', expiresAt: { $gt: now } },
+    viewer,
+  );
   if (!request) {
-    throw new AppError(400, 'REQUEST_EXPIRED', 'This sign-in link has expired. Start again.');
+    throw new AppError(400, 'REQUEST_EXPIRED', 'This link has expired. Start again.');
   }
   if (now - request.lastSentAt < RESEND_AFTER_MS) throw resendTooSoon();
 
-  const refusal = await sendRefusal(request.telegramId, now);
+  const refusal = await sendRefusal(request.telegramId, request.purpose, now);
   if (refusal) {
     await AuthRequest.updateOne(
       { _id: request._id, status: 'otp_sent' },
       { $set: { status: refusal }, $unset: { otpHash: 1 } },
     );
-    return getStatus(requestId);
+    return getStatus(requestId, viewer);
   }
 
   const { code, update } = codeSend(request.startTokenHash, now, config);
@@ -199,7 +241,7 @@ export async function resendCode({ requestId }, config, { messenger }) {
   );
   if (!updated) throw resendTooSoon();
 
-  await messenger.send(updated.telegramId, codeMessage(code, config));
+  await messenger.send(updated.telegramId, codeMessage(code, updated.purpose, config));
   return statusOf(updated, now);
 }
 
@@ -207,9 +249,12 @@ function resendTooSoon() {
   return new AppError(429, 'RESEND_TOO_SOON', 'Please wait before asking for a new code.');
 }
 
-/** What the sign-in page polls. An unknown or timed-out request reads as expired. */
-export async function getStatus(requestId) {
-  const request = await AuthRequest.findOne({ requestId });
+/**
+ * What the sign-in page (or Profile, for Connect Telegram) polls. An unknown or timed-out
+ * request, or someone else's Connect Telegram request, reads as expired.
+ */
+export async function getStatus(requestId, viewer) {
+  const request = await findVisibleRequest({ requestId }, viewer);
   if (!request) return { status: 'expired' };
 
   return statusOf(request, new Date());
@@ -275,12 +320,16 @@ async function signInTelegramUser({ telegramId, telegramUsername, name }, now) {
   return existing;
 }
 
-/** Checks the code and signs the person in, creating a Placeholder user when needed. */
-export async function verifyLogin({ requestId, otp }, meta, config) {
+/**
+ * Accepts the code for a request with a code sent and marks it used, or throws: 3 tries,
+ * single use, constant-time comparison. Returns the request.
+ */
+async function acceptCode({ requestId, otp, purpose, connectUser }, config) {
   const now = new Date();
   const live = {
     requestId,
-    purpose: 'login',
+    purpose,
+    ...(connectUser && { connectUser }),
     status: 'otp_sent',
     expiresAt: { $gt: now },
     otpExpiresAt: { $gt: now },
@@ -306,7 +355,69 @@ export async function verifyLogin({ requestId, otp }, meta, config) {
     { $set: { status: 'verified' }, $unset: { otpHash: 1 } },
   );
   if (!used) throw invalidCode();
+  return request;
+}
 
-  const user = await signInTelegramUser(request, now);
+/** Checks the code and signs the person in, creating a Placeholder user when needed. */
+export async function verifyLogin({ requestId, otp }, meta, config) {
+  const request = await acceptCode({ requestId, otp, purpose: 'login' }, config);
+  const user = await signInTelegramUser(request, new Date());
   return { user, tokens: await startSession(user, meta, config) };
+}
+
+function telegramOwned() {
+  return new AppError(
+    409,
+    'TELEGRAM_OWNED',
+    'This Telegram account belongs to another user. Contact an admin.',
+  );
+}
+
+/**
+ * Connect Telegram: checks the code, then (only now) who holds the Telegram ID. Nobody: it is
+ * attached to the user. A Placeholder user: absorbed in one transaction (the ID moves over,
+ * the Placeholder user is deleted with its sessions and email tokens). Anyone else: 409.
+ * Returns the updated user.
+ */
+export async function verifyConnect({ requestId, otp }, user, config) {
+  const request = await acceptCode(
+    { requestId, otp, purpose: 'connect', connectUser: user._id },
+    config,
+  );
+  const { telegramId, telegramUsername } = request;
+  const holder = await User.findOne({ telegramId });
+  // A rejected account never gains a sign-in method, so a rejected Placeholder is not absorbed.
+  if (holder && (!isPlaceholder(holder) || holder.status === 'rejected')) throw telegramOwned();
+
+  const telegram = { telegramId };
+  if (telegramUsername) telegram.telegramUsername = telegramUsername;
+  const session = await mongoose.startSession();
+  let connected;
+  try {
+    await session.withTransaction(async () => {
+      if (holder) {
+        // Deleted first: telegramId is unique, so it must leave the Placeholder user.
+        const removed = await User.findOneAndDelete(
+          { _id: holder._id, telegramId, emailVerified: false, status: { $ne: 'rejected' } },
+          { session },
+        );
+        if (!removed) throw telegramOwned();
+        await revokeAllForUser(removed._id, { session });
+        await EmailToken.deleteMany({ user: removed._id }, { session });
+      }
+      connected = await User.findOneAndUpdate(
+        { _id: user._id, telegramId: { $exists: false } },
+        { $set: telegram },
+        { session, new: true },
+      );
+      if (!connected) throw telegramAlreadyConnected();
+    });
+  } catch (err) {
+    // Another User took the ID meanwhile.
+    if (err?.code === 11000) throw telegramOwned();
+    throw err;
+  } finally {
+    await session.endSession();
+  }
+  return connected;
 }

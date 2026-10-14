@@ -39,6 +39,9 @@ export const authLimits = {
   telegramStart: () => perIp(HOUR, 20),
   telegramVerify: () => perIp(15 * MINUTE, 30),
   telegramResend: () => perIp(HOUR, 20),
+  // Connect Telegram: the same budgets as sign-in start and verify.
+  telegramConnectStart: () => perIp(HOUR, 20),
+  telegramConnectVerify: () => perIp(15 * MINUTE, 30),
   // Changing the email skips the 60 s cooldown; this bounds how fast one person can send.
   completeProfile: () => perIp(HOUR, 20),
   accountLinkConfirm: () => perIp(15 * MINUTE, 10),

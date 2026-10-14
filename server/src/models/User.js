@@ -32,3 +32,8 @@ export const User = mongoose.model('User', userSchema);
 export function isProfileComplete(user) {
   return Boolean(user.name && user.emailVerified);
 }
+
+/** A Telegram signup that has not verified an email yet: no history, cannot use the app. */
+export function isPlaceholder(user) {
+  return Boolean(user.telegramId && !user.emailVerified);
+}

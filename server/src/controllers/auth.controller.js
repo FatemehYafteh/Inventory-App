@@ -117,12 +117,24 @@ export async function telegramStart(req, res) {
 export async function telegramStatus(req, res) {
   const parsed = telegramStatusQuerySchema.safeParse(req.query);
   if (!parsed.success) throw new AppError(400, 'VALIDATION_ERROR', 'Validation failed');
-  res.json(await telegramAuth.getStatus(parsed.data.requestId));
+  res.json(await telegramAuth.getStatus(parsed.data.requestId, req.user));
 }
 
 export async function telegramResend(req, res) {
   const { config, telegram } = req.app.locals;
-  res.json(await telegramAuth.resendCode(req.body, config, { messenger: telegram }));
+  res.json(
+    await telegramAuth.resendCode(req.body, config, { messenger: telegram, viewer: req.user }),
+  );
+}
+
+export async function telegramConnectStart(req, res) {
+  const result = await telegramAuth.startConnect(req.user, requestMeta(req), req.app.locals.config);
+  res.status(201).json(result);
+}
+
+export async function telegramConnectVerify(req, res) {
+  const user = await telegramAuth.verifyConnect(req.body, req.user, req.app.locals.config);
+  res.json({ user: toPublicUser(user) });
 }
 
 export async function telegramVerify(req, res) {
