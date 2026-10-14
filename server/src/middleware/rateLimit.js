@@ -41,6 +41,7 @@ export const authLimits = {
   telegramResend: () => perIp(HOUR, 20),
   // Changing the email skips the 60 s cooldown; this bounds how fast one person can send.
   completeProfile: () => perIp(HOUR, 20),
+  accountLinkConfirm: () => perIp(15 * MINUTE, 10),
   // The sign-in page polls every 2 s.
   telegramStatus: () => perIp(15 * MINUTE, 300),
 };

@@ -41,6 +41,22 @@ async function recordFailedLogin(userId) {
   ]);
 }
 
+/**
+ * Checks a password the way email login does: a locked account always fails (after a dummy
+ * hash, for similar timing), and a wrong password counts toward the lock.
+ */
+export async function checkPasswordWithLock(user, password) {
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    await verifyDummyPassword(password);
+    return false;
+  }
+  if (!(await verifyPassword(user.passwordHash, password))) {
+    await recordFailedLogin(user._id);
+    return false;
+  }
+  return true;
+}
+
 /** Issues a new session (refresh token family + access token) for a signed-in user. */
 export async function startSession(user, { ip, userAgent }, config) {
   const refresh = await issueRefreshToken({ userId: user._id, ip, userAgent }, config);
@@ -59,15 +75,7 @@ export async function loginWithPassword({ email, password }, meta, config) {
     throw invalidCredentials();
   }
 
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
-    await verifyDummyPassword(password);
-    throw invalidCredentials();
-  }
-
-  if (!(await verifyPassword(user.passwordHash, password))) {
-    await recordFailedLogin(user._id);
-    throw invalidCredentials();
-  }
+  if (!(await checkPasswordWithLock(user, password))) throw invalidCredentials();
 
   if (!user.emailVerified) throw invalidCredentials();
 

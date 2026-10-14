@@ -95,3 +95,12 @@ export const telegramResendSchema = z.object({ requestId: telegramRequestIdSchem
 
 /** Complete profile (Telegram signups): the name to keep and the email to verify. */
 export const completeProfileSchema = z.object({ name: nameSchema, email: emailSchema });
+
+/** Confirm link: the token from the email and the existing account's password. */
+export const accountLinkConfirmSchema = z.object({
+  token: tokenSchema,
+  password: z
+    .string({ required_error: 'Password is required' })
+    .min(1, 'Password is required')
+    .max(128, 'Password must be at most 128 characters'),
+});

@@ -5,7 +5,7 @@ import { hashToken, randomToken } from '../utils/crypto.js';
 export const EMAIL_TOKEN_TTL_MS = {
   verify_email: 24 * 60 * 60 * 1000,
   reset_password: 30 * 60 * 1000,
-  link_telegram: 30 * 60 * 1000,
+  link_telegram: 24 * 60 * 60 * 1000,
 };
 
 /** Minimum time between two emails of the same type to the same user. */

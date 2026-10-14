@@ -8,6 +8,7 @@ import {
 } from '@/lib/guards';
 import { AwaitingApprovalPage } from '@/pages/AwaitingApprovalPage';
 import { CompleteProfilePage } from '@/pages/CompleteProfilePage';
+import { ConfirmLinkPage } from '@/pages/ConfirmLinkPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -25,6 +26,7 @@ export function App() {
       </Route>
       {/* Opened from an email link, whether or not the person is signed in. */}
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/confirm-link" element={<ConfirmLinkPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route element={<RequireIncompleteProfile />}>

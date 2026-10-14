@@ -91,6 +91,13 @@ export function useResetPassword() {
   });
 }
 
+/** Confirm link: moves a Telegram identity into the account whose password is given. */
+export function useConfirmAccountLink() {
+  return useMutation({
+    mutationFn: (values) => api('/auth/link-telegram/confirm', { method: 'POST', body: values }),
+  });
+}
+
 /**
  * Submits a verification link token once. It is a query (not an effect) so React Query
  * dedupes it: remounts and StrictMode never spend the single-use token twice.

@@ -1,5 +1,6 @@
 import { REFRESH_COOKIE, clearSessionCookies, setSessionCookies } from '../config/cookies.js';
 import { telegramStatusQuerySchema } from '@inventory/shared/schemas';
+import * as accountLink from '../services/accountLink.service.js';
 import * as authService from '../services/auth.service.js';
 import * as profileService from '../services/profile.service.js';
 import * as telegramAuth from '../services/telegramAuth.service.js';
@@ -75,6 +76,13 @@ export async function resendProfileVerification(req, res) {
   const { config, mailer } = req.app.locals;
   await profileService.resendProfileEmail(req.user, { config, mailer });
   res.status(202).json({ message: CHECK_EMAIL_MESSAGE });
+}
+
+export async function confirmAccountLink(req, res) {
+  await accountLink.confirmAccountLink(req.body, req.app.locals.config);
+  res.json({
+    message: 'Telegram is now connected to your account. Log in with Telegram or your email.',
+  });
 }
 
 export function me(req, res) {

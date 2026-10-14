@@ -4,7 +4,7 @@ import express from 'express';
 import { authenticate } from '../../src/middleware/auth.js';
 import { errorHandler } from '../../src/middleware/error.js';
 import { requireProfile } from '../../src/middleware/requireProfile.js';
-import { EmailToken } from '../../src/models/EmailToken.js';
+import { EmailSend } from '../../src/models/EmailSend.js';
 import { User } from '../../src/models/User.js';
 import { startSession } from '../../src/services/auth.service.js';
 import {
@@ -69,12 +69,9 @@ async function sentMail(app) {
   return app.locals.mailer.outbox;
 }
 
-/** Moves existing tokens past the 60 s resend cooldown (createdAt is immutable in Mongoose). */
+/** Moves earlier sends past the 60 s resend cooldown (createdAt is immutable in Mongoose). */
 async function skipCooldown() {
-  await EmailToken.collection.updateMany(
-    {},
-    { $set: { createdAt: new Date(Date.now() - 61_000) } },
-  );
+  await EmailSend.collection.updateMany({}, { $set: { createdAt: new Date(Date.now() - 61_000) } });
 }
 
 function resend(app, user) {
@@ -152,18 +149,6 @@ describe('Complete profile, case 1 (email nobody uses)', () => {
     const stored = await User.findById(user._id);
     expect(stored.email).toBeUndefined();
     expect(stored.emailVerified).toBe(false);
-  });
-
-  it('gives the same response and sends nothing for an email another User holds', async () => {
-    const app = buildApp();
-    await createUser({ email: 'taken@example.com' });
-    const user = await createPlaceholder();
-
-    const res = await completeProfile(app, user, { email: 'taken@example.com' });
-
-    expect(res.status).toBe(202);
-    expect(res.body).toEqual(GENERIC);
-    expect(await sentMail(app)).toHaveLength(0);
   });
 
   it('resends the link after the 60 s cooldown, and the newest link works', async () => {

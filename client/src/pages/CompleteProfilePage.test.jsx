@@ -103,6 +103,27 @@ describe('Complete profile', () => {
     expect(requests.complete).toEqual([{ name: 'Nina Novak', email: 'new@example.com' }]);
   });
 
+  it('returns to Login without an error once an Account link removed this user', async () => {
+    profileHandlers({ ...placeholder, pendingEmail: 'olga@example.com' });
+    renderApp({ route: '/complete-profile' });
+    expect(await screen.findByRole('heading', { name: 'Check your email' })).toBeInTheDocument();
+
+    // The owner confirmed the link: this Placeholder user and its sessions are gone.
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json(
+          { message: 'Please log in to continue.', code: 'NOT_AUTHENTICATED' },
+          { status: 401 },
+        ),
+      ),
+    );
+
+    expect(
+      await screen.findByRole('button', { name: 'Log in' }, { timeout: 7000 }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  }, 10_000);
+
   it('moves on to Awaiting approval once the email is verified, even on another device', async () => {
     const { current } = profileHandlers({ ...placeholder, pendingEmail: 'nina@example.com' });
     renderApp({ route: '/complete-profile' });

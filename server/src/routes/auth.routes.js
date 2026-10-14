@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   completeProfileSchema,
   forgotPasswordSchema,
+  accountLinkConfirmSchema,
   loginSchema,
   registerSchema,
   resendVerificationSchema,
@@ -94,6 +95,14 @@ export function authRoutes(config) {
     authenticate(config),
     requireIncompleteProfile,
     auth.resendProfileVerification,
+  );
+
+  // Opened from the link-confirmation email; signs no one in.
+  router.post(
+    '/link-telegram/confirm',
+    authLimits.accountLinkConfirm(),
+    validate(accountLinkConfirmSchema),
+    auth.confirmAccountLink,
   );
 
   return router;

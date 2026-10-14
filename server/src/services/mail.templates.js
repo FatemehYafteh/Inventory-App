@@ -58,3 +58,35 @@ export function passwordChangedTemplate({ name, forgotLink, firstPassword }) {
     ),
   };
 }
+
+/** "Nina Novak (@nina_n)", or just the display name when there is no Telegram username. */
+function telegramAccount({ name, username }) {
+  const display = name || 'A Telegram user';
+  return username ? `${display} (@${username})` : display;
+}
+
+/** Case 2: the owner of an email + password account confirms an Account link. */
+export function accountLinkTemplate({ name, telegram, link }) {
+  const greeting = name ? `Hi ${name},` : 'Hi,';
+  const who = telegramAccount(telegram);
+  return {
+    subject: 'Let a Telegram account sign in to your Inventory account?',
+    text: `${greeting}\n\nThe Telegram account ${who} wants to sign in to your Inventory account. To allow it, open this link and enter your password:\n${link}\n\nThe link expires in 24 hours and can be used once. If you did not ask for this, ignore this email and nothing will change.`,
+    html: layout(
+      `<p>${escapeHtml(greeting)}</p><p>The Telegram account <strong>${escapeHtml(who)}</strong> wants to sign in to your Inventory account. To allow it, open this link and enter your password.</p>${button(link, 'Review and confirm')}<p>The link expires in 24 hours and can be used once. If you did not ask for this, ignore this email and nothing will change.</p>`,
+    ),
+  };
+}
+
+/** Case 3: the address already belongs to an account with a different Telegram account. */
+export function telegramConflictTemplate({ name, telegram }) {
+  const greeting = name ? `Hi ${name},` : 'Hi,';
+  const who = telegramAccount(telegram);
+  return {
+    subject: 'Someone tried to use your email address',
+    text: `${greeting}\n\nThe Telegram account ${who} entered your email address while signing up for Inventory. Your account is already connected to a different Telegram account, so nothing was changed.\n\nIf this was you, sign in with the Telegram account already connected, or contact an admin. If it was not you, you can ignore this email.`,
+    html: layout(
+      `<p>${escapeHtml(greeting)}</p><p>The Telegram account <strong>${escapeHtml(who)}</strong> entered your email address while signing up for Inventory. Your account is already connected to a different Telegram account, so nothing was changed.</p><p>If this was you, sign in with the Telegram account already connected, or contact an admin. If it was not you, you can ignore this email.</p>`,
+    ),
+  };
+}
