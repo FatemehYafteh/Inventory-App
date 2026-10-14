@@ -104,3 +104,6 @@ export const accountLinkConfirmSchema = z.object({
     .min(1, 'Password is required')
     .max(128, 'Password must be at most 128 characters'),
 });
+
+/** Profile page: the name is the only field a user edits themselves. */
+export const updateProfileSchema = z.object({ name: nameSchema });

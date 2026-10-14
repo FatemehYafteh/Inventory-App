@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLogout, useMe } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -32,7 +32,12 @@ export function AppLayout() {
               </NavLink>
             ))}
           </nav>
-          <span className="hidden text-sm text-muted-foreground sm:inline">{user?.name}</span>
+          <Link
+            to="/profile"
+            className="hidden text-sm text-muted-foreground hover:underline sm:inline"
+          >
+            {user?.name}
+          </Link>
           <Button
             variant="outline"
             size="sm"

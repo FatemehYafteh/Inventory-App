@@ -1,4 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { MinimalLayout } from '@/components/layout/MinimalLayout';
 import { homePathFor, useMe } from './auth';
 
 function FullPageMessage({ children }) {
@@ -48,6 +50,20 @@ export function RequireIncompleteProfile() {
   if (!user) return <Navigate to="/login" replace />;
   if (user.profileComplete) return <Navigate to={homePathFor(user)} replace />;
   return <Outlet />;
+}
+
+/**
+ * Pages for any signed-in user with a complete profile (the Profile page): active users see
+ * them in the app layout, pending users in a minimal layout without app navigation.
+ */
+export function RequireCompleteProfile() {
+  const location = useLocation();
+  const { user, view } = useSessionState();
+  if (view) return view;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  const home = homePathFor(user);
+  if (home === '/complete-profile') return <Navigate to={home} replace />;
+  return home === '/' ? <AppLayout /> : <MinimalLayout />;
 }
 
 /**

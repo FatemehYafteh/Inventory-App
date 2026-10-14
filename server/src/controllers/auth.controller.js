@@ -85,6 +85,11 @@ export async function confirmAccountLink(req, res) {
   });
 }
 
+export async function updateProfile(req, res) {
+  const user = await profileService.updateName(req.user, req.body);
+  res.json({ user: toPublicUser(user) });
+}
+
 export function me(req, res) {
   res.json({ user: toPublicUser(req.user) });
 }

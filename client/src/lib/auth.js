@@ -69,6 +69,15 @@ export function useCompleteProfile() {
   });
 }
 
+/** Profile page: saves the name and stores the updated user. */
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values) => api('/auth/profile', { method: 'PATCH', body: values }),
+    onSuccess: ({ user }) => queryClient.setQueryData(ME_QUERY_KEY, user),
+  });
+}
+
 /** Resend on the Complete profile "Check your email" screen (the server knows the email). */
 export function useResendProfileVerification() {
   return useMutation({

@@ -9,12 +9,13 @@ import {
   resetPasswordSchema,
   telegramResendSchema,
   telegramVerifySchema,
+  updateProfileSchema,
   verifyEmailSchema,
 } from '@inventory/shared/schemas';
 import * as auth from '../controllers/auth.controller.js';
 import { authenticate } from '../middleware/auth.js';
 import { authLimits } from '../middleware/rateLimit.js';
-import { requireIncompleteProfile } from '../middleware/requireProfile.js';
+import { requireIncompleteProfile, requireProfile } from '../middleware/requireProfile.js';
 import { validate } from '../middleware/validate.js';
 
 export function authRoutes(config) {
@@ -95,6 +96,16 @@ export function authRoutes(config) {
     authenticate(config),
     requireIncompleteProfile,
     auth.resendProfileVerification,
+  );
+
+  // Profile page: pending and active users with a complete profile (rejected users are
+  // refused by authenticate).
+  router.patch(
+    '/profile',
+    authenticate(config),
+    requireProfile,
+    validate(updateProfileSchema),
+    auth.updateProfile,
   );
 
   // Opened from the link-confirmation email; signs no one in.

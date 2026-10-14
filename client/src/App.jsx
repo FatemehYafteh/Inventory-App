@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import {
   RequireActive,
+  RequireCompleteProfile,
   RequireGuest,
   RequireIncompleteProfile,
   RequirePending,
@@ -13,6 +14,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { ProfilePage } from '@/pages/ProfilePage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
@@ -34,6 +36,9 @@ export function App() {
       </Route>
       <Route element={<RequirePending />}>
         <Route path="/awaiting-approval" element={<AwaitingApprovalPage />} />
+      </Route>
+      <Route element={<RequireCompleteProfile />}>
+        <Route path="/profile" element={<ProfilePage />} />
       </Route>
       <Route element={<RequireActive />}>
         <Route element={<AppLayout />}>

@@ -109,3 +109,10 @@ export async function completeProfile(user, { name, email }, deps) {
   await user.save();
   await resendProfileEmail(user, deps);
 }
+
+/** Profile page: renames a signed-in user with a complete profile. Returns the user. */
+export async function updateName(user, { name }) {
+  user.name = name;
+  await user.save();
+  return user;
+}
