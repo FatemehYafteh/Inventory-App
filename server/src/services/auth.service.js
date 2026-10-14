@@ -41,7 +41,8 @@ async function recordFailedLogin(userId) {
   ]);
 }
 
-async function startSession(user, { ip, userAgent }, config) {
+/** Issues a new session (refresh token family + access token) for a signed-in user. */
+export async function startSession(user, { ip, userAgent }, config) {
   const refresh = await issueRefreshToken({ userId: user._id, ip, userAgent }, config);
   return { accessToken: signAccessToken(user._id, config), refreshToken: refresh.token };
 }

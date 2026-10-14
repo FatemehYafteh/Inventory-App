@@ -84,6 +84,7 @@ export function useVerifyEmail(token) {
 
 /** Where a signed-in user belongs, following the server's access gates. */
 export function homePathFor(user) {
+  if (!user.profileComplete) return '/complete-profile';
   if (user.status === 'pending') return '/awaiting-approval';
   return '/';
 }

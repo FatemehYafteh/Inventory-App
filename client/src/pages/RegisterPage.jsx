@@ -1,6 +1,8 @@
 import { emailSchema, registerSchema } from '@inventory/shared/schemas';
 import { Link } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { OrDivider } from '@/components/auth/OrDivider';
+import { TelegramSignIn } from '@/components/auth/TelegramSignIn';
 import { ResendVerificationButton } from '@/components/auth/ResendVerificationButton';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
@@ -69,6 +71,10 @@ export function RegisterPage() {
       description="Sign up with your email address."
       footer={loginLink}
     >
+      <div className="mb-4 flex flex-col gap-4">
+        <TelegramSignIn />
+        <OrDivider />
+      </div>
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <FormAlert>{formError}</FormAlert>
         <TextField

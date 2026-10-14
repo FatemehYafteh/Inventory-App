@@ -73,3 +73,20 @@ export const newPasswordSchema = z.object(newPasswordFields).refine(...passwords
 export const resetPasswordSchema = z
   .object({ token: tokenSchema, ...newPasswordFields })
   .refine(...passwordsMatch);
+
+/** The browser's handle on a Telegram sign-in request. */
+export const telegramRequestIdSchema = z
+  .string({ required_error: 'Request is required' })
+  .trim()
+  .min(1, 'Request is required')
+  .max(100, 'Request is invalid');
+
+export const telegramStatusQuerySchema = z.object({ requestId: telegramRequestIdSchema });
+
+export const telegramVerifySchema = z.object({
+  requestId: telegramRequestIdSchema,
+  otp: z
+    .string({ required_error: 'Enter the code' })
+    .trim()
+    .regex(/^\d{6}$/, 'Enter the 6-digit code'),
+});

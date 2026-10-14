@@ -13,6 +13,17 @@ export const users = [
     status: 'active',
   },
   {
+    // Signs in with Telegram only. A verified email keeps the profile complete.
+    key: 'telegramAdmin',
+    name: 'Tom Telegram-Admin',
+    email: 'telegram-admin@example.com',
+    emailVerified: true,
+    telegramId: '100000004',
+    telegramUsername: 'tom_admin',
+    role: 'admin',
+    status: 'active',
+  },
+  {
     key: 'staff',
     name: 'Sam Staff',
     email: 'staff@example.com',

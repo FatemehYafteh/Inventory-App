@@ -1,6 +1,8 @@
 import { loginSchema } from '@inventory/shared/schemas';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { OrDivider } from '@/components/auth/OrDivider';
+import { TelegramSignIn } from '@/components/auth/TelegramSignIn';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
@@ -48,6 +50,10 @@ export function LoginPage() {
         </div>
       }
     >
+      <div className="mb-4 flex flex-col gap-4">
+        <TelegramSignIn />
+        <OrDivider />
+      </div>
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         {!login.error && <FormAlert tone="success">{notice}</FormAlert>}
         <FormAlert>{formError}</FormAlert>

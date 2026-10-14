@@ -100,6 +100,19 @@ describe('seedDatabase', () => {
     expect(rejected.statusChangedBy).toBeDefined();
   });
 
+  it('seeds an active Telegram admin with a verified email and no password', async () => {
+    await seedDatabase({ now });
+    const seeded = await User.find().select('+passwordHash');
+
+    const telegramAdmin = seeded.find((user) => user.role === 'admin' && user.telegramId);
+    expect(telegramAdmin).toMatchObject({ status: 'active', emailVerified: true });
+    expect(telegramAdmin.email).toBeTruthy();
+    expect(telegramAdmin.passwordHash).toBeUndefined();
+
+    const telegramIds = seeded.map((user) => user.telegramId).filter(Boolean);
+    expect(new Set(telegramIds).size).toBe(telegramIds.length);
+  });
+
   it('creates accounts that work with the real login', async () => {
     await seedDatabase({ now });
     const app = buildApp();

@@ -12,6 +12,7 @@
     "user:create": "node --env-file=.env scripts/create-user.js",
     "seed": "node --env-file=.env scripts/seed.js",
     "seed:reset": "node --env-file=.env scripts/seed.js --reset",
+    "tg:start": "node --env-file=.env scripts/tg-start.js",
     "secret:generate": "node scripts/generate-secret.js"
   },
   "dependencies": {

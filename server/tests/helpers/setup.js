@@ -6,14 +6,17 @@ import { loadConfig } from '../../src/config/env.js';
 import { User } from '../../src/models/User.js';
 import { hashPassword } from '../../src/services/password.service.js';
 
-export const testConfig = loadConfig({
+export const testEnv = {
   NODE_ENV: 'test',
   MONGODB_URI: 'provided-by-global-setup',
   JWT_ACCESS_SECRET: 'test-access-secret-test-access-secret',
   JWT_REFRESH_SECRET: 'test-refresh-secret-test-refresh-secret',
   CLIENT_ORIGIN: 'http://localhost:5173',
   APP_URL: 'http://localhost:5173',
-});
+  TELEGRAM_BOT_USERNAME: 'test_bot',
+};
+
+export const testConfig = loadConfig(testEnv);
 
 export const ORIGIN = testConfig.clientOrigin;
 

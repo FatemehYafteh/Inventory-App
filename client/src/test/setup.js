@@ -3,8 +3,9 @@ import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { server } from './server';
 
-// Browser APIs jsdom lacks that cmdk, Radix popovers and react-hot-toast call; no-ops are
-// enough for tests.
+// Browser APIs jsdom lacks that cmdk, Radix popovers, react-hot-toast and input-otp call;
+// no-ops are enough for tests.
+document.elementFromPoint ??= () => null;
 window.matchMedia ??= (query) => ({
   matches: false,
   media: query,

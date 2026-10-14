@@ -26,7 +26,7 @@ export function RequireActive() {
   const { user, view } = useSessionState();
   if (view) return view;
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
-  if (user.status !== 'active') return <Navigate to={homePathFor(user)} replace />;
+  if (homePathFor(user) !== '/') return <Navigate to={homePathFor(user)} replace />;
   return <Outlet />;
 }
 
@@ -35,7 +35,18 @@ export function RequirePending() {
   const { user, view } = useSessionState();
   if (view) return view;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.status !== 'pending') return <Navigate to={homePathFor(user)} replace />;
+  if (homePathFor(user) !== '/awaiting-approval') {
+    return <Navigate to={homePathFor(user)} replace />;
+  }
+  return <Outlet />;
+}
+
+/** Signed-in users whose profile is not complete yet (Telegram signups). */
+export function RequireIncompleteProfile() {
+  const { user, view } = useSessionState();
+  if (view) return view;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.profileComplete) return <Navigate to={homePathFor(user)} replace />;
   return <Outlet />;
 }
 

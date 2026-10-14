@@ -50,12 +50,14 @@ Clarified on 2026-10-13, edge cases settled on 2026-10-14 (decisions in sub-PRD 
 
 **Tracked as GitHub issues, not in this table.** M3 is split by `/to-tickets` into vertical-slice issues with blocking links on `FatemehYafteh/Inventory-App`, and each issue is built with `/implement #<issue>` (`/clear` between issues). Progress lives on the issues.
 
-Starting slice outline for `/to-tickets`:
-1. **Telegram sign-in, development path.** AuthRequest, OTP service, `start`/`status`/`resend`/`verify` with rate limits, `refused` and `rate_limited` paths, bot sender that logs codes, `tg:start` script, Login and Register Telegram UI (QR code, countdowns), seed users.
-2. **Real bot.** grammY `/start` handler, polling, webhook route with secret check and registration on startup, production fail-fast. Blocked by 1.
-3. **Complete profile, case 1.** Blocked by 1.
-4. **Account link, cases 2 and 3, and rejected email.** Blocked by 3.
-5. **Connect Telegram and Profile page.** Blocked by 1.
+Issues (blocking links are native on GitHub):
+- [#1](https://github.com/FatemehYafteh/Inventory-App/issues/1) Telegram sign-in, happy path in development
+- [#2](https://github.com/FatemehYafteh/Inventory-App/issues/2) One-time code policy and refusals. Blocked by #1
+- [#3](https://github.com/FatemehYafteh/Inventory-App/issues/3) Real Telegram bot (polling and webhook). Blocked by #2
+- [#4](https://github.com/FatemehYafteh/Inventory-App/issues/4) Complete profile, case 1. Blocked by #1
+- [#5](https://github.com/FatemehYafteh/Inventory-App/issues/5) Account link (cases 2 and 3, rejected emails). Blocked by #4
+- [#6](https://github.com/FatemehYafteh/Inventory-App/issues/6) Profile page
+- [#7](https://github.com/FatemehYafteh/Inventory-App/issues/7) Connect Telegram. Blocked by #2 and #6
 
 ## M4: Roles, access gates and user approval [sub-PRD 04](../docs/prds/04-roles-approval.md)
 
