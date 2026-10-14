@@ -46,14 +46,16 @@ This comes from reading the code; the tests haven't been run.
 
 ## M3: Telegram login and identity linking [sub-PRD 03](../docs/prds/03-telegram-identity.md)
 
-Clarified on 2026-10-13 (decisions in sub-PRD 03, terms in `GLOSSARY.md`). Each phase is one vertical slice: server, client, seed data and tests together. Branch: `feat/telegram-identity`.
+Clarified on 2026-10-13, edge cases settled on 2026-10-14 (decisions in sub-PRD 03 and PRD 1.5, terms in `GLOSSARY.md`). Branch: `feat/telegram-identity`.
 
-| Phase | Task | Status |
-|---|---|---|
-| 3.1 | **Telegram sign-in.** AuthRequest model; OTP service (6 digits, hashed, 2 min, 3 attempts, 60 s resend, 5 sends per hour per Telegram ID); bot with `/start` handler (polling, webhook registered on startup, dev fallback that logs OTPs plus the `tg:start` script); `start`, `status`, `resend`, `verify` endpoints with rate limits; `refused` path for rejected users; Telegram section on Login and Register (Open Telegram button, QR code on wide screens, "code sent to @username", OTP input with countdowns); seed users (Placeholder awaiting verification, rejected Telegram user, Telegram-only admin) | ⬜ To do |
-| 3.2 | **Complete profile, case 1.** `POST /auth/profile/complete` and `/profile/resend-verification` (generic response, replacing `pendingEmail` invalidates earlier links); verifying `pendingEmail`, including the race where the email was taken meanwhile; CompleteProfile page with Check your email, Resend, Use a different email, Log out | ⬜ To do |
-| 3.3 | **Account link, cases 2 and 3.** Link-confirmation email (24 h); `POST /auth/link-telegram/confirm` in one transaction (move Telegram identity, verify the existing email, delete the Placeholder user, revoke its sessions), with a rollback test; case 3 email; ConfirmLink page (no automatic sign-in) | ⬜ To do |
-| 3.4 | **Connect Telegram and Profile page.** `/telegram/connect/start` and `/connect/verify` (absorb a Placeholder user, 409 otherwise); `PATCH /auth/profile`; Profile page with name, sign-in methods and Connect Telegram | ⬜ To do |
+**Tracked as GitHub issues, not in this table.** M3 is split by `/to-tickets` into vertical-slice issues with blocking links on `FatemehYafteh/Inventory-App`, and each issue is built with `/implement #<issue>` (`/clear` between issues). Progress lives on the issues.
+
+Starting slice outline for `/to-tickets`:
+1. **Telegram sign-in, development path.** AuthRequest, OTP service, `start`/`status`/`resend`/`verify` with rate limits, `refused` and `rate_limited` paths, bot sender that logs codes, `tg:start` script, Login and Register Telegram UI (QR code, countdowns), seed users.
+2. **Real bot.** grammY `/start` handler, polling, webhook route with secret check and registration on startup, production fail-fast. Blocked by 1.
+3. **Complete profile, case 1.** Blocked by 1.
+4. **Account link, cases 2 and 3, and rejected email.** Blocked by 3.
+5. **Connect Telegram and Profile page.** Blocked by 1.
 
 ## M4: Roles, access gates and user approval [sub-PRD 04](../docs/prds/04-roles-approval.md)
 

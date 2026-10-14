@@ -1,8 +1,9 @@
 # Product Requirements Document: Product Inventory Manager
 
-**Version:** 1.4 (MVP)
-**Date:** 2026-10-13
+**Version:** 1.5 (MVP)
+**Date:** 2026-10-14
 
+**Changes in 1.5:** Telegram edge cases settled (details in sub-PRD 03): `rate_limited` request status, with OTP sends counted over 1 hour; Confirm link counts toward the login lock and is rate limited; no link and no email for rejected accounts; per-address limit on Complete-profile emails; Connect Telegram checks who owns a Telegram ID only after the code is verified; Profile page open to pending users; the webhook uses `APP_URL` (no separate API URL); the seeded Telegram admin has a verified email.
 **Changes in 1.4:** Telegram sign-in clarified (see sub-PRD 03 and `GLOSSARY.md`): OTP resend endpoint and rate-limit numbers; `refused` status for rejected Telegram users; "Connect Telegram" (`purpose = connect`) named apart from "Account link"; Connect Telegram absorbs a Placeholder user; link-confirmation email valid 24 h and also verifies the existing account's email; Complete profile always offers "use a different email"; development works without a bot token.
 **Changes in 1.3:** One person = one account (Telegram and email identities merge into one user); Telegram signups must complete a profile (name + verified email); linking Telegram from an email account; password reset by email only, with resend; email sent through Nodemailer over SMTP (Brevo to be configured later); OTP policy 6 digits / 2 min / 3 tries / 60 s resend.
 **Changes in 1.2:** Email + password login next to Telegram OTP; user statuses `pending` / `active` / `rejected` with admin approval; every stock movement stores the user who made it.
@@ -98,10 +99,10 @@ Server-side checks are the source of truth; hiding buttons in the UI is only a c
 ### AuthRequest (short-lived, TTL index)
 - `requestId`: random opaque value, unique (the browser's only handle on the request)
 - `purpose`: `login` | `connect` (`connect` is used when a logged-in user connects Telegram, with `connectUser`)
-- `startTokenHash` (unique), `status`: `pending` | `otp_sent` | `verified` | `refused` | `expired`
+- `startTokenHash` (unique), `status`: `pending` | `otp_sent` | `verified` | `refused` | `rate_limited` | `expired`
 - `telegramId`, `telegramUsername` (may be empty), `name` (filled when the bot receives /start)
-- `otpHash`, `otpExpiresAt`, `attempts`, `lastSentAt`
-- `ip`, `userAgent`, `expiresAt` (10 min, auto-deleted)
+- `otpHash`, `otpExpiresAt`, `attempts`, `lastSentAt`, `sendCount`
+- `ip`, `userAgent`, `expiresAt` (10 min, the request stops working); the document is auto-deleted 1 hour after creation so OTP sends can be counted per Telegram ID
 
 ### RefreshToken
 - `user`, `familyId`, `tokenHash`, `expiresAt`, `revokedAt`, `replacedBy`, `ip`, `userAgent`, `createdAt`
@@ -169,7 +170,7 @@ Login and signup are the same flow. If the Telegram ID already belongs to a user
 - 6 digits, generated with a cryptographically secure RNG, stored hashed, single use.
 - Expires in 2 minutes; 3 wrong attempts invalidate that code (the user must request a new one).
 - Resend (`POST /auth/telegram/resend`) allowed 60 seconds after the last send, also after 3 wrong attempts (the bot sends a new code, the old one is invalidated, and the attempt counter resets). Resending does not extend the 10-minute request. The UI shows a countdown for expiry and for the resend button.
-- Rate limits: per IP on `/start`, `/verify`, `/resend` and `/status`, and at most 5 OTP sends per hour per Telegram ID (numbers in sub-PRD 03).
+- Rate limits: per IP on `/start`, `/verify`, `/resend` and `/status`, and at most 5 OTP sends per hour per Telegram ID (numbers in sub-PRD 03). Over the per-Telegram-ID limit no OTP is sent, the request becomes `rate_limited`, and the page says to try again in an hour.
 - Rejected users are refused with a generic message and no OTP is sent; the request becomes `refused` and the page shows the generic refusal.
 
 #### B. Email + password
@@ -194,12 +195,13 @@ Login and signup are the same flow. If the Telegram ID already belongs to a user
 2. The server saves the name, stores the email as `pendingEmail`, and emails a verification link (24 h, one-time). The response is the same generic message in every case.
 3. The screen then shows "Check your email" with a **Resend** button (60 second cooldown, with countdown), **Use a different email**, and the line "Nothing arriving? Use a different email, or contact an admin." Submitting a different email replaces `pendingEmail` and invalidates the earlier links.
 4. **Case 1, email is not used by any user:** clicking the link sets `email`, `emailVerified = true`, and the profile is complete. The account is now visible to admins in the Pending queue.
-5. **Case 2, email already belongs to another user (an email + password account, verified or not):** the email sent to that address is a **link confirmation** (24 h, one-time) instead. It names the Telegram account that wants to link (display name and username) and says to ignore the message if this was not the owner's request. Clicking opens **Confirm link**, which requires the existing account's **password**. On success:
+5. **Case 2, email already belongs to another user (an email + password account, verified or not, not rejected):** the email sent to that address is a **link confirmation** (24 h, one-time) instead. It names the Telegram account that wants to link (display name and username) and says to ignore the message if this was not the owner's request. Clicking opens **Confirm link**, which requires the existing account's **password**. On success:
    - the Telegram ID and username move to the existing account, which keeps its role, status and history, and its email becomes verified;
    - the placeholder user created by the Telegram signup is deleted (it has no history because it could not use the app) and its sessions are revoked;
    - Confirm does not sign anyone in; the person logs in normally afterwards, with either method, and always lands in the same account.
-   The password step stops someone who only knows another person's email address from taking over that account just by getting the link clicked.
+   The password step stops someone who only knows another person's email address from taking over that account just by getting the link clicked. Wrong passwords count toward that account's login lock, and the endpoint is rate limited.
 6. **Case 3, email belongs to a user who already has a different Telegram account linked:** no link is made. The email owner is told in the email, and the Telegram signup stays incomplete with the message to use another email or contact an admin.
+7. **Email belongs to a rejected user:** no link and no email; the Placeholder user sees the same generic screen. Complete-profile emails are limited per target address (sub-PRD 03).
 
 **Connect Telegram later (email accounts).** On the Profile page a logged-in user can click **Connect Telegram**, which runs the same deep-link + OTP flow with `purpose = connect`. On success the Telegram ID is attached to the current user. If that Telegram ID belongs to a Placeholder user (a Telegram signup with no verified email), that user is absorbed in one transaction: the Telegram ID moves over and the Placeholder user is deleted with its sessions. If it belongs to any other user, the request is refused with 409 and a message to contact an admin. Disconnecting is not supported in the MVP.
 
@@ -331,11 +333,12 @@ Password reset works only through email. There is no reset through Telegram.
 - Each user's detail drawer shows the status change history and a link to their stock movements.
 
 ### 5.8 Screens for incomplete and pending users
-- **Complete profile:** name and email form, "Check your email" state with Resend and countdown, Use a different email, Log out.
+- **Complete profile:** name and email form, "Check your email" state with Resend and countdown, Use a different email, Log out. Polls `GET /auth/me` and moves to Awaiting approval once the email is verified.
 - **Awaiting approval:** short message, name and sign-in methods, Refresh button, Log out. Polls `GET /auth/me` periodically so the app opens as soon as the user is approved.
 - **Confirm link:** opened from the link-confirmation email; asks for the existing account's password; shows success (with a Log in button, no automatic sign-in) or an error.
 
-### 5.9 Profile Page (all signed-in users)
+### 5.9 Profile Page (pending and active users)
+- Pending users reach it from Awaiting approval, in a minimal layout without app navigation.
 - Edit name.
 - Shows connected sign-in methods: email (verified) and Telegram (connected or not), with **Connect Telegram** when missing.
 - Password changes happen only through the reset-by-email flow (a "Send password reset email" button).
