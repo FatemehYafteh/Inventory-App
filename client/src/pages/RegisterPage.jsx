@@ -1,12 +1,11 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { emailSchema, registerSchema } from '@inventory/shared/schemas';
-import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { ResendVerificationButton } from '@/components/auth/ResendVerificationButton';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
+import { useZodForm } from '@/hooks/useZodForm';
 import { useRegister } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
@@ -29,9 +28,9 @@ export function RegisterPage() {
     handleSubmit,
     setError,
     getValues,
+    trigger,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(registerSchema),
+  } = useZodForm(registerSchema, {
     defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
   });
 
@@ -93,7 +92,10 @@ export function RegisterPage() {
           type="password"
           autoComplete="new-password"
           error={errors.password}
-          {...register('password')}
+          {...register('password', {
+            // Keep the confirmation's match error current once it has a value.
+            onChange: () => getValues('confirmPassword') && trigger('confirmPassword'),
+          })}
         />
         <p className="-mt-2 text-xs text-muted-foreground">
           At least 10 characters. Avoid common passwords.

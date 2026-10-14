@@ -1,12 +1,11 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { newPasswordSchema } from '@inventory/shared/schemas';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
+import { useZodForm } from '@/hooks/useZodForm';
 import { useResetPassword } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
@@ -49,9 +48,10 @@ export function ResetPasswordPage() {
     register,
     handleSubmit,
     setError,
+    getValues,
+    trigger,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(newPasswordSchema),
+  } = useZodForm(newPasswordSchema, {
     defaultValues: { password: '', confirmPassword: '' },
   });
 
@@ -83,7 +83,10 @@ export function ResetPasswordPage() {
           type="password"
           autoComplete="new-password"
           error={errors.password}
-          {...register('password')}
+          {...register('password', {
+            // Keep the confirmation's match error current once it has a value.
+            onChange: () => getValues('confirmPassword') && trigger('confirmPassword'),
+          })}
         />
         <p className="-mt-2 text-xs text-muted-foreground">
           At least 10 characters. Avoid common passwords.

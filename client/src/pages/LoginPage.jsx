@@ -1,11 +1,10 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@inventory/shared/schemas';
-import { useForm } from 'react-hook-form';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
+import { useZodForm } from '@/hooks/useZodForm';
 import { useLogin } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
@@ -20,7 +19,7 @@ export function LoginPage() {
     setError,
     watch,
     formState: { errors },
-  } = useForm({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } });
+  } = useZodForm(loginSchema, { defaultValues: { email: '', password: '' } });
 
   // On success useLogin stores the user, and the RequireGuest route guard redirects.
   const onSubmit = (values) => {

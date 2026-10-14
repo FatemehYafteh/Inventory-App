@@ -39,7 +39,7 @@ Users can register with email + password, verify their email, log in, stay signe
 ### EmailToken (TTL index)
 - `user`, `type`: `verify_email` | `reset_password` | `link_telegram`
 - `email`, `targetUser` (for `link_telegram`, used in 03)
-- `tokenHash` (random 32 bytes, hashed), `expiresAt` (verify 24 h, reset 30 min, link 30 min), `usedAt`
+- `tokenHash` (random 32 bytes, hashed), `expiresAt` (verify 24 h, reset 30 min, link 24 h), `usedAt`
 - Issuing a new token of the same type for the same user invalidates the previous one
 
 ### RefreshToken (TTL index on `expiresAt`)

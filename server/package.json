@@ -11,7 +11,8 @@
     "db:dev": "node scripts/dev-db.js",
     "user:create": "node --env-file=.env scripts/create-user.js",
     "seed": "node --env-file=.env scripts/seed.js",
-    "seed:reset": "node --env-file=.env scripts/seed.js --reset"
+    "seed:reset": "node --env-file=.env scripts/seed.js --reset",
+    "secret:generate": "node scripts/generate-secret.js"
   },
   "dependencies": {
     "@inventory/shared": "*",

@@ -1,12 +1,11 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { emailSchema, forgotPasswordSchema } from '@inventory/shared/schemas';
-import { useForm } from 'react-hook-form';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { ResendEmailButton } from '@/components/auth/ResendEmailButton';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
+import { useZodForm } from '@/hooks/useZodForm';
 import { useForgotPassword } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
@@ -26,8 +25,7 @@ export function ForgotPasswordPage() {
     setError,
     getValues,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(forgotPasswordSchema),
+  } = useZodForm(forgotPasswordSchema, {
     // Pre-filled from the Login page's "Forgot password?" link.
     defaultValues: { email: location.state?.email ?? '' },
   });

@@ -1,6 +1,4 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { resendVerificationSchema } from '@inventory/shared/schemas';
-import { useForm } from 'react-hook-form';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { RESEND_COOLDOWN_SECONDS } from '@/components/auth/ResendVerificationButton';
@@ -8,6 +6,7 @@ import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
 import { useCountdown } from '@/hooks/useCountdown';
+import { useZodForm } from '@/hooks/useZodForm';
 import { useResendVerification, useVerifyEmail } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
@@ -25,7 +24,7 @@ function ResendForm() {
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm({ resolver: zodResolver(resendVerificationSchema), defaultValues: { email: '' } });
+  } = useZodForm(resendVerificationSchema, { defaultValues: { email: '' } });
 
   const onSubmit = ({ email }) =>
     resend.mutate(email, {

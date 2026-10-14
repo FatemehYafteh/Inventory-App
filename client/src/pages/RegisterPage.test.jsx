@@ -129,4 +129,34 @@ describe('RegisterPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Too many attempts');
   });
+
+  it('checks a field when the user leaves it, not while they first type', async () => {
+    const user = await openRegister();
+    await user.type(screen.getByLabelText('Email'), 'nope');
+    expect(screen.queryByText('Enter a valid email address')).not.toBeInTheDocument();
+
+    await user.tab();
+    expect(await screen.findByText('Enter a valid email address')).toBeInTheDocument();
+  });
+
+  it('rechecks a touched field on every change', async () => {
+    const user = await openRegister();
+    await user.type(screen.getByLabelText('Email'), 'nora');
+    await user.tab();
+    expect(await screen.findByText('Enter a valid email address')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Email'), '@example.com');
+    expect(screen.queryByText('Enter a valid email address')).not.toBeInTheDocument();
+  });
+
+  it('updates the confirmation error when the password changes', async () => {
+    const user = await openRegister();
+    await user.type(screen.getByLabelText('Password'), 'a-long-passwor');
+    await user.type(screen.getByLabelText('Confirm password'), 'a-long-password');
+    await user.tab();
+    expect(await screen.findByText('Passwords do not match')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Password'), 'd');
+    expect(screen.queryByText('Passwords do not match')).not.toBeInTheDocument();
+  });
 });

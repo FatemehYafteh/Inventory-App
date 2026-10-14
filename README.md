@@ -15,10 +15,11 @@ Requires Node 20.6+.
 ```sh
 npm install
 cp server/.env.example server/.env   # then fill in the two JWT secrets
-npm run db:dev -w server             # local MongoDB replica set on :27018 (27017 is often taken by an installed MongoDB service) (separate terminal)
-npm run seed -w server               # demo data for every model (see below)
-npm run dev                          # API on :4000, web app on http://localhost:5173
+npm run dev                          # MongoDB replica set on :27018, API on :4000, web app on http://localhost:5173
+npm run seed -w server               # demo data for every model (see below), in a second terminal while dev runs
 ```
+
+The database runs on :27018 because 27017 is often taken by an installed MongoDB service. To browse it in Compass, connect to `mongodb://127.0.0.1:27018/?directConnection=true` while `npm run dev` is running. If you already run the database yourself (`npm run db:dev -w server`), `npm run dev:app` starts only the API and web app.
 
 ### Seed data
 `npm run seed -w server` adds demo users, categories, suppliers, products and their stock history, and keeps anything already there. `npm run seed:reset -w server` wipes those collections and seeds again. Both refuse to run in production.

@@ -46,18 +46,14 @@ This comes from reading the code; the tests haven't been run.
 
 ## M3: Telegram login and identity linking [sub-PRD 03](../docs/prds/03-telegram-identity.md)
 
+Clarified on 2026-10-13 (decisions in sub-PRD 03, terms in `GLOSSARY.md`). Each phase is one vertical slice: server, client, seed data and tests together. Branch: `feat/telegram-identity`.
+
 | Phase | Task | Status |
 |---|---|---|
-| 3.1 | AuthRequest model (expires automatically) and seed data | ⬜ To do |
-| 3.2 | OTP service: 6-digit codes, stored hashed, 2-minute expiry, 3 attempts, 60-second resend | ⬜ To do |
-| 3.3 | Telegram bot with the `/start <token>` handler (polling in development, webhook in production) | ⬜ To do |
-| 3.4 | `POST /auth/telegram/start`, `GET /auth/telegram/status`, `POST /auth/telegram/verify` | ⬜ To do |
-| 3.5 | Telegram part of the Login page: deep link, polling, OTP input with countdowns | ⬜ To do |
-| 3.6 | Complete profile endpoints, covering all three email-collision cases | ⬜ To do |
-| 3.7 | `POST /auth/link-telegram/confirm`: all-or-nothing in one transaction, removes the placeholder user | ⬜ To do |
-| 3.8 | CompleteProfile and ConfirmLink pages | ⬜ To do |
-| 3.9 | Connect Telegram endpoints (`link/start`, `link/verify`) and `PATCH /auth/profile` | ⬜ To do |
-| 3.10 | Profile page | ⬜ To do |
+| 3.1 | **Telegram sign-in.** AuthRequest model; OTP service (6 digits, hashed, 2 min, 3 attempts, 60 s resend, 5 sends per hour per Telegram ID); bot with `/start` handler (polling, webhook registered on startup, dev fallback that logs OTPs plus the `tg:start` script); `start`, `status`, `resend`, `verify` endpoints with rate limits; `refused` path for rejected users; Telegram section on Login and Register (Open Telegram button, QR code on wide screens, "code sent to @username", OTP input with countdowns); seed users (Placeholder awaiting verification, rejected Telegram user, Telegram-only admin) | ⬜ To do |
+| 3.2 | **Complete profile, case 1.** `POST /auth/profile/complete` and `/profile/resend-verification` (generic response, replacing `pendingEmail` invalidates earlier links); verifying `pendingEmail`, including the race where the email was taken meanwhile; CompleteProfile page with Check your email, Resend, Use a different email, Log out | ⬜ To do |
+| 3.3 | **Account link, cases 2 and 3.** Link-confirmation email (24 h); `POST /auth/link-telegram/confirm` in one transaction (move Telegram identity, verify the existing email, delete the Placeholder user, revoke its sessions), with a rollback test; case 3 email; ConfirmLink page (no automatic sign-in) | ⬜ To do |
+| 3.4 | **Connect Telegram and Profile page.** `/telegram/connect/start` and `/connect/verify` (absorb a Placeholder user, 409 otherwise); `PATCH /auth/profile`; Profile page with name, sign-in methods and Connect Telegram | ⬜ To do |
 
 ## M4: Roles, access gates and user approval [sub-PRD 04](../docs/prds/04-roles-approval.md)
 
