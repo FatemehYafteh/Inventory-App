@@ -5,6 +5,7 @@ import {
   registerSchema,
   resendVerificationSchema,
   resetPasswordSchema,
+  telegramResendSchema,
   telegramVerifySchema,
   verifyEmailSchema,
 } from '@inventory/shared/schemas';
@@ -62,6 +63,12 @@ export function authRoutes(config) {
     authLimits.telegramVerify(),
     validate(telegramVerifySchema),
     auth.telegramVerify,
+  );
+  router.post(
+    '/telegram/resend',
+    authLimits.telegramResend(),
+    validate(telegramResendSchema),
+    auth.telegramResend,
   );
 
   router.post('/refresh', authLimits.refresh(), auth.refresh);

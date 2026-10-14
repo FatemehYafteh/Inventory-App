@@ -90,6 +90,11 @@ export async function telegramStatus(req, res) {
   res.json(await telegramAuth.getStatus(parsed.data.requestId));
 }
 
+export async function telegramResend(req, res) {
+  const { config, telegram } = req.app.locals;
+  res.json(await telegramAuth.resendCode(req.body, config, { messenger: telegram }));
+}
+
 export async function telegramVerify(req, res) {
   const { config } = req.app.locals;
   const { user, tokens } = await telegramAuth.verifyLogin(req.body, requestMeta(req), config);

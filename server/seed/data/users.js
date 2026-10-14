@@ -64,6 +64,19 @@ export const users = [
     statusReason: 'Not part of the warehouse team.',
   },
   {
+    // Telegram sign-in sends no code and shows the generic refusal.
+    key: 'telegramRejected',
+    name: 'Rita Rejected-Telegram',
+    email: 'rejected-telegram@example.com',
+    emailVerified: true,
+    telegramId: '100000005',
+    telegramUsername: 'rita_rejected',
+    role: 'staff',
+    status: 'rejected',
+    statusChangedBy: 'admin',
+    statusReason: 'Signed up by mistake.',
+  },
+  {
     key: 'unverified',
     name: 'Uma Unverified',
     email: 'unverified@example.com',

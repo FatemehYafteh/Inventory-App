@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { loadConfig } from '../../src/config/env.js';
 import { User } from '../../src/models/User.js';
@@ -46,6 +46,20 @@ function pressStart(startToken, from = {}) {
 function codeIn(reply) {
   return reply.match(/\b(\d{6})\b/)[1];
 }
+
+/** Fakes only Date, so the database driver and supertest keep their real timers. */
+function freezeClock() {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-14T10:00:00Z'));
+}
+
+function advanceClock(ms) {
+  vi.setSystemTime(Date.now() + ms);
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('Telegram sign-in', () => {
   it('signs a new Telegram user in as a Placeholder user', async () => {
@@ -158,6 +172,225 @@ describe('Telegram sign-in', () => {
     expect(await User.countDocuments()).toBe(0);
   });
 
+  it('counts wrong codes and invalidates the code after 3 wrong tries', async () => {
+    const app = buildApp();
+    const { requestId, startToken } = await startLogin(app);
+    const otp = codeIn(await pressStart(startToken));
+    const wrong = otp === '000000' ? '111111' : '000000';
+    const verify = (code) => post(app, '/api/auth/telegram/verify').send({ requestId, otp: code });
+
+    const first = await verify(wrong);
+    expect(first.status).toBe(400);
+    expect(first.body).toEqual({ code: 'INVALID_CODE', message: 'Wrong code. 2 tries left.' });
+    expect((await getStatus(app, requestId)).body.attemptsLeft).toBe(2);
+
+    expect((await verify(wrong)).body.message).toBe('Wrong code. 1 try left.');
+    const third = await verify(wrong);
+    expect(third.body).toEqual({ code: 'TOO_MANY_ATTEMPTS', message: 'Too many wrong codes.' });
+
+    // The right code no longer works either.
+    const late = await verify(otp);
+    expect(late.status).toBe(400);
+    expect(late.body.code).toBe('TOO_MANY_ATTEMPTS');
+    expect(parseCookies(late).access_token).toBeUndefined();
+    expect((await getStatus(app, requestId)).body).toMatchObject({
+      status: 'otp_sent',
+      attemptsLeft: 0,
+    });
+  });
+
+  it('rejects a start token after the 10-minute request ends', async () => {
+    freezeClock();
+    const app = buildApp();
+    const { requestId, startToken } = await startLogin(app);
+
+    advanceClock(10 * 60 * 1000);
+    expect(await pressStart(startToken)).toBe(
+      'This sign-in link has expired. Go back to the sign-in page and start again.',
+    );
+    expect((await getStatus(app, requestId)).body.status).toBe('expired');
+  });
+
+  it('gives parallel guesses no more than 3 tries', async () => {
+    const app = buildApp();
+    const { requestId, startToken } = await startLogin(app);
+    const otp = codeIn(await pressStart(startToken));
+    const wrong = otp === '000000' ? '111111' : '000000';
+
+    const guesses = await Promise.all(
+      Array.from({ length: 6 }, () =>
+        post(app, '/api/auth/telegram/verify').send({ requestId, otp: wrong }),
+      ),
+    );
+    const wrongCodes = guesses.filter((res) => res.body.message?.startsWith('Wrong code.'));
+    expect(wrongCodes).toHaveLength(2);
+
+    const res = await post(app, '/api/auth/telegram/verify').send({ requestId, otp });
+    expect(res.body.code).toBe('TOO_MANY_ATTEMPTS');
+  });
+
+  it('expires a code after 2 minutes', async () => {
+    freezeClock();
+    const app = buildApp();
+    const { requestId, startToken } = await startLogin(app);
+    const otp = codeIn(await pressStart(startToken));
+
+    expect((await getStatus(app, requestId)).body).toMatchObject({
+      codeExpiresIn: 120,
+      resendIn: 60,
+      attemptsLeft: 3,
+    });
+
+    advanceClock(2 * 60 * 1000);
+    expect((await getStatus(app, requestId)).body.codeExpiresIn).toBe(0);
+    const res = await post(app, '/api/auth/telegram/verify').send({ requestId, otp });
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({
+      code: 'INVALID_CODE',
+      message: 'This code is invalid or has expired.',
+    });
+    expect(await User.countDocuments()).toBe(0);
+  });
+
+  it('resends a new code 60 s after the last send, invalidating the old one', async () => {
+    freezeClock();
+    const app = buildApp();
+    const { requestId, startToken } = await startLogin(app);
+    const oldOtp = codeIn(await pressStart(startToken));
+    const resend = () => post(app, '/api/auth/telegram/resend').send({ requestId });
+    const verify = (otp) => post(app, '/api/auth/telegram/verify').send({ requestId, otp });
+
+    advanceClock(59 * 1000);
+    const early = await resend();
+    expect(early.status).toBe(429);
+    expect(early.body.code).toBe('RESEND_TOO_SOON');
+    expect(app.locals.telegram.outbox).toHaveLength(0);
+
+    // One wrong try, then the resend resets the tries.
+    await verify(oldOtp === '000000' ? '111111' : '000000');
+    advanceClock(1000);
+    const res = await resend();
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      status: 'otp_sent',
+      codeExpiresIn: 120,
+      resendIn: 60,
+      attemptsLeft: 3,
+    });
+    const [message] = app.locals.telegram.outbox;
+    expect(message.chatId).toBe('555000111');
+    expect(message.text).toMatch(/^Your sign-in code is \d{6}\. It expires in 2 minutes\./);
+    const newOtp = codeIn(message.text);
+
+    if (newOtp !== oldOtp) {
+      expect((await verify(oldOtp)).body.code).toBe('INVALID_CODE');
+    }
+    expect((await verify(newOtp)).status).toBe(200);
+  });
+
+  it('allows a resend after 3 wrong tries', async () => {
+    freezeClock();
+    const app = buildApp();
+    const { requestId, startToken } = await startLogin(app);
+    const otp = codeIn(await pressStart(startToken));
+    const wrong = otp === '000000' ? '111111' : '000000';
+    for (let i = 0; i < 3; i += 1) {
+      await post(app, '/api/auth/telegram/verify').send({ requestId, otp: wrong });
+    }
+
+    advanceClock(60 * 1000);
+    const res = await post(app, '/api/auth/telegram/resend').send({ requestId });
+
+    expect(res.body).toMatchObject({ status: 'otp_sent', attemptsLeft: 3 });
+    const newOtp = codeIn(app.locals.telegram.outbox[0].text);
+    const ok = await post(app, '/api/auth/telegram/verify').send({ requestId, otp: newOtp });
+    expect(ok.status).toBe(200);
+  });
+
+  it('does not extend the 10-minute request when resending', async () => {
+    freezeClock();
+    const app = buildApp();
+    const { requestId, startToken } = await startLogin(app);
+    await pressStart(startToken);
+    const resend = () => post(app, '/api/auth/telegram/resend').send({ requestId });
+
+    advanceClock(9 * 60 * 1000);
+    expect((await resend()).status).toBe(200);
+    const before = (await getStatus(app, requestId)).body.expiresAt;
+
+    advanceClock(60 * 1000);
+    expect((await getStatus(app, requestId)).body).toMatchObject({
+      status: 'expired',
+      expiresAt: before,
+    });
+    const late = await resend();
+    expect(late.status).toBe(400);
+    expect(late.body.code).toBe('REQUEST_EXPIRED');
+  });
+
+  it('refuses to resend for a request that never got a code', async () => {
+    const app = buildApp();
+    const { requestId } = await startLogin(app);
+    const res = await post(app, '/api/auth/telegram/resend').send({ requestId });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('REQUEST_EXPIRED');
+  });
+
+  it('limits resend to 20 per hour per IP', async () => {
+    const app = buildApp();
+    for (let i = 0; i < 20; i += 1) {
+      await post(app, '/api/auth/telegram/resend').send({ requestId: `unknown-${i}` });
+    }
+    const res = await post(app, '/api/auth/telegram/resend').send({ requestId: 'unknown' });
+    expect(res.status).toBe(429);
+    expect(res.body.code).toBe('RATE_LIMITED');
+  });
+
+  it('sends at most 5 codes per hour per Telegram ID, counting first sends and resends', async () => {
+    freezeClock();
+    const app = buildApp();
+    const tooMany = 'Too many codes requested. Try again in an hour.';
+
+    // First send on one request, then 3 resends: 4 sends.
+    const first = await startLogin(app);
+    await pressStart(first.startToken);
+    for (let i = 0; i < 3; i += 1) {
+      advanceClock(60 * 1000);
+      await post(app, '/api/auth/telegram/resend').send({ requestId: first.requestId });
+    }
+    // A second request for the same Telegram ID makes the 5th send.
+    const second = await startLogin(app);
+    expect(await pressStart(second.startToken)).toMatch(/^Your sign-in code is/);
+
+    // Over the limit: a resend sends nothing and the request becomes rate_limited.
+    advanceClock(60 * 1000);
+    const sent = app.locals.telegram.outbox.length;
+    const res = await post(app, '/api/auth/telegram/resend').send({
+      requestId: second.requestId,
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('rate_limited');
+    expect(app.locals.telegram.outbox).toHaveLength(sent);
+    expect((await getStatus(app, second.requestId)).body.status).toBe('rate_limited');
+
+    // A new request for that Telegram ID gets no code either.
+    const third = await startLogin(app);
+    expect(await pressStart(third.startToken)).toBe(tooMany);
+    expect((await getStatus(app, third.requestId)).body).toEqual(
+      expect.objectContaining({ status: 'rate_limited' }),
+    );
+    expect((await getStatus(app, third.requestId)).body).not.toHaveProperty('codeExpiresIn');
+
+    // Another Telegram ID is not affected, and an hour later the first one works again.
+    const other = await startLogin(app);
+    expect(await pressStart(other.startToken, { telegramId: '555000222' })).toMatch(
+      /^Your sign-in code is/,
+    );
+    advanceClock(60 * 60 * 1000);
+    const later = await startLogin(app);
+    expect(await pressStart(later.startToken)).toMatch(/^Your sign-in code is/);
+  });
+
   it('validates the verify body', async () => {
     const res = await post(buildApp(), '/api/auth/telegram/verify').send({
       requestId: 'x',
@@ -174,7 +407,7 @@ describe('Telegram sign-in', () => {
     expect(res.status).toBe(429);
   });
 
-  it('refuses a rejected Telegram user without touching their account', async () => {
+  it('sends no code to a rejected Telegram user', async () => {
     const app = buildApp();
     const rejected = await createUser({
       telegramId: '555000111',
@@ -183,7 +416,41 @@ describe('Telegram sign-in', () => {
     });
 
     const { requestId, startToken } = await startLogin(app);
+    const reply = await pressStart(startToken, { username: 'new_handle' });
+
+    expect(reply).toBe('Access denied, contact an admin.');
+    expect(reply).not.toMatch(/\d{6}/);
+    expect((await getStatus(app, requestId)).body.status).toBe('refused');
+    const res = await post(app, '/api/auth/telegram/verify').send({ requestId, otp: '123456' });
+    expect(res.status).toBe(400);
+    expect(parseCookies(res).access_token).toBeUndefined();
+    const stored = await User.findById(rejected._id);
+    expect(stored.telegramUsername).toBe('old_handle');
+  });
+
+  it('refuses a resend once the Telegram user has been rejected', async () => {
+    freezeClock();
+    const app = buildApp();
+    const { requestId, startToken } = await startLogin(app);
+    await pressStart(startToken);
+    await createUser({ telegramId: '555000111', status: 'rejected' });
+
+    advanceClock(60 * 1000);
+    const res = await post(app, '/api/auth/telegram/resend').send({ requestId });
+
+    expect(res.body.status).toBe('refused');
+    expect(app.locals.telegram.outbox).toHaveLength(0);
+  });
+
+  it('refuses a Telegram user rejected after the code was sent', async () => {
+    const app = buildApp();
+    const { requestId, startToken } = await startLogin(app);
     const otp = codeIn(await pressStart(startToken, { username: 'new_handle' }));
+    const rejected = await createUser({
+      telegramId: '555000111',
+      telegramUsername: 'old_handle',
+      status: 'rejected',
+    });
     const res = await post(app, '/api/auth/telegram/verify').send({ requestId, otp });
 
     expect(res.status).toBe(403);

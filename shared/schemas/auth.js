@@ -90,3 +90,5 @@ export const telegramVerifySchema = z.object({
     .trim()
     .regex(/^\d{6}$/, 'Enter the 6-digit code'),
 });
+
+export const telegramResendSchema = z.object({ requestId: telegramRequestIdSchema });

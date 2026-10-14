@@ -38,6 +38,7 @@ export const authLimits = {
   refresh: () => perIp(15 * MINUTE, 100),
   telegramStart: () => perIp(HOUR, 20),
   telegramVerify: () => perIp(15 * MINUTE, 30),
+  telegramResend: () => perIp(HOUR, 20),
   // The sign-in page polls every 2 s.
   telegramStatus: () => perIp(15 * MINUTE, 300),
 };

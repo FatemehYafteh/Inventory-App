@@ -1,23 +1,35 @@
 import { telegramVerifySchema } from '@inventory/shared/schemas';
+import { QRCodeSVG } from 'qrcode.react';
 import { Controller } from 'react-hook-form';
 import { FormAlert } from '@/components/form/FormAlert';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { useSecondsUntil } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import { errorMessage } from '@/lib/errors';
-import { useTelegramStart, useTelegramStatus, useTelegramVerify } from '@/lib/telegram';
+import {
+  useTelegramResend,
+  useTelegramStart,
+  useTelegramStatus,
+  useTelegramVerify,
+} from '@/lib/telegram';
 
 const CODE_LENGTH = 6;
 const codeSchema = telegramVerifySchema.pick({ otp: true });
 // Server errors about the code itself belong on the code field, not in the page alert.
-const CODE_ERRORS = new Set(['INVALID_CODE', 'VALIDATION_ERROR']);
+const CODE_ERRORS = new Set(['INVALID_CODE', 'TOO_MANY_ATTEMPTS', 'VALIDATION_ERROR']);
+// Final statuses the page explains instead of offering a code form.
+const REFUSALS = {
+  refused: 'Access denied, contact an admin.',
+  rate_limited: 'Too many codes requested. Try again in an hour.',
+};
 
 /** "@username", or the display name when the Telegram account has no username. */
 function telegramHandle({ telegramUsername, name }) {
   return telegramUsername ? `@${telegramUsername}` : name || 'you';
 }
 
-function CodeForm({ requestId, handle }) {
+function CodeForm({ requestId }) {
   const verify = useTelegramVerify();
   const {
     control,
@@ -45,7 +57,6 @@ function CodeForm({ requestId, handle }) {
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-      <p className="text-sm">We sent a code to {handle} in Telegram</p>
       <FormAlert>{formError}</FormAlert>
       <Controller
         name="otp"
@@ -84,6 +95,60 @@ function CodeForm({ requestId, handle }) {
     </form>
   );
 }
+/** "1:58" */
+function minutesAndSeconds(seconds) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+/** Asks Telegram for a new code, after the cooldown the server enforces. */
+function ResendButton({ requestId, resendAt }) {
+  const resend = useTelegramResend(requestId);
+  const secondsLeft = useSecondsUntil(resendAt);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => resend.mutate()}
+        disabled={secondsLeft > 0 || resend.isPending}
+      >
+        {resend.isPending
+          ? 'Sending…'
+          : secondsLeft > 0
+            ? `Send a new code in ${secondsLeft}s`
+            : 'Send a new code'}
+      </Button>
+      <FormAlert>{errorMessage(resend.error)}</FormAlert>
+    </div>
+  );
+}
+
+/** The code sent to Telegram: entry form, expiry countdown and resend. */
+function CodeStep({ requestId, status }) {
+  const codeSecondsLeft = useSecondsUntil(status.codeExpiresAt);
+  const tooManyWrong = status.attemptsLeft === 0;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm">We sent a code to {telegramHandle(status)} in Telegram</p>
+      {tooManyWrong ? (
+        <FormAlert>Too many wrong codes.</FormAlert>
+      ) : codeSecondsLeft === 0 ? (
+        <FormAlert>This code has expired.</FormAlert>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Code expires in {minutesAndSeconds(codeSecondsLeft)}
+          </p>
+          <CodeForm requestId={requestId} />
+        </>
+      )}
+      <ResendButton requestId={requestId} resendAt={status.resendAt} />
+    </div>
+  );
+}
+
 /** Telegram sign-in on the Login and Register pages (sign-in and sign-up are one flow). */
 export function TelegramSignIn() {
   const start = useTelegramStart();
@@ -113,8 +178,13 @@ export function TelegramSignIn() {
     );
   }
 
+  if (REFUSALS[current]) {
+    return <FormAlert>{REFUSALS[current]}</FormAlert>;
+  }
+
   if (current === 'otp_sent') {
-    return <CodeForm requestId={requestId} handle={telegramHandle(status.data)} />;
+    // Remount for each new code so the form starts empty (polls keep what was typed).
+    return <CodeStep key={status.data.codeSentAt} requestId={requestId} status={status.data} />;
   }
 
   return (
@@ -127,6 +197,16 @@ export function TelegramSignIn() {
       <p className="text-sm text-muted-foreground">
         Press Start in Telegram, then come back here for your code.
       </p>
+      {/* For people with Telegram only on their phone. */}
+      <div data-qr className="hidden flex-col items-center gap-2 pt-2 md:flex">
+        <QRCodeSVG
+          value={start.data.deepLink}
+          size={160}
+          role="img"
+          aria-label="QR code to open Telegram on your phone"
+        />
+        <p className="text-xs text-muted-foreground">Or scan with your phone camera.</p>
+      </div>
     </div>
   );
 }

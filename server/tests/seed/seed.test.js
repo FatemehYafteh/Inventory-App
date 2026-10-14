@@ -10,7 +10,8 @@ import { Product, stockStatus } from '../../src/models/Product.js';
 import { StockMovement } from '../../src/models/StockMovement.js';
 import { Supplier } from '../../src/models/Supplier.js';
 import { User } from '../../src/models/User.js';
-import { ORIGIN, buildApp, useTestDatabase } from '../helpers/setup.js';
+import { handleStart } from '../../src/services/telegramAuth.service.js';
+import { ORIGIN, buildApp, testConfig, useTestDatabase } from '../helpers/setup.js';
 
 useTestDatabase();
 
@@ -111,6 +112,25 @@ describe('seedDatabase', () => {
 
     const telegramIds = seeded.map((user) => user.telegramId).filter(Boolean);
     expect(new Set(telegramIds).size).toBe(telegramIds.length);
+  });
+
+  it('seeds a rejected Telegram user, who gets no code', async () => {
+    await seedDatabase({ now });
+    const rejected = await User.findOne({ status: 'rejected', telegramId: { $exists: true } });
+    expect(rejected).not.toBeNull();
+    expect(rejected.statusChangedBy).toBeDefined();
+
+    const app = buildApp();
+    const start = await request(app)
+      .post('/api/auth/telegram/start')
+      .set('Origin', ORIGIN)
+      .set('X-Requested-With', 'XMLHttpRequest');
+    const startToken = new URL(start.body.deepLink).searchParams.get('start');
+    const reply = await handleStart(
+      { startToken, telegramId: rejected.telegramId, firstName: 'Rita' },
+      testConfig,
+    );
+    expect(reply).toBe('Access denied, contact an admin.');
   });
 
   it('creates accounts that work with the real login', async () => {

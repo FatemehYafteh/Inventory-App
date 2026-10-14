@@ -18,6 +18,16 @@ const placeholderUser = {
   profileComplete: false,
 };
 
+const codeSent = {
+  status: 'otp_sent',
+  telegramUsername: 'nina_n',
+  name: 'Nina Novak',
+  codeSentAt: '2026-10-14T10:00:00.000Z',
+  codeExpiresIn: 120,
+  resendIn: 60,
+  attemptsLeft: 3,
+};
+
 /** Status answers in order; the last one repeats. */
 function telegramHandlers(statuses, verifiedUser) {
   let call = 0;
@@ -46,13 +56,7 @@ function telegramHandlers(statuses, verifiedUser) {
 
 describe('Continue with Telegram', () => {
   it('signs a new Telegram user in and sends them to Complete profile', async () => {
-    const verifyBodies = telegramHandlers(
-      [
-        { status: 'pending' },
-        { status: 'otp_sent', telegramUsername: 'nina_n', name: 'Nina Novak' },
-      ],
-      placeholderUser,
-    );
+    const verifyBodies = telegramHandlers([{ status: 'pending' }, codeSent], placeholderUser);
     const user = userEvent.setup();
     renderApp({ route: '/login' });
 
@@ -75,7 +79,7 @@ describe('Continue with Telegram', () => {
   });
 
   it('shows a rejected code on the code field and stays on the page', async () => {
-    telegramHandlers([{ status: 'otp_sent', telegramUsername: 'nina_n', name: 'Nina Novak' }]);
+    telegramHandlers([codeSent]);
     server.use(
       http.post('*/api/auth/telegram/verify', () =>
         HttpResponse.json(
@@ -97,7 +101,7 @@ describe('Continue with Telegram', () => {
   });
 
   it('names the person when they have no Telegram username', async () => {
-    telegramHandlers([{ status: 'otp_sent', telegramUsername: null, name: 'Nina Novak' }]);
+    telegramHandlers([{ ...codeSent, telegramUsername: null }]);
     const user = userEvent.setup();
     renderApp({ route: '/login' });
 
@@ -115,6 +119,103 @@ describe('Continue with Telegram', () => {
 
     expect(await screen.findByText('This sign-in link has expired.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start again' })).toBeInTheDocument();
+  });
+
+  it('shows a QR code of the deep link from the md breakpoint up', async () => {
+    telegramHandlers([{ status: 'pending' }]);
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+
+    await user.click(await screen.findByRole('button', { name: 'Continue with Telegram' }));
+
+    const qr = await screen.findByRole('img', { name: 'QR code to open Telegram on your phone' });
+    expect(qr.closest('[data-qr]')).toHaveClass('hidden', 'md:flex');
+  });
+
+  it('counts down the code expiry and the resend button, then resends', async () => {
+    telegramHandlers([{ ...codeSent, codeExpiresIn: 118, resendIn: 0 }]);
+    let resends = 0;
+    server.use(
+      http.post('*/api/auth/telegram/resend', async ({ request }) => {
+        resends += 1;
+        expect(await request.json()).toEqual({ requestId: 'req-1' });
+        return HttpResponse.json({
+          ...codeSent,
+          codeSentAt: '2026-10-14T10:01:00.000Z',
+          codeExpiresIn: 120,
+          resendIn: 60,
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+
+    await user.click(await screen.findByRole('button', { name: 'Continue with Telegram' }));
+    expect(await screen.findByText('Code expires in 1:58')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Send a new code' }));
+
+    expect(await screen.findByRole('button', { name: 'Send a new code in 60s' })).toBeDisabled();
+    expect(screen.getByText('Code expires in 2:00')).toBeInTheDocument();
+    expect(resends).toBe(1);
+  });
+
+  it('tells the person when the code has expired', async () => {
+    telegramHandlers([{ ...codeSent, codeExpiresIn: 0, resendIn: 0 }]);
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+
+    await user.click(await screen.findByRole('button', { name: 'Continue with Telegram' }));
+
+    expect(await screen.findByText('This code has expired.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Send a new code' })).toBeEnabled();
+  });
+
+  it('shows the tries left, then "Too many wrong codes" with the resend countdown', async () => {
+    const statuses = [{ ...codeSent, attemptsLeft: 1, resendIn: 40 }];
+    telegramHandlers(statuses);
+    server.use(
+      http.post('*/api/auth/telegram/verify', () => {
+        statuses[0] = { ...codeSent, attemptsLeft: 0, resendIn: 40 };
+        return HttpResponse.json(
+          { message: 'Too many wrong codes.', code: 'TOO_MANY_ATTEMPTS' },
+          { status: 400 },
+        );
+      }),
+    );
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+
+    await user.click(await screen.findByRole('button', { name: 'Continue with Telegram' }));
+    await user.type(await screen.findByLabelText('Code from Telegram'), '000000');
+    await user.click(screen.getByRole('button', { name: 'Verify' }));
+
+    expect(await screen.findByText('Too many wrong codes.')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Code from Telegram')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Send a new code in 40s' })).toBeDisabled();
+  });
+
+  it('shows the generic refusal to a rejected Telegram user', async () => {
+    telegramHandlers([{ status: 'refused' }]);
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+
+    await user.click(await screen.findByRole('button', { name: 'Continue with Telegram' }));
+
+    expect(await screen.findByText('Access denied, contact an admin.')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Code from Telegram')).not.toBeInTheDocument();
+  });
+
+  it('tells the person when too many codes were requested', async () => {
+    telegramHandlers([{ status: 'rate_limited' }]);
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+
+    await user.click(await screen.findByRole('button', { name: 'Continue with Telegram' }));
+
+    expect(
+      await screen.findByText('Too many codes requested. Try again in an hour.'),
+    ).toBeInTheDocument();
   });
 
   it('is offered on the Register page too', async () => {

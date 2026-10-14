@@ -5,15 +5,20 @@ import { csrf } from './middleware/csrf.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { createMailer } from './services/mail.service.js';
+import { createTelegramMessenger } from './services/telegram.service.js';
 
 /**
  * Builds the Express app. No CORS middleware on purpose: the client is served from the same
  * site, so cross-origin requests get no CORS headers and browsers block them.
  */
-export function createApp(config, { mailer = createMailer(config) } = {}) {
+export function createApp(
+  config,
+  { mailer = createMailer(config), telegram = createTelegramMessenger(config) } = {},
+) {
   const app = express();
   app.locals.config = config;
   app.locals.mailer = mailer;
+  app.locals.telegram = telegram;
 
   app.disable('x-powered-by');
   app.use(helmet());
