@@ -4,7 +4,7 @@ import { ME_QUERY_KEY } from './auth';
 
 const POLL_MS = 2000;
 // Statuses after which the request can no longer change, so polling stops.
-const FINAL_STATUSES = new Set(['verified', 'refused', 'rate_limited', 'expired']);
+const FINAL_STATUSES = new Set(['verified', 'refused', 'rate_limited', 'locked', 'expired']);
 
 function statusKey(requestId) {
   return ['auth', 'telegram', 'status', requestId];
@@ -25,10 +25,13 @@ function withDeadlines(status) {
 }
 
 function useStartRequest(path) {
-  return useMutation({ mutationFn: () => api(path, { method: 'POST' }) });
+  return useMutation({ mutationFn: (body) => api(path, { method: 'POST', body }) });
 }
 
-/** Continue with Telegram: creates a sign-in request and returns `{ requestId, deepLink }`. */
+/**
+ * Continue with Telegram: creates a sign-in request and returns `{ requestId, deepLink }`.
+ * After a wrong code, `mutate({ previousRequestId })` replaces that request with a new one.
+ */
 export function useTelegramStart() {
   return useStartRequest('/auth/telegram/start');
 }

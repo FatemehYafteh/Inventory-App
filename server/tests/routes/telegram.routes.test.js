@@ -266,7 +266,7 @@ describe('Telegram sign-in', () => {
     expect(early.body.code).toBe('RESEND_TOO_SOON');
     expect(app.locals.telegram.outbox).toHaveLength(0);
 
-    // One wrong try, then the resend resets the tries.
+    // One wrong try, which the resend does not give back.
     await verify(oldOtp === '000000' ? '111111' : '000000');
     advanceClock(1000);
     const res = await resend();
@@ -275,7 +275,7 @@ describe('Telegram sign-in', () => {
       status: 'otp_sent',
       codeExpiresIn: 120,
       resendIn: 60,
-      attemptsLeft: 3,
+      attemptsLeft: 2,
     });
     const [message] = app.locals.telegram.outbox;
     expect(message.chatId).toBe('555000111');
@@ -288,7 +288,7 @@ describe('Telegram sign-in', () => {
     expect((await verify(newOtp)).status).toBe(200);
   });
 
-  it('allows a resend after 3 wrong tries', async () => {
+  it('sends no new code after 3 wrong tries', async () => {
     freezeClock();
     const app = buildApp();
     const { requestId, startToken } = await startLogin(app);
@@ -301,10 +301,100 @@ describe('Telegram sign-in', () => {
     advanceClock(60 * 1000);
     const res = await post(app, '/api/auth/telegram/resend').send({ requestId });
 
-    expect(res.body).toMatchObject({ status: 'otp_sent', attemptsLeft: 3 });
-    const newOtp = codeIn(app.locals.telegram.outbox[0].text);
-    const ok = await post(app, '/api/auth/telegram/verify').send({ requestId, otp: newOtp });
-    expect(ok.status).toBe(200);
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('TOO_MANY_ATTEMPTS');
+    expect(app.locals.telegram.outbox).toHaveLength(0);
+  });
+
+  describe('starting again after a wrong code', () => {
+    const wrongFor = (otp) => (otp === '000000' ? '111111' : '000000');
+    const verify = (app, requestId, otp) =>
+      post(app, '/api/auth/telegram/verify').send({ requestId, otp });
+    const restart = (app, previousRequestId) =>
+      post(app, '/api/auth/telegram/start').send({ previousRequestId });
+
+    /** Starts again from `previousRequestId` and presses Start; returns the new request. */
+    async function retry(app, previousRequestId) {
+      const res = await restart(app, previousRequestId);
+      expect(res.status).toBe(201);
+      const startToken = new URL(res.body.deepLink).searchParams.get('start');
+      return { requestId: res.body.requestId, reply: await pressStart(startToken) };
+    }
+
+    it('gives a 5-minute link that keeps the tries, and locks after 3 in all', async () => {
+      freezeClock();
+      const app = buildApp();
+      const first = await startLogin(app);
+      const firstOtp = codeIn(await pressStart(first.startToken));
+      expect((await verify(app, first.requestId, wrongFor(firstOtp))).body.message).toBe(
+        'Wrong code. 2 tries left.',
+      );
+
+      const second = await retry(app, first.requestId);
+      // The replaced request and its code stop working.
+      expect((await getStatus(app, first.requestId)).body.status).toBe('expired');
+      expect((await verify(app, first.requestId, firstOtp)).body.code).toBe('INVALID_CODE');
+      const status = (await getStatus(app, second.requestId)).body;
+      expect(status).toMatchObject({ status: 'otp_sent', attemptsLeft: 2 });
+      expect(new Date(status.expiresAt).getTime()).toBe(Date.now() + 5 * 60 * 1000);
+
+      const secondOtp = codeIn(second.reply);
+      expect((await verify(app, second.requestId, wrongFor(secondOtp))).body.message).toBe(
+        'Wrong code. 1 try left.',
+      );
+      const third = await retry(app, second.requestId);
+      const thirdOtp = codeIn(third.reply);
+      expect((await verify(app, third.requestId, wrongFor(thirdOtp))).body.code).toBe(
+        'TOO_MANY_ATTEMPTS',
+      );
+      expect((await verify(app, third.requestId, thirdOtp)).body.code).toBe('TOO_MANY_ATTEMPTS');
+
+      // A new link (even without previousRequestId) is refused for this Telegram ID...
+      const blocked = await startLogin(app);
+      expect(await pressStart(blocked.startToken)).toBe(
+        'Too many wrong codes. Try again later.',
+      );
+      expect((await getStatus(app, blocked.requestId)).body.status).toBe('locked');
+      expect(app.locals.telegram.outbox).toHaveLength(0);
+      expect(await User.countDocuments()).toBe(0);
+
+      // ...until the first request would have expired.
+      advanceClock(10 * 60 * 1000);
+      const fresh = await startLogin(app);
+      expect(await pressStart(fresh.startToken)).toMatch(/Your sign-in code is \d{6}\./);
+      expect((await getStatus(app, fresh.requestId)).body.attemptsLeft).toBe(3);
+    });
+
+    it('starts the tries over after a verified sign-in', async () => {
+      const app = buildApp();
+      const first = await startLogin(app);
+      await verify(app, first.requestId, wrongFor(codeIn(await pressStart(first.startToken))));
+      const second = await retry(app, first.requestId);
+      expect((await verify(app, second.requestId, codeIn(second.reply))).status).toBe(200);
+
+      const next = await startLogin(app);
+      await pressStart(next.startToken);
+      expect((await getStatus(app, next.requestId)).body.attemptsLeft).toBe(3);
+    });
+
+    it('replaces nothing when the previous request had no wrong try', async () => {
+      freezeClock();
+      const app = buildApp();
+      const first = await startLogin(app);
+      const otp = codeIn(await pressStart(first.startToken));
+
+      const res = await restart(app, first.requestId);
+      expect(res.status).toBe(201);
+      const status = (await getStatus(app, res.body.requestId)).body;
+      expect(new Date(status.expiresAt).getTime()).toBe(Date.now() + 10 * 60 * 1000);
+      expect((await verify(app, first.requestId, otp)).status).toBe(200);
+    });
+
+    it('rejects an invalid previousRequestId', async () => {
+      const res = await restart(buildApp(), 'x'.repeat(101));
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+    });
   });
 
   it('does not extend the 10-minute request when resending', async () => {

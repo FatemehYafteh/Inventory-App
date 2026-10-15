@@ -110,7 +110,10 @@ export async function resetPassword(req, res) {
 }
 
 export async function telegramStart(req, res) {
-  const result = await telegramAuth.startLogin(requestMeta(req), req.app.locals.config);
+  const result = await telegramAuth.startLogin(
+    { ...requestMeta(req), previousRequestId: req.body.previousRequestId },
+    req.app.locals.config,
+  );
   res.status(201).json(result);
 }
 

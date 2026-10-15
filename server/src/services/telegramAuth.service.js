@@ -9,6 +9,8 @@ import { startSession } from './auth.service.js';
 import { revokeAllForUser } from './token.service.js';
 
 export const REQUEST_TTL_MS = 10 * 60 * 1000;
+// A sign-in request started again after a wrong code.
+export const RETRY_REQUEST_TTL_MS = 5 * 60 * 1000;
 export const OTP_TTL_MS = 2 * 60 * 1000;
 export const MAX_OTP_ATTEMPTS = 3;
 export const RESEND_AFTER_MS = 60 * 1000;
@@ -21,6 +23,7 @@ export const START_REPLIES = {
   help: 'To sign in, open the sign-in page and press Continue with Telegram.',
   refused: 'Access denied, contact an admin.',
   rate_limited: 'Too many codes requested. Try again in an hour.',
+  locked: 'Too many wrong codes. Try again later.',
 };
 
 function codeMessage(code, purpose, config) {
@@ -105,9 +108,40 @@ async function findVisibleRequest(filter, viewer) {
   return request.connectUser?.equals(viewer._id) ? request : null;
 }
 
-/** Continue with Telegram: creates the request and the deep link the browser opens. */
-export function startLogin(meta, config, options) {
-  return startRequest({ ...meta, purpose: 'login' }, config, options);
+/**
+ * Continue with Telegram: creates the request and the deep link the browser opens. With
+ * `previousRequestId` (the sign-in page starting again after a wrong code), that request stops
+ * working and the new one lasts 5 minutes; its tries carry over when Start is pressed.
+ */
+export async function startLogin({ previousRequestId, ...meta }, config, options) {
+  const replaced =
+    previousRequestId &&
+    (await AuthRequest.findOneAndUpdate(
+      {
+        requestId: previousRequestId,
+        purpose: 'login',
+        status: 'otp_sent',
+        attempts: { $gt: 0, $lt: MAX_OTP_ATTEMPTS },
+        expiresAt: { $gt: new Date() },
+      },
+      { $set: { status: 'expired' }, $unset: { otpHash: 1 } },
+    ));
+  const ttlMs = replaced ? RETRY_REQUEST_TTL_MS : REQUEST_TTL_MS;
+  return startRequest({ ...meta, purpose: 'login', ttlMs }, config, options);
+}
+
+/**
+ * Sign-in only: the wrong tries a Telegram ID has used and when they stop counting, or null.
+ * Only its latest sign-in request counts, so a verified sign-in starts the tries over.
+ */
+async function carriedTries(telegramId, now) {
+  const last = await AuthRequest.findOne({ telegramId, purpose: 'login' })
+    .sort({ createdAt: -1 })
+    .select('status attempts triesUntil');
+  if (!last || last.status === 'verified' || !last.attempts || !(last.triesUntil > now)) {
+    return null;
+  }
+  return { attempts: last.attempts, triesUntil: last.triesUntil };
 }
 
 function telegramAlreadyConnected() {
@@ -121,7 +155,7 @@ export function startConnect(user, meta, config, options) {
 }
 
 async function startRequest(
-  { purpose, connectUser, ip, userAgent },
+  { purpose, connectUser, ip, userAgent, ttlMs = REQUEST_TTL_MS },
   config,
   { logger = console } = {},
 ) {
@@ -139,7 +173,7 @@ async function startRequest(
     startTokenHash: hashToken(startToken, config.jwt.refreshSecret),
     ip,
     userAgent,
-    expiresAt: new Date(Date.now() + REQUEST_TTL_MS),
+    expiresAt: new Date(Date.now() + ttlMs),
   });
   if (!config.telegram.botToken && config.nodeEnv === 'development') {
     // No bot in development: show how to press Start by hand.
@@ -168,7 +202,7 @@ export async function handleStart(
   const startTokenHash = hashToken(startToken, config.jwt.refreshSecret);
   const now = new Date();
   const pending = { startTokenHash, status: 'pending', expiresAt: { $gt: now } };
-  const request = await AuthRequest.findOne(pending).select('purpose');
+  const request = await AuthRequest.findOne(pending).select('purpose expiresAt');
   if (!request) return START_REPLIES.expired;
 
   const identity = {
@@ -176,7 +210,14 @@ export async function handleStart(
     telegramUsername: username || undefined,
     name: telegramName(firstName, lastName),
   };
-  const refusal = await sendRefusal(identity.telegramId, request.purpose, now);
+  // Sign-in: wrong tries count across new links until the first one would have expired.
+  if (request.purpose === 'login') {
+    const carried = await carriedTries(identity.telegramId, now);
+    identity.attempts = carried?.attempts ?? 0;
+    identity.triesUntil = carried?.triesUntil ?? request.expiresAt;
+  }
+  let refusal = await sendRefusal(identity.telegramId, request.purpose, now);
+  if (!refusal && identity.attempts >= MAX_OTP_ATTEMPTS) refusal = 'locked';
   if (refusal) {
     const claimed = await AuthRequest.findOneAndUpdate(pending, {
       $set: { ...identity, status: refusal },
@@ -191,7 +232,7 @@ export async function handleStart(
   return claimed ? codeMessage(code, request.purpose, config) : START_REPLIES.expired;
 }
 
-/** A new code for a request, and the update that stores it (old code out, tries reset). */
+/** A new code for a request, and the update that stores it (old code out). */
 function codeSend(startTokenHash, now, config) {
   const code = newCode();
   return {
@@ -200,7 +241,6 @@ function codeSend(startTokenHash, now, config) {
       $set: {
         otpHash: hashOtp(startTokenHash, code, config),
         otpExpiresAt: new Date(now.getTime() + OTP_TTL_MS),
-        attempts: 0,
         lastSentAt: now,
       },
       $inc: { sendCount: 1 },
@@ -209,8 +249,9 @@ function codeSend(startTokenHash, now, config) {
 }
 
 /**
- * Sends a new code 60 s after the last send (also after 3 wrong tries). The old code stops
- * working and the tries start over; the 10-minute request is not extended.
+ * Sends a new code 60 s after the last send; the old code stops working and the request is
+ * not extended. Connect Telegram: also after 3 wrong tries, and the tries start over.
+ * Sign-in: the tries carry on, and after 3 wrong tries there is no new code.
  */
 export async function resendCode({ requestId }, config, { messenger, viewer }) {
   const now = new Date();
@@ -221,6 +262,8 @@ export async function resendCode({ requestId }, config, { messenger, viewer }) {
   if (!request) {
     throw new AppError(400, 'REQUEST_EXPIRED', 'This link has expired. Start again.');
   }
+  const login = request.purpose === 'login';
+  if (login && request.attempts >= MAX_OTP_ATTEMPTS) throw tooManyWrongCodes();
   if (now - request.lastSentAt < RESEND_AFTER_MS) throw resendTooSoon();
 
   const refusal = await sendRefusal(request.telegramId, request.purpose, now);
@@ -233,9 +276,16 @@ export async function resendCode({ requestId }, config, { messenger, viewer }) {
   }
 
   const { code, update } = codeSend(request.startTokenHash, now, config);
-  // Conditional on the last send, so two resends at once send only one code.
+  if (!login) update.$set.attempts = 0;
+  // Conditional on the last send (and, for sign-in, the tries), so two resends at once send
+  // only one code and a resend never races past a third wrong try.
   const updated = await AuthRequest.findOneAndUpdate(
-    { _id: request._id, status: 'otp_sent', lastSentAt: request.lastSentAt },
+    {
+      _id: request._id,
+      status: 'otp_sent',
+      lastSentAt: request.lastSentAt,
+      ...(login && { attempts: { $lt: MAX_OTP_ATTEMPTS } }),
+    },
     update,
     { new: true },
   );

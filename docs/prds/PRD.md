@@ -168,8 +168,8 @@ Login and signup are the same flow. If the Telegram ID already belongs to a user
 
 **OTP policy**
 - 6 digits, generated with a cryptographically secure RNG, stored hashed, single use.
-- Expires in 2 minutes; 3 wrong attempts invalidate that code (the user must request a new one).
-- Resend (`POST /auth/telegram/resend`) allowed 60 seconds after the last send, also after 3 wrong attempts (the bot sends a new code, the old one is invalidated, and the attempt counter resets). Resending does not extend the 10-minute request. The UI shows a countdown for expiry and for the resend button.
+- Expires in 2 minutes. Login: after a wrong code the page starts again with a new 5-minute link; the 3 wrong attempts count across those links per Telegram ID, and the 3rd ends the flow until the first request would have expired (details in sub-PRD 03). Connect: 3 wrong attempts invalidate that code (the user must request a new one).
+- Resend (`POST /auth/telegram/resend`) allowed 60 seconds after the last send (the bot sends a new code and the old one is invalidated). Login keeps the attempt count and offers no resend after 3 wrong attempts; connect also allows it after 3 wrong attempts and resets the count. Resending does not extend the 10-minute request. The UI shows a countdown for expiry and for the resend button.
 - Rate limits: per IP on `/start`, `/verify`, `/resend` and `/status`, and at most 5 OTP sends per hour per Telegram ID (numbers in sub-PRD 03). Over the per-Telegram-ID limit no OTP is sent, the request becomes `rate_limited`, and the page says to try again in an hour.
 - Rejected users are refused with a generic message and no OTP is sent; the request becomes `refused` and the page shows the generic refusal.
 

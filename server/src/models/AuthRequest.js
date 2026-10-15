@@ -7,6 +7,7 @@ export const AUTH_REQUEST_STATUSES = [
   'verified',
   'refused',
   'rate_limited',
+  'locked',
   'expired',
 ];
 
@@ -31,6 +32,9 @@ const authRequestSchema = new mongoose.Schema(
     // The request stops working at expiresAt; the document stays an hour so code sends
     // can be counted per Telegram ID.
     expiresAt: { type: Date, required: true },
+    // Sign-in only: a new link after a wrong code keeps the tries of the request it replaces,
+    // per Telegram ID, until the first request of that chain would have expired.
+    triesUntil: Date,
   },
   { timestamps: { createdAt: true, updatedAt: false } },
 );

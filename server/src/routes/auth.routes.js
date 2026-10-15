@@ -8,6 +8,7 @@ import {
   resendVerificationSchema,
   resetPasswordSchema,
   telegramResendSchema,
+  telegramStartSchema,
   telegramVerifySchema,
   updateProfileSchema,
   verifyEmailSchema,
@@ -60,7 +61,12 @@ export function authRoutes(config) {
     auth.resetPassword,
   );
 
-  router.post('/telegram/start', authLimits.telegramStart(), auth.telegramStart);
+  router.post(
+    '/telegram/start',
+    authLimits.telegramStart(),
+    validate(telegramStartSchema),
+    auth.telegramStart,
+  );
   // Shared by sign-in and Connect Telegram; a connect request is visible only to its user.
   router.get(
     '/telegram/status',

@@ -83,6 +83,11 @@ export const telegramRequestIdSchema = z
 
 export const telegramStatusQuerySchema = z.object({ requestId: telegramRequestIdSchema });
 
+/** Continue with Telegram; after a wrong code, the request the new one replaces. */
+export const telegramStartSchema = z.object({
+  previousRequestId: telegramRequestIdSchema.optional(),
+});
+
 export const telegramVerifySchema = z.object({
   requestId: telegramRequestIdSchema,
   otp: z
