@@ -15,7 +15,7 @@ Requires Node 20.6+.
 ```sh
 npm install
 cp server/.env.example server/.env   # then fill in the two JWT secrets
-npm run dev                          # MongoDB replica set on :27018, API on :4000, web app on http://localhost:5173
+npm run dev                          # MongoDB replica set on :27018, API on :4000, web app on http://127.0.0.1:5173
 npm run seed -w server               # demo data for every model (see below), in a second terminal while dev runs
 ```
 
