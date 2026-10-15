@@ -64,6 +64,20 @@ With no SMTP configured in development, `mail.service` logs emails (and their li
 
 Issues are tracked in GitHub Issues for `FatemehYafteh/Inventory-App`, using the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
+### Building tickets
+
+Tickets are built one at a time with `/mattpocock-skills:implement #<issue>`, each in a fresh session (`/clear` between tickets), until every ticket is done. There is no code review per ticket. After the last ticket, one fresh session runs `/mattpocock-skills:code-review` over all the changes. Don't change this workflow, and don't skip a ticket unless it is genuinely blocked.
+
+`scripts/implement-all.sh [--base <ref>] [<issue>...]` runs this unattended: one `claude -p` session per issue, then one review session. With no issues given, it takes every open issue without a `(#<issue>)` commit on the branch, in number order. It needs a clean tree on a feature branch. A ticket whose session ends with `BLOCKED: <reason>` and changes nothing is skipped; any other failure stops the run. Logs and the review report go to `logs/tickets/<timestamp>/`.
+
+When implementing a ticket in this flow:
+- Implement only that ticket's scope.
+- Skip the implement skill's code-review step.
+- If the ticket is genuinely blocked, change nothing and end the reply with `BLOCKED: <reason>`.
+- Run `npm run lint` and `npm test` before committing.
+- Make one commit per ticket on the current branch, titled `feat: <issue title> (#<issue>)`.
+- Don't push, open a PR, or close the issue. Issues close when the milestone PR merges.
+
 ### Domain docs
 
 Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
