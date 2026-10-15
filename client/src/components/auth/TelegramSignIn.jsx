@@ -1,5 +1,6 @@
 import { telegramVerifySchema } from '@inventory/shared/schemas';
 import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { FormAlert } from '@/components/form/FormAlert';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { useSecondsUntil } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import { errorMessage } from '@/lib/errors';
+import { cn } from '@/lib/utils';
 import {
   useTelegramConnectStart,
   useTelegramConnectVerify,
@@ -24,30 +26,80 @@ const CODE_ERRORS = new Set(['INVALID_CODE', 'TOO_MANY_ATTEMPTS', 'VALIDATION_ER
 const REFUSALS = {
   refused: 'Access denied, contact an admin.',
   rate_limited: 'Too many codes requested. Try again in an hour.',
+  locked: 'Too many wrong codes. Try again later.',
 };
+// How long a wrong code stays on screen before sign-in starts again with a new link.
+const RESTART_DELAY_MS = 1000;
 
-// The two uses of the deep-link + code flow differ only in endpoints and wording.
+// The two uses of the deep-link + code flow differ in endpoints, wording and wrong codes:
+// sign-in starts again with a new link after each one (the tries carry over, 3 in all);
+// Connect Telegram keeps the code form and offers a new code after 3.
 const FLOWS = {
   login: {
     useStart: useTelegramStart,
     useVerify: useTelegramVerify,
     startLabel: 'Continue with Telegram',
     expired: 'This sign-in link has expired.',
+    restartOnWrongCode: true,
+    // Sign-in explains the way in; Connect Telegram is one step in a settings page.
+    guided: true,
   },
   connect: {
     useStart: useTelegramConnectStart,
     useVerify: useTelegramConnectVerify,
     startLabel: 'Connect Telegram',
     expired: 'This link has expired.',
+    restartOnWrongCode: false,
+    guided: false,
   },
 };
+
+const STEPS = ['Open the chat and press Start', 'Enter the 6-digit code we send you'];
+
+/**
+ * The way in, as a short list. `active` is the step the person is on (1 or 2); 0 means they
+ * have not started, and steps before the active one show as done.
+ */
+function Steps({ active }) {
+  return (
+    <ol className="flex flex-col gap-2 text-sm">
+      {STEPS.map((label, index) => {
+        const number = index + 1;
+        const done = number < active;
+        const current = number === active;
+        return (
+          <li
+            key={label}
+            aria-current={current ? 'step' : undefined}
+            className="flex items-center gap-3"
+          >
+            <span
+              aria-hidden="true"
+              className={cn(
+                'flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-medium',
+                (done || current) && 'border-primary bg-primary text-primary-foreground',
+              )}
+            >
+              {done ? '✓' : number}
+            </span>
+            <span
+              className={cn(!current && !done && 'text-muted-foreground', current && 'font-medium')}
+            >
+              {label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 /** "@username", or the display name when the Telegram account has no username. */
 function telegramHandle({ telegramUsername, name }) {
   return telegramUsername ? `@${telegramUsername}` : name || 'you';
 }
 
-function CodeForm({ requestId, useVerify }) {
+function CodeForm({ requestId, useVerify, onWrongCode }) {
   const verify = useVerify();
   const {
     control,
@@ -66,6 +118,7 @@ function CodeForm({ requestId, useVerify }) {
           if (CODE_ERRORS.has(error.code)) {
             setError('otp', { message: error.errors?.otp ?? error.message });
           }
+          if (error.code === 'INVALID_CODE') onWrongCode?.(error.message);
         },
       },
     );
@@ -143,10 +196,17 @@ function ResendButton({ requestId, resendAt }) {
   );
 }
 
-/** The code sent to Telegram: entry form, expiry countdown and resend. */
-function CodeStep({ requestId, status, useVerify }) {
+/**
+ * The code sent to Telegram: entry form, expiry countdown and resend. With `onWrongCode`
+ * (sign-in), 3 wrong tries end the flow: no new code is offered.
+ */
+function CodeStep({ requestId, status, useVerify, onWrongCode }) {
   const codeSecondsLeft = useSecondsUntil(status.codeExpiresAt);
   const tooManyWrong = status.attemptsLeft === 0;
+
+  if (tooManyWrong && onWrongCode) {
+    return <FormAlert>{REFUSALS.locked}</FormAlert>;
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -160,7 +220,7 @@ function CodeStep({ requestId, status, useVerify }) {
           <p className="text-sm text-muted-foreground">
             Code expires in {minutesAndSeconds(codeSecondsLeft)}
           </p>
-          <CodeForm requestId={requestId} useVerify={useVerify} />
+          <CodeForm requestId={requestId} useVerify={useVerify} onWrongCode={onWrongCode} />
         </>
       )}
       <ResendButton requestId={requestId} resendAt={status.resendAt} />
@@ -183,15 +243,54 @@ function TelegramFlow({ flow }) {
   const requestId = start.data?.requestId;
   const status = useTelegramStatus(requestId);
   const current = status.data?.status;
+  // Sign-in after a wrong code: `{ requestId, message }` of the request being replaced.
+  const [wrongCode, setWrongCode] = useState(null);
+  const restart = start.mutate;
+
+  useEffect(() => {
+    if (!wrongCode || wrongCode.requestId !== requestId) return undefined;
+    const timer = setTimeout(
+      () => restart({ previousRequestId: wrongCode.requestId }),
+      RESTART_DELAY_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [wrongCode, requestId, restart]);
+
+  // Shown until the new link's code arrives.
+  const notice = wrongCode && wrongCode.requestId !== requestId ? wrongCode.message : null;
+  const onWrongCode = flow.restartOnWrongCode
+    ? (message) => setWrongCode({ requestId, message })
+    : undefined;
+  const startOver = () => {
+    setWrongCode(null);
+    start.mutate();
+  };
+
+  // The steps above the working states: before starting, waiting for Start, entering the code.
+  const guide = (active, content) =>
+    flow.guided ? (
+      <div className="flex flex-col gap-4">
+        <Steps active={active} />
+        {content}
+      </div>
+    ) : (
+      content
+    );
 
   if (!start.data) {
-    return (
+    return guide(
+      0,
       <div className="flex flex-col gap-2">
-        <FormAlert>{start.error && errorMessage(start.error)}</FormAlert>
-        <Button type="button" onClick={() => start.mutate()} disabled={start.isPending}>
+        {flow.guided && (
+          <p className="text-sm text-muted-foreground">
+            Sign in or create an account with Telegram. No password needed.
+          </p>
+        )}
+        <FormAlert>{start.error ? errorMessage(start.error) : notice}</FormAlert>
+        <Button type="button" onClick={startOver} disabled={start.isPending}>
           {start.isPending ? 'Starting…' : flow.startLabel}
         </Button>
-      </div>
+      </div>,
     );
   }
 
@@ -199,7 +298,7 @@ function TelegramFlow({ flow }) {
     return (
       <div className="flex flex-col gap-2">
         <p className="text-sm">{flow.expired}</p>
-        <Button type="button" variant="outline" onClick={() => start.mutate()}>
+        <Button type="button" variant="outline" onClick={startOver}>
           Start again
         </Button>
       </div>
@@ -212,26 +311,37 @@ function TelegramFlow({ flow }) {
 
   if (current === 'otp_sent') {
     // Remount for each new code so the form starts empty (polls keep what was typed).
-    return (
+    return guide(
+      2,
       <CodeStep
         key={status.data.codeSentAt}
         requestId={requestId}
         status={status.data}
         useVerify={flow.useVerify}
-      />
+        onWrongCode={onWrongCode}
+      />,
     );
   }
 
-  return (
+  return guide(
+    1,
     <div className="flex flex-col gap-2">
+      <FormAlert>{notice}</FormAlert>
       <Button asChild>
         <a href={start.data.deepLink} target="_blank" rel="noreferrer">
           Open Telegram
         </a>
       </Button>
-      <p className="text-sm text-muted-foreground">
-        Press Start in Telegram, then come back here for your code.
-      </p>
+      {flow.guided ? (
+        <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-primary" />
+          Waiting for you to press Start in Telegram…
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Press Start in Telegram, then come back here for your code.
+        </p>
+      )}
       {/* For people with Telegram only on their phone. */}
       <div data-qr className="hidden flex-col items-center gap-2 pt-2 md:flex">
         <QRCodeSVG
@@ -242,6 +352,6 @@ function TelegramFlow({ flow }) {
         />
         <p className="text-xs text-muted-foreground">Or scan with your phone camera.</p>
       </div>
-    </div>
+    </div>,
   );
 }

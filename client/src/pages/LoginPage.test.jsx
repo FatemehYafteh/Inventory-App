@@ -80,6 +80,34 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('heading', { name: 'Awaiting approval' })).toBeInTheDocument();
   });
 
+  it('offers Email and Telegram as tabs, with Email first', async () => {
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+    await screen.findByRole('heading', { name: 'Log in' });
+
+    expect(screen.getByRole('tab', { name: 'Email' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByLabelText('Email')).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Continue with Telegram' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Telegram' }));
+    expect(screen.getByRole('button', { name: 'Continue with Telegram' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).not.toBeVisible();
+  });
+
+  it('keeps what was typed when switching tabs', async () => {
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+    await screen.findByRole('heading', { name: 'Log in' });
+    await user.type(screen.getByLabelText('Email'), 'ana@example.com');
+
+    await user.click(screen.getByRole('tab', { name: 'Telegram' }));
+    await user.click(screen.getByRole('tab', { name: 'Email' }));
+
+    expect(screen.getByLabelText('Email')).toHaveValue('ana@example.com');
+  });
+
   it('redirects a signed-in user away from the login page', async () => {
     server.use(http.get('*/api/auth/me', () => HttpResponse.json({ user: activeUser })));
     renderApp({ route: '/login' });

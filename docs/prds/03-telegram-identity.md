@@ -28,10 +28,11 @@ Users can sign in with a one-time code from the Telegram bot. Telegram signups m
 ## 3. Data model: AuthRequest (TTL index)
 - `requestId`: random opaque value (not a Mongo ObjectId), unique; the only handle the browser holds
 - `purpose`: `login` | `connect`; `connectUser` (for `connect`)
-- `startTokenHash` (unique), `status`: `pending` | `otp_sent` | `verified` | `refused` | `rate_limited` | `expired`
+- `startTokenHash` (unique), `status`: `pending` | `otp_sent` | `verified` | `refused` | `rate_limited` | `locked` | `expired`
 - `telegramId`, `telegramUsername` (may be empty), `name` (filled on `/start`)
 - `otpHash`, `otpExpiresAt`, `attempts`, `lastSentAt`, `sendCount`
-- `ip`, `userAgent`, `expiresAt` (10 min: the request stops working)
+- `ip`, `userAgent`, `expiresAt` (10 min, or 5 min when started again after a wrong code: the request stops working)
+- `triesUntil` (login): until when the wrong tries count across new links (4.2)
 - The document itself is deleted by the TTL index 1 hour after creation, so the per-Telegram-ID send limit (4.2) can be counted by summing `sendCount` over that Telegram ID's requests from the last hour.
 
 A **Placeholder user** is a User created by a Telegram sign-in with no verified email. It has only a Telegram identity, cannot use the app and has no history. It stays until its email is verified (case 1), or it is deleted by an Account link (case 2) or absorbed by Connect Telegram (4.4).
@@ -39,21 +40,23 @@ A **Placeholder user** is a User created by a Telegram sign-in with no verified 
 ## 4. Functional requirements
 
 ### 4.1 Telegram OTP login / signup
-Login and signup are the same flow, offered on both the Login and Register pages (**Continue with Telegram** above the email form, with an "or" divider). Known Telegram ID: log in to that user. Unknown: create a Placeholder user with the Telegram ID, name prefilled from Telegram, `staff`, `pending`.
+Login and signup are the same flow, offered on both the Login and Register pages (two tabs, **Email** first and **Telegram**; both stay mounted, so switching keeps what was typed and a Telegram request in progress; **Continue with Telegram** is in the Telegram tab). Known Telegram ID: log in to that user. Unknown: create a Placeholder user with the Telegram ID, name prefilled from Telegram, `staff`, `pending`.
 
-1. **Continue with Telegram**: `POST /auth/telegram/start`.
+1. **Continue with Telegram**: `POST /auth/telegram/start` (optional body `{ previousRequestId }`, see step 6).
 2. Server creates an AuthRequest and returns `{ requestId, deepLink }`, `deepLink = https://t.me/<BOT_USERNAME>?start=<startToken>`. Start token: 32 random bytes, stored hashed, single use, 10 min.
 3. The page shows an **Open Telegram** button and, from the `md` breakpoint (≥768 px) up, a QR code of the same link (`qrcode.react`), for people with Telegram only on their phone.
-4. Bot receives `/start <startToken>`, finds the pending request, stores Telegram ID, username and name (first name + last name, cut to 100 characters), generates and sends the OTP. Status `otp_sent`. If the Telegram ID belongs to a `rejected` user: no OTP, status `refused`, and the bot replies with the generic refusal. If the Telegram ID has reached the send limit (4.2): no OTP, status `rate_limited`, and the bot replies "Too many codes requested. Try again in an hour."
-5. Login page polls `GET /auth/telegram/status?requestId=` every 2 s (stops on expiry, `refused`, `rate_limited` or `verified`; an unknown `requestId` reads as `expired`). On `otp_sent` it shows the OTP input and "We sent a code to @username in Telegram" (display name when there is no username), with countdowns for expiry and resend. On `refused` it shows the same generic "Access denied, contact an admin" as email login. On `rate_limited` it shows "Too many codes requested. Try again in an hour."
-6. `POST /auth/telegram/verify` `{ requestId, otp }`. A wrong code shows the tries left ("Wrong code. 2 tries left.").
+4. Bot receives `/start <startToken>`, finds the pending request, stores Telegram ID, username and name (first name + last name, cut to 100 characters), generates and sends the OTP. Status `otp_sent`. If the Telegram ID belongs to a `rejected` user: no OTP, status `refused`, and the bot replies with the generic refusal. If the Telegram ID has reached the send limit (4.2): no OTP, status `rate_limited`, and the bot replies "Too many codes requested. Try again in an hour." If the Telegram ID has used its 3 wrong tries (4.2): no OTP, status `locked`, and the bot replies "Too many wrong codes. Try again later."
+5. Login page polls `GET /auth/telegram/status?requestId=` every 2 s (stops on expiry, `refused`, `rate_limited`, `locked` or `verified`; an unknown `requestId` reads as `expired`). On `otp_sent` it shows the OTP input and "We sent a code to @username in Telegram" (display name when there is no username), with countdowns for expiry and resend. On `refused` it shows the same generic "Access denied, contact an admin" as email login. On `rate_limited` it shows "Too many codes requested. Try again in an hour." On `locked` it shows "Too many wrong codes. Try again later."
+6. `POST /auth/telegram/verify` `{ requestId, otp }`. A wrong code shows the tries left ("Wrong code. 2 tries left.") for 1 second; then the page starts again with `POST /auth/telegram/start { previousRequestId }` and shows the new **Open Telegram** link with the same message. The previous request stops working (status `expired`) and the new one lasts 5 minutes. The tries carry over (4.2).
 7. On success: find or create the user, set `telegramUsername` to the current Telegram username (cleared if the person removed it; never touches `name`), set session cookies (as in 02). Body contains only profile and status. The password login lock (`lockedUntil`, 02) does not block Telegram login and is left unchanged.
 8. Client routes: incomplete profile to **Complete profile**, `pending` to **Awaiting approval**, `active` to dashboard. `rejected`: no tokens, generic "access denied".
 
 ### 4.2 OTP policy
 - 6 digits, crypto-secure RNG, stored hashed, single use.
-- Expires in 2 minutes. 3 wrong attempts invalidate the code; the page shows "Too many wrong codes" with the resend countdown.
-- Resend: `POST /auth/telegram/resend { requestId }` (login and connect), allowed 60 s after the last send, including after 3 wrong attempts. New code, old one invalid, attempts reset. Resending does not extend the 10-minute request.
+- Expires in 2 minutes.
+- Login: 3 wrong attempts in all per Telegram ID, counted across the new links started after wrong codes, until the first of those requests would have expired (`triesUntil`; a verified sign-in starts the count over). The 3rd wrong attempt ends the flow: the page shows "Too many wrong codes. Try again later." with no resend, and pressing Start on any new link before `triesUntil` gives status `locked`.
+- Connect: 3 wrong attempts invalidate the code; the page shows "Too many wrong codes" with the resend countdown.
+- Resend: `POST /auth/telegram/resend { requestId }` (login and connect), allowed 60 s after the last send. New code, old one invalid. Resending does not extend the request. Login: attempts carry on, and no resend after 3 wrong attempts. Connect: also allowed after 3 wrong attempts, and attempts reset.
 - Bot message: "Your sign-in code is 123456. It expires in 2 minutes. Only enter it on <APP_URL>. Never share it with anyone." For `connect` requests: "Your code to connect Telegram to your account is 123456. …" (same rest).
 - Rate limits:
   | What | Limit |

@@ -119,6 +119,8 @@ describe('Profile page', () => {
     renderApp({ route: '/profile' });
 
     await startConnect(user);
+    // Connect Telegram is one step in a settings page: no sign-in steps list.
+    expect(screen.queryByText('Open the chat and press Start')).not.toBeInTheDocument();
     expect(await screen.findByRole('link', { name: 'Open Telegram' })).toHaveAttribute(
       'href',
       'https://t.me/test_bot?start=tok',
@@ -173,6 +175,47 @@ describe('Profile page', () => {
       await screen.findByText('This Telegram account belongs to another user. Contact an admin.'),
     ).toBeInTheDocument();
     expect(signInMethods().getByText('Not connected')).toBeInTheDocument();
+  });
+
+  it('keeps the code form after a wrong code when connecting Telegram', async () => {
+    profileHandlers(activeUser);
+    let starts = 0;
+    server.use(
+      http.post('*/api/auth/telegram/connect/start', () => {
+        starts += 1;
+        return HttpResponse.json(
+          { requestId: 'req-c', deepLink: 'https://t.me/b?start=t' },
+          { status: 201 },
+        );
+      }),
+      http.get('*/api/auth/telegram/status', () =>
+        HttpResponse.json({
+          status: 'otp_sent',
+          telegramUsername: 'ana_tg',
+          codeSentAt: '2026-10-14T10:00:00.000Z',
+          codeExpiresIn: 120,
+          resendIn: 60,
+          attemptsLeft: 2,
+        }),
+      ),
+      http.post('*/api/auth/telegram/connect/verify', () =>
+        HttpResponse.json(
+          { message: 'Wrong code. 2 tries left.', code: 'INVALID_CODE' },
+          { status: 400 },
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp({ route: '/profile' });
+
+    await startConnect(user);
+    await user.type(await screen.findByLabelText('Code from Telegram'), '000000');
+    await user.click(screen.getByRole('button', { name: 'Verify' }));
+
+    expect(await screen.findByText('Wrong code. 2 tries left.')).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    expect(screen.getByLabelText('Code from Telegram')).toBeInTheDocument();
+    expect(starts).toBe(1);
   });
 
   it('saves a new name', async () => {

@@ -1,8 +1,7 @@
 import { emailSchema, registerSchema } from '@inventory/shared/schemas';
 import { Link } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
-import { OrDivider } from '@/components/auth/OrDivider';
-import { TelegramSignIn } from '@/components/auth/TelegramSignIn';
+import { AuthMethodTabs } from '@/components/auth/AuthMethodTabs';
 import { ResendVerificationButton } from '@/components/auth/ResendVerificationButton';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
@@ -68,56 +67,56 @@ export function RegisterPage() {
   return (
     <AuthLayout
       title="Create an account"
-      description="Sign up with your email address."
+      description="Choose how you want to sign up."
       footer={loginLink}
     >
-      <div className="mb-4 flex flex-col gap-4">
-        <TelegramSignIn />
-        <OrDivider />
-      </div>
-      <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <FormAlert>{formError}</FormAlert>
-        <TextField
-          id="name"
-          label="Name"
-          autoComplete="name"
-          error={errors.name}
-          {...register('name')}
-        />
-        <TextField
-          id="email"
-          label="Email"
-          type="email"
-          autoComplete="email"
-          error={errors.email}
-          {...register('email')}
-        />
-        <TextField
-          id="password"
-          label="Password"
-          type="password"
-          autoComplete="new-password"
-          error={errors.password}
-          {...register('password', {
-            // Keep the confirmation's match error current once it has a value.
-            onChange: () => getValues('confirmPassword') && trigger('confirmPassword'),
-          })}
-        />
-        <p className="-mt-2 text-xs text-muted-foreground">
-          At least 10 characters. Avoid common passwords.
-        </p>
-        <TextField
-          id="confirmPassword"
-          label="Confirm password"
-          type="password"
-          autoComplete="new-password"
-          error={errors.confirmPassword}
-          {...register('confirmPassword')}
-        />
-        <Button type="submit" disabled={registration.isPending}>
-          {registration.isPending ? 'Creating account…' : 'Create account'}
-        </Button>
-      </form>
+      <AuthMethodTabs
+        email={
+          <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <FormAlert>{formError}</FormAlert>
+            <TextField
+              id="name"
+              label="Name"
+              autoComplete="name"
+              error={errors.name}
+              {...register('name')}
+            />
+            <TextField
+              id="email"
+              label="Email"
+              type="email"
+              autoComplete="email"
+              error={errors.email}
+              {...register('email')}
+            />
+            <TextField
+              id="password"
+              label="Password"
+              type="password"
+              autoComplete="new-password"
+              error={errors.password}
+              {...register('password', {
+                // Keep the confirmation's match error current once it has a value.
+                onChange: () => getValues('confirmPassword') && trigger('confirmPassword'),
+              })}
+            />
+            <p className="-mt-2 text-xs text-muted-foreground">
+              At least 10 characters. Avoid common passwords.
+            </p>
+            <TextField
+              id="confirmPassword"
+              label="Confirm password"
+              type="password"
+              autoComplete="new-password"
+              error={errors.confirmPassword}
+              {...register('confirmPassword')}
+            />
+            <Button type="submit" disabled={registration.isPending}>
+              {registration.isPending ? 'Creating account…' : 'Create account'}
+            </Button>
+          </form>
+        }
+      />
     </AuthLayout>
   );
 }

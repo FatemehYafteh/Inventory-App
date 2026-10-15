@@ -159,4 +159,20 @@ describe('RegisterPage', () => {
     await user.type(screen.getByLabelText('Password'), 'd');
     expect(screen.queryByText('Passwords do not match')).not.toBeInTheDocument();
   });
+
+  it('offers Email and Telegram as tabs, with Email first', async () => {
+    const user = userEvent.setup();
+    renderApp({ route: '/register' });
+    await screen.findByRole('heading', { name: 'Create an account' });
+
+    expect(screen.getByRole('tab', { name: 'Email' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByLabelText('Name')).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Continue with Telegram' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Telegram' }));
+    expect(screen.getByRole('button', { name: 'Continue with Telegram' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).not.toBeVisible();
+  });
 });
