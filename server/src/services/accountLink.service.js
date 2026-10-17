@@ -5,7 +5,7 @@ import { AppError } from '../utils/AppError.js';
 import { hashToken } from '../utils/crypto.js';
 import { checkPasswordWithLock } from './auth.service.js';
 import { consumeEmailToken } from './emailToken.service.js';
-import { revokeAllForUser } from './token.service.js';
+import { deletePlaceholder } from './placeholder.service.js';
 
 function invalidLink() {
   return new AppError(400, 'INVALID_TOKEN', 'This link is invalid or has expired.');
@@ -58,9 +58,7 @@ export async function confirmAccountLink({ token, password }, config) {
   try {
     await session.withTransaction(async () => {
       await consumeEmailToken({ token, type: 'link_telegram', session }, config);
-      // Deleted first: telegramId is unique, so it must leave the Placeholder user before
-      // the owner can take it.
-      const removed = await User.findOneAndDelete(placeholderFilter(linkToken), { session });
+      const removed = await deletePlaceholder(placeholderFilter(linkToken), session);
       if (!removed) throw invalidLink();
 
       const telegram = { telegramId: removed.telegramId };
@@ -79,9 +77,6 @@ export async function confirmAccountLink({ token, password }, config) {
         { session },
       );
       if (!linked) throw invalidLink();
-
-      await revokeAllForUser(removed._id, { session });
-      await EmailToken.deleteMany({ user: removed._id }, { session });
     });
   } finally {
     await session.endSession();

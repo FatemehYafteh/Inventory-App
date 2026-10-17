@@ -28,6 +28,12 @@ describe('loadConfig', () => {
     const config = loadConfig(base);
     expect(config.smtp).toBeNull();
     expect(config.cookieSecure).toBe(false);
+    expect(config.trustProxy).toBe(0);
+  });
+
+  it('reads the number of proxies in front of the API', () => {
+    expect(loadConfig({ ...base, TRUST_PROXY: '1' }).trustProxy).toBe(1);
+    expect(() => loadConfig({ ...base, TRUST_PROXY: 'yes' })).toThrow(/TRUST_PROXY/);
   });
 
   it('fails with the names of missing required variables', () => {

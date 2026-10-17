@@ -1,7 +1,13 @@
 import axios from 'axios';
 
 // Auth calls whose 401 means "bad credentials" or "no session", not "access token expired".
-const NO_REFRESH_PATHS = new Set(['/auth/login', '/auth/refresh', '/auth/logout']);
+const NO_REFRESH_PATHS = new Set([
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/logout',
+  // Public: a wrong password answers 401 but says nothing about the session.
+  '/auth/link-telegram/confirm',
+]);
 const NETWORK_ERROR = 'Could not reach the server. Check your connection and try again.';
 
 export class ApiError extends Error {

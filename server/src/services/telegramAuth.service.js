@@ -1,12 +1,11 @@
 import { randomInt, timingSafeEqual } from 'node:crypto';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../models/AuthRequest.js';
-import { EmailToken } from '../models/EmailToken.js';
 import { User, isPlaceholder } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 import { hashToken, randomToken } from '../utils/crypto.js';
 import { startSession } from './auth.service.js';
-import { revokeAllForUser } from './token.service.js';
+import { deletePlaceholder } from './placeholder.service.js';
 
 export const REQUEST_TTL_MS = 10 * 60 * 1000;
 // A sign-in request started again after a wrong code.
@@ -446,14 +445,11 @@ export async function verifyConnect({ requestId, otp }, user, config) {
   try {
     await session.withTransaction(async () => {
       if (holder) {
-        // Deleted first: telegramId is unique, so it must leave the Placeholder user.
-        const removed = await User.findOneAndDelete(
+        const removed = await deletePlaceholder(
           { _id: holder._id, telegramId, emailVerified: false, status: { $ne: 'rejected' } },
-          { session },
+          session,
         );
         if (!removed) throw telegramOwned();
-        await revokeAllForUser(removed._id, { session });
-        await EmailToken.deleteMany({ user: removed._id }, { session });
       }
       connected = await User.findOneAndUpdate(
         { _id: user._id, telegramId: { $exists: false } },

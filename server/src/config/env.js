@@ -25,6 +25,8 @@ const envSchema = z
     COOKIE_SECURE: z.enum(['true', 'false']).default('false'),
     CLIENT_ORIGIN: z.string().trim().url('must be a URL'),
     APP_URL: z.string().trim().url('must be a URL'),
+    // Reverse proxies in front of the API (0 = none), so req.ip is the client, not the proxy.
+    TRUST_PROXY: z.coerce.number().int().min(0).default(0),
     TELEGRAM_BOT_TOKEN: optional,
     TELEGRAM_BOT_USERNAME: optional,
     // Telegram's rule for secret_token: 1-256 characters of A-Z, a-z, 0-9, _ and -.
@@ -99,6 +101,7 @@ export function loadConfig(source = process.env) {
     cookieSecure: isProduction || env.COOKIE_SECURE === 'true',
     clientOrigin: new URL(env.CLIENT_ORIGIN).origin,
     appUrl: env.APP_URL.replace(/\/$/, ''),
+    trustProxy: env.TRUST_PROXY,
     telegram: {
       botToken: env.TELEGRAM_BOT_TOKEN,
       botUsername: env.TELEGRAM_BOT_USERNAME,

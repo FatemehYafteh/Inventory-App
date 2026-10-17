@@ -151,6 +151,22 @@ describe('Complete profile, case 1 (email nobody uses)', () => {
     expect(stored.emailVerified).toBe(false);
   });
 
+  it('sends again when the user goes back to an earlier address inside the cooldown', async () => {
+    const app = buildApp();
+    const user = await createPlaceholder();
+    await completeProfile(app, user, { email: 'first@example.com' });
+    await completeProfile(app, user, { email: 'second@example.com' });
+    await completeProfile(app, user, { email: 'first@example.com' });
+
+    const mail = await sentMail(app);
+    expect(mail.map((m) => m.to)).toEqual([
+      'first@example.com',
+      'second@example.com',
+      'first@example.com',
+    ]);
+    expect((await verify(app, tokenFrom(mail[2]))).status).toBe(200);
+  });
+
   it('resends the link after the 60 s cooldown, and the newest link works', async () => {
     const app = buildApp();
     const user = await createPlaceholder();

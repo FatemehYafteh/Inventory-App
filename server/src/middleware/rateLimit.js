@@ -46,5 +46,5 @@ export const authLimits = {
   completeProfile: () => perIp(HOUR, 20),
   accountLinkConfirm: () => perIp(15 * MINUTE, 10),
   // The sign-in page polls every 2 s.
-  telegramStatus: () => perIp(15 * MINUTE, 300),
+  telegramStatus: () => perIp(15 * MINUTE, 1200),
 };

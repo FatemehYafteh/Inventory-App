@@ -19,6 +19,7 @@ async function reserveProfileEmail(user, email) {
   const recent = await EmailSend.exists({
     user: user._id,
     email,
+    superseded: false,
     createdAt: { $gt: new Date(Date.now() - RESEND_COOLDOWN_MS) },
   });
   if (recent) return false;
@@ -103,6 +104,8 @@ export async function completeProfile(user, { name, email }, deps) {
       type: { $in: PROFILE_TOKEN_TYPES },
       usedAt: null,
     });
+    // Their links are dead, so going back to an earlier address is not a resend.
+    await EmailSend.updateMany({ user: user._id }, { $set: { superseded: true } });
   }
   user.name = name;
   user.pendingEmail = email;

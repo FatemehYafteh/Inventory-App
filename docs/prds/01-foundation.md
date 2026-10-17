@@ -49,7 +49,7 @@ Set up the repository, the Express + MongoDB server, the shared Zod package and 
 
 ## 5. Environment variables
 
-`MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `COOKIE_SECURE`, `CLIENT_ORIGIN`, `APP_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `BOT_MODE`, `ADMIN_TELEGRAM_IDS`, `ADMIN_EMAILS`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`
+`MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `COOKIE_SECURE`, `CLIENT_ORIGIN`, `APP_URL`, `TRUST_PROXY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `BOT_MODE`, `ADMIN_TELEGRAM_IDS`, `ADMIN_EMAILS`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`
 
 Startup validates them. Missing required values stop the server with a clear message. (SMTP is optional in development, required in production; see 02.)
 

@@ -10,6 +10,9 @@ const emailSendSchema = new mongoose.Schema(
     email: { type: String, required: true, lowercase: true, trim: true },
     // The Placeholder user whose Complete profile sent it.
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    // The user changed their email after this send, so its link is dead: it no longer holds
+    // the resend cooldown, but still counts toward the hourly limit.
+    superseded: { type: Boolean, default: false },
   },
   { timestamps: { createdAt: true, updatedAt: false } },
 );

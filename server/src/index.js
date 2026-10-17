@@ -18,6 +18,8 @@ async function main() {
   // and `npm run tg:start` stands in for pressing Start.
   const bot = config.telegram.botToken ? createBot(config) : undefined;
   const telegram = createTelegramMessenger(config, { api: bot?.api });
+  // Before listening, so a webhook call can never reach a bot that is not initialised yet.
+  await bot?.init();
   const app = createApp(config, { bot, telegram });
   const server = app.listen(config.port, () => {
     console.log(`API listening on http://localhost:${config.port}`);

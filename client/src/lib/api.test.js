@@ -125,4 +125,18 @@ describe('api', () => {
     });
     expect(refresh).not.toHaveBeenCalled();
   });
+
+  it('does not try to refresh after a wrong password on Confirm link', async () => {
+    const refresh = vi.fn(() => new HttpResponse(null, { status: 204 }));
+    server.use(
+      http.post('*/api/auth/link-telegram/confirm', () =>
+        HttpResponse.json({ code: 'INVALID_PASSWORD', message: 'Incorrect password.' }, { status: 401 }),
+      ),
+      http.post('*/api/auth/refresh', refresh),
+    );
+    await expect(
+      api('/auth/link-telegram/confirm', { method: 'POST', body: {} }),
+    ).rejects.toMatchObject({ code: 'INVALID_PASSWORD' });
+    expect(refresh).not.toHaveBeenCalled();
+  });
 });
