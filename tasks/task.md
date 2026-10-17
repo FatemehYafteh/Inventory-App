@@ -83,7 +83,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 
 | Phase | Task | Status |
 |---|---|---|
-| 5.1 | Categories API (409 on delete while any product uses it, archived products included) | ⬜ To do |
+| 5.1 | Categories API (409 on delete while any product uses it, archived products included) | ✅ Done |
 | 5.2 | Categories page: card grid, admin add/edit/delete, read-only for staff | ⬜ To do |
 | 5.3 | Suppliers API: search, sort, pagination, deactivate and reactivate, 409 on delete while in use | ⬜ To do |
 | 5.4 | Suppliers page: table, form, admin actions | ⬜ To do |

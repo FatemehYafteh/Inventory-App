@@ -21,7 +21,7 @@ tests/                mirrors src/, supertest + mongodb-memory-server (replica s
 ## Conventions
 - ES modules, async/await, no callbacks. Controllers never touch models directly for business rules; they call services.
 - Every write endpoint uses the `validate` middleware with a Zod schema from `shared/schemas`.
-- One error class (`AppError(status, code, message)`) and one error-handler middleware. Never leak stack traces or internal details.
+- One error class (`AppError(status, code, message, errors, details)`) and one error-handler middleware. `errors` are field-level validation messages; `details` is an optional object of safe values the service computed (such as `{ productCount }` on `IN_USE`), included in the body only when set. Never leak stack traces or internal details.
 - Auth endpoints that can reveal whether an account exists (register, forgot-password, resend, complete profile) return the same generic response in every case.
 - Hash OTPs, refresh tokens, start tokens and email tokens before storing. Compare in constant time.
 - Cookies: `access_token` (15 min, path `/`) and `refresh_token` (7 days, path `/api/auth`), both `HttpOnly; SameSite=Strict`, `Secure` when `COOKIE_SECURE=true`. Set them through `Set-Cookie` headers, never in the body.

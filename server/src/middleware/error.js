@@ -8,6 +8,7 @@ export function errorHandler(err, _req, res, _next) {
   if (err instanceof AppError) {
     const body = { message: err.message, code: err.code };
     if (err.errors) body.errors = err.errors;
+    if (err.details) body.details = err.details;
     return res.status(err.status).json(body);
   }
 
