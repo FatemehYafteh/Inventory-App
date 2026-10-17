@@ -26,7 +26,7 @@ Admins maintain the categories and suppliers that products belong to. Staff can 
 ### Supplier
 - `name` (required, unique), `contactPerson`, `phone`, `email` (valid format), `address`, `notes`
 - `isActive` (default true), timestamps
-- Virtual `productCount`
+- Virtual `productCount` (includes archived products) and `movementCount` (stock movements that reference the supplier)
 
 ## 4. Functional requirements
 
@@ -40,7 +40,7 @@ Admins maintain the categories and suppliers that products belong to. Staff can 
 - TanStack Table: Name, Contact person, Phone, Email, Product count, Actions.
 - Search by name, contact person, phone or email; sort by name; server-side pagination.
 - Admin: add, edit, deactivate / reactivate, delete. Staff: read-only.
-- Delete blocked (409) if any product references the supplier.
+- Delete blocked (409 `IN_USE`) if any product **or any stock movement** references the supplier. The response carries both counts (`productCount`, `movementCount`) and a message suggesting deactivation instead. The Delete button is enabled only when both counts are zero.
 - Deactivated suppliers cannot be chosen for new products but stay on existing ones.
 - Row link: Products filtered by that supplier.
 - Form (React Hook Form + shared Zod): name (required), contact person, phone, email, address, notes.
@@ -56,10 +56,10 @@ Admins maintain the categories and suppliers that products belong to. Staff can 
 | GET | `/suppliers?search=&active=&sortBy=&order=&page=&limit=` | active users |
 | POST | `/suppliers` | admin |
 | PATCH | `/suppliers/:id` | admin (also used to deactivate / reactivate) |
-| DELETE | `/suppliers/:id` | admin; 409 if products reference it |
+| DELETE | `/suppliers/:id` | admin; 409 `IN_USE` if products or stock movements reference it |
 
 ## 6. Acceptance criteria
-- A category or supplier with products (including archived) cannot be deleted; the UI shows a clear message.
+- A category with products (including archived) cannot be deleted. A supplier with products (including archived) or stock movements cannot be deleted; the 409 reports both counts and suggests deactivating. The UI shows a clear message.
 - Staff see read-only pages and get 403 from every write endpoint.
 - Duplicate category title or supplier name is rejected.
 - Deactivated suppliers do not appear in the supplier picker for new products.
