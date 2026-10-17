@@ -82,7 +82,12 @@ function Details({ user, history }) {
 
       <section className="flex flex-col gap-2">
         {/* The Movements page arrives in a later milestone, which enables this link. */}
-        <Button variant="outline" disabled className="w-fit">
+        <Button
+          variant="outline"
+          disabled
+          className="w-fit"
+          title="Available once Movements ships."
+        >
           View movements
         </Button>
         <p className="text-xs text-muted-foreground">Available once Movements ships.</p>

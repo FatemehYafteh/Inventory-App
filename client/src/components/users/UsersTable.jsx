@@ -8,7 +8,16 @@ const NO_SORTING = [];
 
 function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChangeRole }) {
   const buttons = [];
-  let note = null;
+  // Why the buttons the rules disable are disabled: a tooltip on them, and a note under them.
+  const note =
+    {
+      pending:
+        !user.profileComplete && 'They must finish their profile before they can be approved.',
+      active: isYou && 'You cannot reject or demote yourself.',
+      rejected:
+        !user.profileComplete && 'They must finish their profile before they can be reactivated.',
+    }[user.status] || null;
+  const title = note || undefined;
 
   if (user.status === 'pending') {
     buttons.push(
@@ -16,6 +25,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         key="approve"
         size="sm"
         disabled={busy || !user.profileComplete}
+        title={title}
         onClick={() => onApprove(user)}
       >
         Approve
@@ -30,7 +40,6 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         Reject
       </Button>,
     );
-    if (!user.profileComplete) note = 'They must finish their profile before they can be approved.';
   } else if (user.status === 'active') {
     buttons.push(
       <Button
@@ -38,6 +47,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         size="sm"
         variant="outline"
         disabled={busy || isYou}
+        title={title}
         onClick={() => onReject(user)}
       >
         Reject
@@ -47,18 +57,19 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         size="sm"
         variant="outline"
         disabled={busy || isYou}
+        title={title}
         onClick={() => onChangeRole(user)}
       >
         {user.role === 'admin' ? 'Make staff' : 'Make admin'}
       </Button>,
     );
-    if (isYou) note = 'You cannot reject or demote yourself.';
   } else {
     buttons.push(
       <Button
         key="active"
         size="sm"
         disabled={busy || !user.profileComplete}
+        title={title}
         onClick={() => onReactivate(user, 'active')}
       >
         Reactivate
@@ -73,8 +84,6 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         Move to pending
       </Button>,
     );
-    if (!user.profileComplete)
-      note = 'They must finish their profile before they can be reactivated.';
   }
 
   return (

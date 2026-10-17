@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { changeStatusSchema } from '@inventory/shared/schemas';
+import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,22 +9,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useZodForm } from '@/hooks/useZodForm';
+
+// The reason is the only field of the status change that the admin types.
+const rejectSchema = changeStatusSchema.pick({ reason: true });
 
 /** Rejecting asks for an optional reason, which the user gets in the rejection email. */
 export function RejectUserDialog({ user, busy, onConfirm, onCancel }) {
-  const [reason, setReason] = useState('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useZodForm(rejectSchema, { defaultValues: { reason: '' } });
   if (!user) return null;
 
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
       <DialogContent>
         <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            onConfirm(user, reason.trim());
-          }}
+          noValidate
+          onSubmit={handleSubmit(({ reason }) => onConfirm(user, reason))}
           className="flex flex-col gap-4"
         >
           <DialogHeader>
@@ -34,12 +39,11 @@ export function RejectUserDialog({ user, busy, onConfirm, onCancel }) {
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="reject-reason">Reason (optional)</Label>
-            <Input
+            <TextField
               id="reject-reason"
-              maxLength={500}
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
+              label="Reason (optional)"
+              error={errors.reason}
+              {...register('reason')}
             />
             <p className="text-xs text-muted-foreground">
               The reason is included in the email, not in the Telegram message.

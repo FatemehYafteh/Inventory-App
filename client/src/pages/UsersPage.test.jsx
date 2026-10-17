@@ -216,6 +216,10 @@ describe('UsersPage tabs and table', () => {
     expect(api.lists.at(-1)).toMatchObject({ status: 'pending', incomplete: 'true' });
     const unfinished = within(rowOf('Ivy Unfinished'));
     expect(unfinished.getByRole('button', { name: 'Approve' })).toBeDisabled();
+    expect(unfinished.getByRole('button', { name: 'Approve' })).toHaveAttribute(
+      'title',
+      expect.stringMatching(/finish their profile/),
+    );
     expect(unfinished.getByText(/finish their profile/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: /Active/ }));
@@ -324,6 +328,24 @@ describe('UsersPage actions', () => {
     ]);
   });
 
+  it('refuses a reason over 500 characters without sending anything', async () => {
+    const user = userEvent.setup();
+    const api = await open();
+    await user.click(
+      within(await waitForRow('Pat Pending')).getByRole('button', { name: 'Reject' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+
+    await user.click(within(dialog).getByLabelText('Reason (optional)'));
+    await user.paste('x'.repeat(501));
+    await user.click(within(dialog).getByRole('button', { name: 'Reject user' }));
+
+    expect(
+      await within(dialog).findByText('Reason must be at most 500 characters'),
+    ).toBeInTheDocument();
+    expect(api.patches).toEqual([]);
+  });
+
   it('rejects without a reason', async () => {
     const user = userEvent.setup();
     const api = await open();
@@ -387,6 +409,10 @@ describe('UsersPage actions', () => {
 
     expect(own.getByRole('button', { name: 'Reject' })).toBeDisabled();
     expect(own.getByRole('button', { name: 'Make staff' })).toBeDisabled();
+    expect(own.getByRole('button', { name: 'Reject' })).toHaveAttribute(
+      'title',
+      'You cannot reject or demote yourself.',
+    );
     expect(own.getByText(/cannot reject or demote yourself/i)).toBeInTheDocument();
     expect(within(rowOf('Sam Staff')).getByRole('button', { name: 'Reject' })).toBeEnabled();
   });
@@ -489,6 +515,7 @@ describe('UsersPage detail drawer', () => {
 
     const button = within(drawer).getByRole('button', { name: 'View movements' });
     expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('title', 'Available once Movements ships.');
     expect(within(drawer).getByText('Available once Movements ships.')).toBeInTheDocument();
   });
 

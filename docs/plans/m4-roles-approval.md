@@ -100,7 +100,7 @@ Add it to the model list in `server/CLAUDE.md`. Offer an ADR for "history in its
 | PATCH | `/users/:id/status` | `{ status, reason? }` | updated user |
 | PATCH | `/users/:id/role` | `{ role }` | updated user |
 
-Item shape: `id, name, email, emailVerified, telegramUsername, hasPassword, hasTelegram, role, status, profileComplete, createdAt, lastLoginAt`. `statusReason`, `statusChangedAt` and `statusChangedBy` (name) are included for admins only. Never `passwordHash`.
+Item shape: `id, name, email, emailVerified, telegramUsername, hasPassword, hasTelegram, role, status, profileComplete, createdAt, lastLoginAt`. `statusReason`, `statusChangedAt` and `statusChangedBy` (the admin's id; the names are in the status history of `GET /users/:id`) are included for admins only. Never `passwordHash`.
 - Define `pending-count` and `/:id` so `pending-count` is matched first.
 - Errors use `AppError(status, code, message)`: 400 `VALIDATION_ERROR`, 401 `NOT_AUTHENTICATED`, 403 `PROFILE_INCOMPLETE` / `ACCOUNT_PENDING` / `FORBIDDEN`, 404 `NOT_FOUND`, 409 `INVALID_TRANSITION` / `CANNOT_CHANGE_SELF` / `LAST_ADMIN` / `PROFILE_INCOMPLETE` / `USER_NOT_ACTIVE`.
 - Zod schemas in `shared/schemas/users.js`: `listUsersQuery`, `changeStatusSchema`, `changeRoleSchema`, exported from `shared/schemas/index.js`. Write routes use `validate`.

@@ -72,7 +72,7 @@ async function assertAnotherActiveAdmin(targetId, session) {
  * a failed notification never undoes the change. Returns the updated user.
  */
 export async function changeStatus({ actor, userId, to, reason }, deps) {
-  const { user, from } = await inTransaction(async (session) => {
+  const user = await inTransaction(async (session) => {
     const admin = await lockAdmin(actor._id, session);
     const target = await loadTarget(userId, session);
     const from = target.status;
@@ -106,10 +106,10 @@ export async function changeStatus({ actor, userId, to, reason }, deps) {
       { session },
     );
     if (to === 'rejected') await revokeAllForUser(target._id, { session });
-    return { user: updated, from };
+    return updated;
   });
 
-  notifyStatusChange(user, { from, to, reason }, deps);
+  notifyStatusChange(user, { to, reason }, deps);
   return user;
 }
 
