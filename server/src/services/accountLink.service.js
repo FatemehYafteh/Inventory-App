@@ -5,6 +5,7 @@ import { AppError } from '../utils/AppError.js';
 import { hashToken } from '../utils/crypto.js';
 import { checkPasswordWithLock } from './auth.service.js';
 import { consumeEmailToken } from './emailToken.service.js';
+import { applyAdminBootstrap } from './adminBootstrap.service.js';
 import { deletePlaceholder } from './placeholder.service.js';
 
 function invalidLink() {
@@ -77,6 +78,7 @@ export async function confirmAccountLink({ token, password }, config) {
         { session },
       );
       if (!linked) throw invalidLink();
+      await applyAdminBootstrap(linked._id, config, { session });
     });
   } finally {
     await session.endSession();

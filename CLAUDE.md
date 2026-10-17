@@ -8,7 +8,7 @@ server/src/
   app.js              builds the Express app and registers every router
   index.js            starts the server and (optionally) the Telegram bot
   config/             env validation (fail fast), cookie and CORS config
-  models/             Mongoose models (User, AuthRequest, EmailToken, RefreshToken, Category, Supplier, Product, StockMovement)
+  models/             Mongoose models (User, StatusChange, AuthRequest, EmailToken, RefreshToken, Category, Supplier, Product, StockMovement)
   routes/             route definitions only (path, middleware, controller)
   controllers/        thin: parse request, call a service, send response
   services/           ALL business logic (stock, auth, otp, token, password, mail, account-link, user-status)

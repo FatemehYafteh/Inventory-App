@@ -2,11 +2,13 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { categories } from '../../seed/data/categories.js';
 import { products } from '../../seed/data/products.js';
+import { statusChanges } from '../../seed/data/statusChanges.js';
 import { suppliers } from '../../seed/data/suppliers.js';
 import { users } from '../../seed/data/users.js';
 import { DEFAULT_SEED_PASSWORD, buildHistory, seedDatabase } from '../../seed/seed.js';
 import { Category } from '../../src/models/Category.js';
 import { Product, stockStatus } from '../../src/models/Product.js';
+import { StatusChange } from '../../src/models/StatusChange.js';
 import { StockMovement } from '../../src/models/StockMovement.js';
 import { Supplier } from '../../src/models/Supplier.js';
 import { User } from '../../src/models/User.js';
@@ -24,6 +26,7 @@ describe('seedDatabase', () => {
 
     expect(created).toEqual({
       users: users.length,
+      statusChanges: statusChanges.length,
       categories: categories.length,
       suppliers: suppliers.length,
       products: products.length,
@@ -99,6 +102,51 @@ describe('seedDatabase', () => {
     expect(seeded.some((user) => user.telegramId && !user.email)).toBe(true);
     const rejected = seeded.find((user) => user.status === 'rejected');
     expect(rejected.statusChangedBy).toBeDefined();
+  });
+
+  it('keeps each user status history in order, ending at the current status', async () => {
+    await seedDatabase({ now });
+    const seeded = await User.find();
+    const byId = new Map(seeded.map((user) => [String(user._id), user]));
+
+    for (const user of seeded) {
+      const history = await StatusChange.find({ user: user._id }).sort({ at: 1 });
+      if (!history.length) continue;
+      expect(history[0].from).toBe('pending');
+      history.forEach((change, index) => {
+        if (index > 0) expect(change.from).toBe(history[index - 1].to);
+        expect(change.to).not.toBe(change.from);
+      });
+      expect(history.at(-1).to).toBe(user.status);
+    }
+
+    for (const change of await StatusChange.find()) {
+      if (change.changedBy === null) {
+        expect(change.changedByName).toBe('System (admin list)');
+        continue;
+      }
+      const admin = byId.get(String(change.changedBy));
+      expect(admin).toMatchObject({ role: 'admin', status: 'active', emailVerified: true });
+      expect(change.changedByName).toBe(admin.name);
+    }
+  });
+
+  it('records the bootstrap admin promotion and every rejection with its reason', async () => {
+    await seedDatabase({ now });
+
+    const telegramAdmin = await User.findOne({ role: 'admin', telegramId: { $exists: true } });
+    expect(await StatusChange.find({ user: telegramAdmin._id })).toHaveLength(1);
+    expect(await StatusChange.findOne({ user: telegramAdmin._id })).toMatchObject({
+      from: 'pending',
+      to: 'active',
+      changedBy: null,
+    });
+
+    for (const rejected of await User.find({ status: 'rejected' })) {
+      const change = await StatusChange.findOne({ user: rejected._id, to: 'rejected' });
+      expect(change).toMatchObject({ reason: rejected.statusReason });
+      expect(String(change.changedBy)).toBe(String(rejected.statusChangedBy));
+    }
   });
 
   it('seeds an active Telegram admin with a verified email and no password', async () => {
@@ -203,7 +251,15 @@ describe('seedDatabase', () => {
 
     const second = await seedDatabase({ now });
 
-    expect(second).toEqual({ users: 0, categories: 0, suppliers: 0, products: 0, movements: 0 });
+    expect(second).toEqual({
+      users: 0,
+      statusChanges: 0,
+      categories: 0,
+      suppliers: 0,
+      products: 0,
+      movements: 0,
+    });
+    expect(await StatusChange.countDocuments()).toBe(statusChanges.length);
     expect((await Product.findOne({ sku: 'EL-LAP-001' })).title).toBe('Renamed laptop');
   });
 
