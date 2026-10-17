@@ -12,7 +12,7 @@ server/src/
   routes/             route definitions only (path, middleware, controller)
   controllers/        thin: parse request, call a service, send response
   services/           ALL business logic (stock, auth, otp, token, password, mail, account-link, user-status)
-  middleware/         auth, requireProfile, requireActive, requireRole, validate, rateLimit, csrf, error
+  middleware/         auth, requireProfile, requireActive, requireRole, protect (the composed gate chain), validate, rateLimit, csrf, error
   bot/                Telegram bot and /start handler
   utils/
 tests/                mirrors src/, supertest + mongodb-memory-server (replica set)

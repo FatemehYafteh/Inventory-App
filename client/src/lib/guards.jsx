@@ -32,6 +32,17 @@ export function RequireActive() {
   return <Outlet />;
 }
 
+/**
+ * Admin-only pages, inside RequireActive. Staff go to the dashboard; the API still answers
+ * 403 to them, so this only keeps them from seeing a page that cannot work.
+ */
+export function RequireAdmin() {
+  const { user, view } = useSessionState();
+  if (view) return view;
+  if (user?.role !== 'admin') return <Navigate to="/" replace />;
+  return <Outlet />;
+}
+
 /** Signed-in pending users only. */
 export function RequirePending() {
   const { user, view } = useSessionState();

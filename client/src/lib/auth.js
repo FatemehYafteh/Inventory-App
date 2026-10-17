@@ -2,6 +2,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from './api';
 
 export const ME_QUERY_KEY = ['auth', 'me'];
+// True after the server rejected an account that was signed in; the login page says so.
+export const ACCESS_DENIED_KEY = ['auth', 'access-denied'];
+
+export function useAccessDenied() {
+  const { data } = useQuery({
+    queryKey: ACCESS_DENIED_KEY,
+    queryFn: () => false,
+    initialData: false,
+    staleTime: Infinity,
+  });
+  return data;
+}
 
 /** The signed-in user, or null when there is no session. `options` adds query options. */
 export function useMe(options) {
@@ -24,7 +36,10 @@ export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (credentials) => api('/auth/login', { method: 'POST', body: credentials }),
-    onSuccess: ({ user }) => queryClient.setQueryData(ME_QUERY_KEY, user),
+    onSuccess: ({ user }) => {
+      queryClient.setQueryData(ACCESS_DENIED_KEY, false);
+      queryClient.setQueryData(ME_QUERY_KEY, user);
+    },
   });
 }
 

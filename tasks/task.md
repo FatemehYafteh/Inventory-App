@@ -70,7 +70,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 
 | Phase | Task | Status |
 |---|---|---|
-| 4.1 | `requireProfile`, `requireActive` and `requireRole` middleware (`PROFILE_INCOMPLETE`, `ACCOUNT_PENDING`, 403) | ⬜ To do |
+| 4.1 | `requireProfile`, `requireActive` and `requireRole` middleware (`PROFILE_INCOMPLETE`, `ACCOUNT_PENDING`, 403) | ✅ Done |
 | 4.2 | Admin bootstrap from `ADMIN_EMAILS` and `ADMIN_TELEGRAM_IDS` | ⬜ To do |
 | 4.3 | User status service: transitions, change history, ending sessions on rejection, the last-admin rule | ⬜ To do |
 | 4.4 | Approve and reject notifications by email and Telegram bot | ⬜ To do |

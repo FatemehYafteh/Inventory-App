@@ -4,9 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ME_QUERY_KEY, useLogout, useMe } from '@/lib/auth';
 
+// The app opens by itself once an admin approves the account.
+const APPROVAL_POLL_MS = 10_000;
+
 export function AwaitingApprovalPage() {
   const queryClient = useQueryClient();
-  const { data: user, isFetching } = useMe();
+  const { data: user, isFetching } = useMe({
+    refetchInterval: (query) => (query.state.data?.status === 'pending' ? APPROVAL_POLL_MS : false),
+  });
   const logout = useLogout();
 
   return (

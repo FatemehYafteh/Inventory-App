@@ -1,7 +1,9 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
+import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it } from 'vitest';
+import { ACCESS_DENIED_KEY } from '@/lib/auth';
 import { renderApp } from '@/test/render';
 import { activeUser, server } from '@/test/server';
 
@@ -12,6 +14,20 @@ async function fillAndSubmit(user, { email, password }) {
 }
 
 describe('LoginPage', () => {
+  it('says "Access denied" after an account was rejected while signed in', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    queryClient.setQueryData(ACCESS_DENIED_KEY, true);
+    renderApp({ route: '/login', queryClient });
+
+    expect(await screen.findByText('Access denied.')).toBeInTheDocument();
+  });
+
+  it('shows no access-denied notice by default', async () => {
+    renderApp({ route: '/login' });
+    await screen.findByRole('heading', { name: 'Log in' });
+    expect(screen.queryByText('Access denied.')).not.toBeInTheDocument();
+  });
+
   it('sends a signed-out visitor to the login page', async () => {
     renderApp({ route: '/' });
     expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
