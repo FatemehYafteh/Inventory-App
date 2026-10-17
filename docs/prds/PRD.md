@@ -309,7 +309,7 @@ Password reset works only through email. There is no reset through Telegram.
 ### 5.4 Suppliers Page
 - TanStack Table with columns: Name, Contact person, Phone, Email, Product count, Actions.
 - Search by name, contact person, phone or email; sort by name; server-side pagination.
-- Admin: add, edit, deactivate/reactivate, delete. Delete is blocked if any product references the supplier. Deactivated suppliers cannot be chosen for new products but remain on existing ones.
+- Admin: add, edit, deactivate/reactivate, delete. Delete is blocked if any product or any stock movement references the supplier (the error reports both counts and suggests deactivating instead). Deactivated suppliers cannot be chosen for new products but remain on existing ones.
 - Staff: read-only.
 - Row link: view products from that supplier (Products page filtered by supplier).
 - Form fields: name (required), contact person, phone, email (valid format), address, notes.
@@ -379,7 +379,7 @@ All routes under `/api`, JSON, authenticated via the access cookie unless marked
 
 **Suppliers**
 - `GET /suppliers?search=&active=&sortBy=&order=&page=&limit=`
-- `POST /suppliers`, `PATCH /suppliers/:id`, `DELETE /suppliers/:id` (admin; 409 if products reference it)
+- `POST /suppliers`, `PATCH /suppliers/:id`, `DELETE /suppliers/:id` (admin; 409 `IN_USE` if products or stock movements reference it)
 
 **Products**
 - `GET /products?search=&category=&supplier=&status=&archived=&sortBy=&order=&page=&limit=`
@@ -406,7 +406,7 @@ All routes under `/api`, JSON, authenticated via the access cookie unless marked
 - SKU unique and case-insensitive.
 - Archived products cannot receive stock changes until restored.
 - A `receive` movement stores the supplier the product had at that moment, so later supplier changes do not rewrite history.
-- A supplier or category cannot be deleted while products reference it.
+- A category cannot be deleted while products (archived included) reference it. A supplier cannot be deleted while products or stock movements reference it; deactivate it instead.
 - Status changes take effect immediately: rejecting revokes refresh tokens, and every request re-checks the current profile and status.
 - `performedBy` is always set server-side from the authenticated user; a request that tries to send it is ignored. A stock write without an authenticated, `active`, profile-complete user is impossible.
 - Email addresses are trimmed and lowercased before storage and lookup. `email` and `telegramId` are unique across users, so one person cannot end up with two accounts.
