@@ -61,16 +61,23 @@ Issues (blocking links are native on GitHub):
 
 ## M4: Roles, access gates and user approval [sub-PRD 04](../docs/prds/04-roles-approval.md)
 
+Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHub issues**, built with `/mattpocock-skills:implement #<issue>`; the table below maps each task to its issue:
+- [#9](https://github.com/FatemehYafteh/Inventory-App/issues/9) Access gates and Awaiting approval (4.1, 4.5 screen, 4.8 guards)
+- [#10](https://github.com/FatemehYafteh/Inventory-App/issues/10) Admin bootstrap and the StatusChange model (4.2)
+- [#11](https://github.com/FatemehYafteh/Inventory-App/issues/11) User status and role changes (4.3, 4.4, 4.5 API). Blocked by #9 and #10
+- [#12](https://github.com/FatemehYafteh/Inventory-App/issues/12) Users page (4.6, 4.8 badge). Blocked by #11
+- [#13](https://github.com/FatemehYafteh/Inventory-App/issues/13) User detail drawer (4.7). Blocked by #12
+
 | Phase | Task | Status |
 |---|---|---|
-| 4.1 | `requireProfile`, `requireActive` and `requireRole` middleware (`PROFILE_INCOMPLETE`, `ACCOUNT_PENDING`, 403) | ⬜ To do |
-| 4.2 | Admin bootstrap from `ADMIN_EMAILS` and `ADMIN_TELEGRAM_IDS` | ⬜ To do |
-| 4.3 | User status service: transitions, change history, ending sessions on rejection, the last-admin rule | ⬜ To do |
-| 4.4 | Approve and reject notifications by email and Telegram bot | ⬜ To do |
-| 4.5 | Users API: `GET /users`, `PATCH /users/:id/status`, `PATCH /users/:id/role`, `GET /users/pending-count` | ⬜ To do |
-| 4.6 | Users page: Pending, Active and Rejected tabs, table, actions | ⬜ To do |
-| 4.7 | User detail drawer: status history and a link to the user's movements | ⬜ To do |
-| 4.8 | Pending-count badge in the navigation, plus guards for incomplete profiles and admin-only pages | ⬜ To do |
+| 4.1 | `requireProfile`, `requireActive` and `requireRole` middleware (`PROFILE_INCOMPLETE`, `ACCOUNT_PENDING`, 403) | ✅ Done |
+| 4.2 | Admin bootstrap from `ADMIN_EMAILS` and `ADMIN_TELEGRAM_IDS` | ✅ Done |
+| 4.3 | User status service: transitions, change history, ending sessions on rejection, the last-admin rule | ✅ Done |
+| 4.4 | Approve and reject notifications by email and Telegram bot | ✅ Done |
+| 4.5 | Users API: `GET /users`, `PATCH /users/:id/status`, `PATCH /users/:id/role`, `GET /users/pending-count` | ✅ Done |
+| 4.6 | Users page: Pending, Active and Rejected tabs, table, actions | ✅ Done |
+| 4.7 | User detail drawer: status history and a link to the user's movements | ✅ Done |
+| 4.8 | Pending-count badge in the navigation, plus guards for incomplete profiles and admin-only pages | ✅ Done |
 
 ## M5: Categories and suppliers [sub-PRD 05](../docs/prds/05-categories-suppliers.md)
 

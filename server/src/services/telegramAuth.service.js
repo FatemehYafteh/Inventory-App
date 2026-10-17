@@ -5,6 +5,7 @@ import { User, isPlaceholder } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 import { hashToken, randomToken } from '../utils/crypto.js';
 import { startSession } from './auth.service.js';
+import { applyAdminBootstrap } from './adminBootstrap.service.js';
 import { deletePlaceholder } from './placeholder.service.js';
 
 export const REQUEST_TTL_MS = 10 * 60 * 1000;
@@ -457,6 +458,7 @@ export async function verifyConnect({ requestId, otp }, user, config) {
         { session, new: true },
       );
       if (!connected) throw telegramAlreadyConnected();
+      await applyAdminBootstrap(connected._id, config, { session });
     });
   } catch (err) {
     // Another User took the ID meanwhile.

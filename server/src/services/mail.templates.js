@@ -90,3 +90,31 @@ export function telegramConflictTemplate({ name, telegram }) {
     ),
   };
 }
+
+/** An admin approved the account (or reactivated a rejected one). */
+export function accountApprovedTemplate({ name, loginLink }) {
+  const greeting = name ? `Hi ${name},` : 'Hi,';
+  const what = 'An admin approved your Inventory account. You can now log in and use the app.';
+  return {
+    subject: 'Your Inventory account was approved',
+    text: `${greeting}\n\n${what}\n${loginLink}`,
+    html: layout(
+      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(what)}</p>${button(loginLink, 'Log in')}`,
+    ),
+  };
+}
+
+/** An admin rejected the account. The reason is shown only when the admin gave one. */
+export function accountRejectedTemplate({ name, reason }) {
+  const greeting = name ? `Hi ${name},` : 'Hi,';
+  const what = 'An admin did not approve your Inventory account request.';
+  const why = reason ? `Reason: ${reason}` : '';
+  const help = 'If you think this is a mistake, contact an admin.';
+  return {
+    subject: 'Your Inventory account request was declined',
+    text: [greeting, what, why, help].filter(Boolean).join('\n\n'),
+    html: layout(
+      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(what)}</p>${why ? `<p>${escapeHtml(why)}</p>` : ''}<p>${escapeHtml(help)}</p>`,
+    ),
+  };
+}

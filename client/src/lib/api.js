@@ -8,6 +8,10 @@ const NO_REFRESH_PATHS = new Set([
   // Public: a wrong password answers 401 but says nothing about the session.
   '/auth/link-telegram/confirm',
 ]);
+// The gates' 403 codes: the user's status or profile changed since the page was loaded.
+const ACCESS_DENIED_CODES = new Set(['ACCOUNT_REJECTED', 'ACCOUNT_PENDING', 'PROFILE_INCOMPLETE']);
+// Sign-in calls show their own answer for a rejected account.
+const SIGN_IN_PATHS = new Set(['/auth/login', '/auth/telegram/verify']);
 const NETWORK_ERROR = 'Could not reach the server. Check your connection and try again.';
 
 export class ApiError extends Error {
@@ -25,6 +29,13 @@ let onSessionExpired = () => {};
 /** Called when a request fails with 401 and the refresh attempt fails too. */
 export function setSessionExpiredHandler(handler) {
   onSessionExpired = handler;
+}
+
+let onAccessDenied = () => {};
+
+/** Called with the code when a request fails with 403 ACCOUNT_REJECTED, ACCOUNT_PENDING or PROFILE_INCOMPLETE. */
+export function setAccessDeniedHandler(handler) {
+  onAccessDenied = handler;
 }
 
 // Cookies carry the session (httpOnly); X-Requested-With is part of the CSRF defence.
@@ -59,6 +70,14 @@ http.interceptors.response.use(undefined, async (error) => {
     if (await refreshSession()) return http({ ...config, retriedAfterRefresh: true });
   }
   if (canRefresh) onSessionExpired();
+
+  if (
+    response.status === 403 &&
+    ACCESS_DENIED_CODES.has(response.data?.code) &&
+    !SIGN_IN_PATHS.has(config.url)
+  ) {
+    onAccessDenied(response.data.code);
+  }
 
   throw new ApiError(response.status, response.data);
 });

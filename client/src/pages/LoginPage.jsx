@@ -6,11 +6,12 @@ import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
 import { useZodForm } from '@/hooks/useZodForm';
-import { useLogin } from '@/lib/auth';
+import { useAccessDenied, useLogin } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
 export function LoginPage() {
   const login = useLogin();
+  const accessDenied = useAccessDenied();
   // Set by pages that send the user here, e.g. after a password reset.
   const notice = useLocation().state?.notice;
 
@@ -53,7 +54,7 @@ export function LoginPage() {
         email={
           <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             {!login.error && <FormAlert tone="success">{notice}</FormAlert>}
-            <FormAlert>{formError}</FormAlert>
+            <FormAlert>{formError ?? (accessDenied ? 'Access denied.' : undefined)}</FormAlert>
             <TextField
               id="email"
               label="Email"

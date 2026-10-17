@@ -2,12 +2,15 @@ import { Category } from '../src/models/Category.js';
 import { EmailToken } from '../src/models/EmailToken.js';
 import { Product } from '../src/models/Product.js';
 import { RefreshToken } from '../src/models/RefreshToken.js';
+import { StatusChange } from '../src/models/StatusChange.js';
 import { StockMovement } from '../src/models/StockMovement.js';
 import { Supplier } from '../src/models/Supplier.js';
 import { User } from '../src/models/User.js';
+import { SYSTEM_NAME } from '../src/services/adminBootstrap.service.js';
 import { hashPassword } from '../src/services/password.service.js';
 import { categories } from './data/categories.js';
 import { products } from './data/products.js';
+import { statusChanges } from './data/statusChanges.js';
 import { suppliers } from './data/suppliers.js';
 import { users } from './data/users.js';
 
@@ -84,7 +87,16 @@ export function buildHistory(spec, { productIndex, now, performers }) {
 async function seedUsers(passwordHash, now) {
   const byKey = {};
   let created = 0;
-  for (const { key, password, statusChangedBy, statusReason, ...fields } of users) {
+  for (const {
+    key,
+    password,
+    statusChangedBy,
+    statusReason,
+    signedUpDaysAgo,
+    lastLoginDaysAgo,
+    approvedBy,
+    ...fields
+  } of users) {
     const filter = fields.email ? { email: fields.email } : { telegramId: fields.telegramId };
     let user = await User.findOne(filter);
     if (!user) {
@@ -93,17 +105,55 @@ async function seedUsers(passwordHash, now) {
         passwordHash: password ? passwordHash : undefined,
         statusReason,
         statusChangedAt: fields.status === 'pending' ? undefined : new Date(now - 2 * DAY_MS),
+        ...(signedUpDaysAgo && { createdAt: new Date(now - signedUpDaysAgo * DAY_MS) }),
+        ...(lastLoginDaysAgo !== undefined && {
+          lastLoginAt: new Date(now - lastLoginDaysAgo * DAY_MS),
+        }),
       });
       created += 1;
     }
     byKey[key] = user;
     // Resolved after the referenced user exists.
-    if (statusChangedBy && !user.statusChangedBy) {
-      user.statusChangedBy = byKey[statusChangedBy]._id;
+    const changer = statusChangedBy ?? approvedBy;
+    if (changer && !user.statusChangedBy) {
+      user.statusChangedBy = byKey[changer]._id;
       await user.save();
     }
   }
   return { byKey, created };
+}
+
+/**
+ * Inserts each status change once, dated `daysAgo` before `now`. A user who got new rows has
+ * their `statusChangedAt` set to the date of the latest one, as a real change would.
+ */
+async function seedStatusChanges(usersByKey, now) {
+  let created = 0;
+  const latest = new Map();
+  for (const { user: key, from, to, changedBy, reason, daysAgo } of statusChanges) {
+    const user = usersByKey[key];
+    if (!user) throw new Error(`Status change for unknown user "${key}"`);
+    if (await StatusChange.exists({ user: user._id, from, to })) continue;
+
+    const changer = changedBy ? usersByKey[changedBy] : null;
+    if (changedBy && !changer) throw new Error(`Status change by unknown user "${changedBy}"`);
+    const at = new Date(now - daysAgo * DAY_MS);
+    await StatusChange.create({
+      user: user._id,
+      from,
+      to,
+      changedBy: changer?._id ?? null,
+      changedByName: changer?.name ?? SYSTEM_NAME,
+      reason,
+      at,
+    });
+    if (!(latest.get(key) > at)) latest.set(key, at);
+    created += 1;
+  }
+  for (const [key, at] of latest) {
+    await User.updateOne({ _id: usersByKey[key]._id }, { $set: { statusChangedAt: at } });
+  }
+  return created;
 }
 
 async function upsertByName(Model, field, items) {
@@ -186,19 +236,27 @@ export async function seedDatabase({
 } = {}) {
   if (reset) {
     await Promise.all(
-      [StockMovement, Product, Supplier, Category, EmailToken, RefreshToken, User].map((Model) =>
-        Model.deleteMany({}),
-      ),
+      [
+        StockMovement,
+        Product,
+        Supplier,
+        Category,
+        EmailToken,
+        RefreshToken,
+        StatusChange,
+        User,
+      ].map((Model) => Model.deleteMany({})),
     );
   }
   await Promise.all(
-    [User, Category, Supplier, Product, StockMovement, EmailToken, RefreshToken].map((Model) =>
-      Model.init(),
+    [User, StatusChange, Category, Supplier, Product, StockMovement, EmailToken, RefreshToken].map(
+      (Model) => Model.init(),
     ),
   );
 
   const passwordHash = await hashPassword(password);
   const { byKey: usersByKey, created: usersCreated } = await seedUsers(passwordHash, now);
+  const statusChangesCreated = await seedStatusChanges(usersByKey, now);
   const { byName: categoriesByTitle, created: categoriesCreated } = await upsertByName(
     Category,
     'title',
@@ -221,6 +279,7 @@ export async function seedDatabase({
 
   return {
     users: usersCreated,
+    statusChanges: statusChangesCreated,
     categories: categoriesCreated,
     suppliers: suppliersCreated,
     products: productsCreated,

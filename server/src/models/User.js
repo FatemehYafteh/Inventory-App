@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// The approval queue (oldest first) and the last-admin check.
+userSchema.index({ status: 1, createdAt: 1 });
+userSchema.index({ role: 1, status: 1 });
+
 export const User = mongoose.model('User', userSchema);
 
 /** A usable profile: a name and a verified email (Telegram signups start without both). */

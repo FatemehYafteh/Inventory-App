@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 import { server } from '@/test/server';
-import { ApiError, api, setSessionExpiredHandler } from './api';
+import { ApiError, api, setAccessDeniedHandler, setSessionExpiredHandler } from './api';
 
 describe('api', () => {
   it('sends credentials and the X-Requested-With header', async () => {
@@ -130,7 +130,10 @@ describe('api', () => {
     const refresh = vi.fn(() => new HttpResponse(null, { status: 204 }));
     server.use(
       http.post('*/api/auth/link-telegram/confirm', () =>
-        HttpResponse.json({ code: 'INVALID_PASSWORD', message: 'Incorrect password.' }, { status: 401 }),
+        HttpResponse.json(
+          { code: 'INVALID_PASSWORD', message: 'Incorrect password.' },
+          { status: 401 },
+        ),
       ),
       http.post('*/api/auth/refresh', refresh),
     );
@@ -138,5 +141,35 @@ describe('api', () => {
       api('/auth/link-telegram/confirm', { method: 'POST', body: {} }),
     ).rejects.toMatchObject({ code: 'INVALID_PASSWORD' });
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it.each(['ACCOUNT_REJECTED', 'ACCOUNT_PENDING', 'PROFILE_INCOMPLETE'])(
+    'reports a 403 %s to the access-denied handler without refreshing',
+    async (code) => {
+      const onDenied = vi.fn();
+      setAccessDeniedHandler(onDenied);
+      const refresh = vi.fn(() => new HttpResponse(null, { status: 204 }));
+      server.use(
+        http.get('*/api/data', () => HttpResponse.json({ code, message: 'no' }, { status: 403 })),
+        http.post('*/api/auth/refresh', refresh),
+      );
+
+      await expect(api('/data')).rejects.toMatchObject({ status: 403, code });
+      expect(onDenied).toHaveBeenCalledExactlyOnceWith(code);
+      expect(refresh).not.toHaveBeenCalled();
+      setAccessDeniedHandler(() => {});
+    },
+  );
+
+  it('ignores other 403 errors', async () => {
+    const onDenied = vi.fn();
+    setAccessDeniedHandler(onDenied);
+    server.use(
+      http.get('*/api/data', () => HttpResponse.json({ code: 'FORBIDDEN' }, { status: 403 })),
+    );
+
+    await expect(api('/data')).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(onDenied).not.toHaveBeenCalled();
+    setAccessDeniedHandler(() => {});
   });
 });

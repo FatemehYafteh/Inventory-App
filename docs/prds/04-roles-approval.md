@@ -56,7 +56,7 @@ Order on every protected route: **authenticate, load user, profile complete, sta
 - Role failure: 403.
 
 ### 4.2 Admin bootstrap
-- `ADMIN_TELEGRAM_IDS` and `ADMIN_EMAILS` (comma-separated). A matching user becomes `admin` + `active` once their profile is complete (verified email).
+- `ADMIN_TELEGRAM_IDS` and `ADMIN_EMAILS` (comma-separated). A matching user becomes `admin` + `active` once their profile is complete (verified email), and the promotion is recorded as a status change made by the system. It happens once, when the profile becomes complete or Telegram is connected, and only for a `pending` user: an admin's later decision (rejected, demoted) is never overridden, and there is no startup sweep.
 
 ### 4.3 Status changes
 - Rejecting a user revokes all their refresh tokens immediately.

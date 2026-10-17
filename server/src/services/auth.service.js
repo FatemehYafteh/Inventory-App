@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
+import { applyAdminBootstrap } from './adminBootstrap.service.js';
 import { consumeEmailToken, isInCooldown, issueEmailToken } from './emailToken.service.js';
 import {
   passwordChangedTemplate,
@@ -185,6 +186,7 @@ export async function verifyEmail({ token }, config) {
       if (!before) {
         throw new AppError(400, 'INVALID_TOKEN', 'This link is invalid or has expired.');
       }
+      await applyAdminBootstrap(before._id, config, { session });
     });
   } finally {
     await session.endSession();

@@ -1,14 +1,22 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLogout, useMe } from '@/lib/auth';
+import { usePendingCount } from '@/lib/users';
 import { cn } from '@/lib/utils';
 
-// Pages are added here as their milestones land.
-const NAV_ITEMS = [{ to: '/', label: 'Dashboard', end: true }];
+// Pages are added here as their milestones land. `adminOnly` items are hidden from staff.
+const NAV_ITEMS = [
+  { to: '/', label: 'Dashboard', end: true },
+  { to: '/users', label: 'Users', adminOnly: true, badge: true },
+];
 
 export function AppLayout() {
   const { data: user } = useMe();
   const logout = useLogout();
+  const isAdmin = user?.role === 'admin';
+  const { data: pendingCount = 0 } = usePendingCount({ enabled: isAdmin });
+  const items = NAV_ITEMS.filter((item) => isAdmin || !item.adminOnly);
 
   return (
     <div className="min-h-svh">
@@ -16,7 +24,7 @@ export function AppLayout() {
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
           <span className="font-semibold">Inventory</span>
           <nav aria-label="Main" className="flex flex-1 gap-1">
-            {NAV_ITEMS.map((item) => (
+            {items.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -29,6 +37,12 @@ export function AppLayout() {
                 }
               >
                 {item.label}
+                {item.badge && pendingCount > 0 && (
+                  <Badge className="ml-2">
+                    {pendingCount}
+                    <span className="sr-only"> waiting for approval</span>
+                  </Badge>
+                )}
               </NavLink>
             ))}
           </nav>
