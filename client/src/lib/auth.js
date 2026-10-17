@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { hashKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from './api';
 
 export const ME_QUERY_KEY = ['auth', 'me'];
@@ -48,8 +48,12 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => api('/auth/logout', { method: 'POST' }),
     onSettled: () => {
-      queryClient.clear();
+      // The guards watch the session query, so it keeps its place in the cache and answers null.
+      // Everything else (the previous user's lists, the access-denied flag) is dropped.
       queryClient.setQueryData(ME_QUERY_KEY, null);
+      queryClient.removeQueries({
+        predicate: (query) => query.queryHash !== hashKey(ME_QUERY_KEY),
+      });
     },
   });
 }
