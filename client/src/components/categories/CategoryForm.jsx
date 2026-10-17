@@ -20,7 +20,7 @@ const FIELDS = ['title', 'description'];
  * Add (no `category`) or edit a category. `onSubmit(values)` returns a promise; a server
  * validation or duplicate-title error lands on its field, anything else shows above the fields.
  */
-export function CategoryForm({ category, onSubmit, onCancel }) {
+export function CategoryForm({ category, onSubmit, onCancel, onCloseAutoFocus }) {
   const {
     register,
     handleSubmit,
@@ -43,7 +43,7 @@ export function CategoryForm({ category, onSubmit, onCancel }) {
 
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent>
+      <DialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <form noValidate onSubmit={handleSubmit(submit)} className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle>{category ? 'Edit category' : 'Add category'}</DialogTitle>

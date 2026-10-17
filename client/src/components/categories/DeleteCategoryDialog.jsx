@@ -9,12 +9,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-export function DeleteCategoryDialog({ category, onConfirm, onCancel }) {
+export function DeleteCategoryDialog({ category, onConfirm, onCancel, onCloseAutoFocus }) {
   if (!category) return null;
 
   return (
     <AlertDialog open onOpenChange={(open) => !open && onCancel()}>
-      <AlertDialogContent>
+      <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {category.title}?</AlertDialogTitle>
           <AlertDialogDescription>

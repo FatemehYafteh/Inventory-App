@@ -13,6 +13,7 @@ export function productCountLabel(count) {
 export function CategoryCard({ category, canManage, onEdit, onDelete }) {
   const inUse = category.productCount > 0;
   const reasonId = `category-${category.id}-in-use`;
+  const reason = `Used by ${productCountLabel(category.productCount)}, so it cannot be deleted.`;
 
   return (
     <Card
@@ -42,19 +43,22 @@ export function CategoryCard({ category, canManage, onEdit, onDelete }) {
             >
               Edit
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label={`Delete ${category.title}`}
-              aria-describedby={inUse ? reasonId : undefined}
-              disabled={inUse}
-              onClick={() => onDelete(category)}
-            >
-              Delete
-            </Button>
+            {/* A disabled button gets no hover events, so the span carries the tooltip. */}
+            <span title={inUse ? reason : undefined}>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label={`Delete ${category.title}`}
+                aria-describedby={inUse ? reasonId : undefined}
+                disabled={inUse}
+                onClick={() => onDelete(category)}
+              >
+                Delete
+              </Button>
+            </span>
             {inUse && (
               <span id={reasonId} className="sr-only">
-                Used by {productCountLabel(category.productCount)}, so it cannot be deleted.
+                {reason}
               </span>
             )}
           </div>

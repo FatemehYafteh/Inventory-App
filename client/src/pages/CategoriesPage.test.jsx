@@ -225,6 +225,130 @@ describe('Categories page, admin', () => {
     expect(button).toHaveAccessibleDescription(/3 products/);
   });
 
+  it('explains a disabled Delete to mouse users too, since a disabled button gets no hover', async () => {
+    categoriesApi([tools]);
+    renderApp({ route: '/categories' });
+
+    const button = within(await card('Tools')).getByRole('button', { name: 'Delete Tools' });
+    expect(button.parentElement).toHaveAttribute(
+      'title',
+      'Used by 3 products, so it cannot be deleted.',
+    );
+  });
+
+  it('keeps the admin buttons outside the card link, so no control is nested in another', async () => {
+    categoriesApi([tools]);
+    renderApp({ route: '/categories' });
+
+    const link = await screen.findByRole('link', { name: /Tools/ });
+    expect(within(link).queryAllByRole('button')).toEqual([]);
+    expect(link.closest('a')).toBe(link);
+  });
+
+  it('keeps the duplicate-title message on the Edit form too', async () => {
+    const state = categoriesApi([tools, books]);
+    state.failNext = {
+      status: 409,
+      body: {
+        code: 'DUPLICATE_NAME',
+        message: 'A category with this title already exists',
+        errors: { title: 'A category with this title already exists' },
+      },
+    };
+    const user = userEvent.setup();
+    renderApp({ route: '/categories' });
+
+    await user.click(within(await card('Books')).getByRole('button', { name: 'Edit Books' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Edit category' });
+    await user.clear(within(dialog).getByLabelText('Title'));
+    await user.type(within(dialog).getByLabelText('Title'), 'tools');
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    expect(
+      await within(dialog).findByText('A category with this title already exists'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Edit category' })).toBeInTheDocument();
+  });
+
+  it('shows a message inside the form when the category was deleted by someone else', async () => {
+    const state = categoriesApi([books]);
+    state.failNext = {
+      status: 404,
+      body: { code: 'NOT_FOUND', message: 'Category not found' },
+    };
+    const user = userEvent.setup();
+    renderApp({ route: '/categories' });
+
+    await user.click(within(await card('Books')).getByRole('button', { name: 'Edit Books' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Edit category' });
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Category not found');
+    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled();
+  });
+
+  it('clears a description by saving it empty', async () => {
+    const state = categoriesApi([tools]);
+    const user = userEvent.setup();
+    renderApp({ route: '/categories' });
+
+    await user.click(within(await card('Tools')).getByRole('button', { name: 'Edit Tools' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Edit category' });
+    await user.clear(within(dialog).getByLabelText('Description'));
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(state.writes).toEqual([
+      { method: 'PATCH', id: 'c1', body: { title: 'Tools', description: '' } },
+    ]);
+    expect(within(await card('Tools')).queryByText('Hand tools')).not.toBeInTheDocument();
+  });
+
+  it('returns focus to the Delete button when its dialog is cancelled', async () => {
+    categoriesApi([books]);
+    const user = userEvent.setup();
+    renderApp({ route: '/categories' });
+
+    const button = within(await card('Books')).getByRole('button', { name: 'Delete Books' });
+    await user.click(button);
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Cancel' }),
+    );
+
+    await waitFor(() => expect(button).toHaveFocus());
+  });
+
+  it('moves focus to the page heading after the focused card is deleted', async () => {
+    categoriesApi([tools, books]);
+    const user = userEvent.setup();
+    renderApp({ route: '/categories' });
+
+    await user.click(within(await card('Books')).getByRole('button', { name: 'Delete Books' }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByRole('link', { name: /Books/ })).not.toBeInTheDocument(),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { level: 1, name: 'Categories' })).toHaveFocus(),
+    );
+  });
+
+  it('returns focus to the page when a dialog is cancelled with the keyboard', async () => {
+    categoriesApi([tools]);
+    const user = userEvent.setup();
+    renderApp({ route: '/categories' });
+
+    await user.click(await screen.findByRole('button', { name: 'Add category' }));
+    await screen.findByRole('dialog');
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Add category' })).toHaveFocus());
+  });
+
   it('shows the server message and refreshes when a delete is blocked after all', async () => {
     const state = categoriesApi([books]);
     state.failNext = {

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { CategoryCard } from '@/components/categories/CategoryCard';
 import { CategoryForm } from '@/components/categories/CategoryForm';
 import { DeleteCategoryDialog } from '@/components/categories/DeleteCategoryDialog';
 import { FormAlert } from '@/components/form/FormAlert';
 import { Button } from '@/components/ui/button';
+import { useReturnFocus } from '@/hooks/useReturnFocus';
 import { useMe } from '@/lib/auth';
 import {
   useCategories,
@@ -30,7 +31,19 @@ export function CategoriesPage() {
   const [deleting, setDeleting] = useState(null);
   const [actionError, setActionError] = useState(null);
 
+  const headingRef = useRef(null);
+  const { remember, onCloseAutoFocus } = useReturnFocus(headingRef);
   const items = categories.data?.items ?? [];
+
+  function openForm(category) {
+    remember();
+    setForm({ category });
+  }
+
+  function openDelete(category) {
+    remember();
+    setDeleting(category);
+  }
 
   function confirmDelete(category) {
     setDeleting(null);
@@ -43,8 +56,10 @@ export function CategoriesPage() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Categories</h1>
-        {canManage && <Button onClick={() => setForm({ category: null })}>Add category</Button>}
+        <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold outline-none">
+          Categories
+        </h1>
+        {canManage && <Button onClick={() => openForm(null)}>Add category</Button>}
       </div>
       <FormAlert>{actionError}</FormAlert>
 
@@ -63,8 +78,8 @@ export function CategoriesPage() {
             key={category.id}
             category={category}
             canManage={canManage}
-            onEdit={(target) => setForm({ category: target })}
-            onDelete={setDeleting}
+            onEdit={openForm}
+            onDelete={openDelete}
           />
         ))}
       </div>
@@ -74,6 +89,7 @@ export function CategoriesPage() {
           key={form.category?.id ?? 'new'}
           category={form.category}
           onCancel={() => setForm(null)}
+          onCloseAutoFocus={onCloseAutoFocus}
           onSubmit={async (values) => {
             if (form.category) {
               await updateCategory.mutateAsync({ id: form.category.id, ...values });
@@ -87,6 +103,7 @@ export function CategoriesPage() {
       <DeleteCategoryDialog
         category={deleting}
         onCancel={() => setDeleting(null)}
+        onCloseAutoFocus={onCloseAutoFocus}
         onConfirm={confirmDelete}
       />
     </section>
