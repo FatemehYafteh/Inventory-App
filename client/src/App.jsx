@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import {
   RequireActive,
+  RequireAdmin,
   RequireCompleteProfile,
   RequireGuest,
   RequireIncompleteProfile,
@@ -17,6 +18,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { UsersPage } from '@/pages/UsersPage';
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 
 export function App() {
@@ -43,6 +45,9 @@ export function App() {
       <Route element={<RequireActive />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
+          <Route element={<RequireAdmin />}>
+            <Route path="/users" element={<UsersPage />} />
+          </Route>
         </Route>
       </Route>
       <Route path="*" element={<NotFoundPage />} />
