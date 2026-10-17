@@ -61,6 +61,13 @@ Issues (blocking links are native on GitHub):
 
 ## M4: Roles, access gates and user approval [sub-PRD 04](../docs/prds/04-roles-approval.md)
 
+Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHub issues**, built with `/mattpocock-skills:implement #<issue>`; the table below maps each task to its issue:
+- [#9](https://github.com/FatemehYafteh/Inventory-App/issues/9) Access gates and Awaiting approval (4.1, 4.5 screen, 4.8 guards)
+- [#10](https://github.com/FatemehYafteh/Inventory-App/issues/10) Admin bootstrap (4.2)
+- [#11](https://github.com/FatemehYafteh/Inventory-App/issues/11) User status and role changes (4.3, 4.4, 4.5 API). Blocked by #9
+- [#12](https://github.com/FatemehYafteh/Inventory-App/issues/12) Users page (4.6, 4.8 badge). Blocked by #11
+- [#13](https://github.com/FatemehYafteh/Inventory-App/issues/13) User detail drawer (4.7). Blocked by #12
+
 | Phase | Task | Status |
 |---|---|---|
 | 4.1 | `requireProfile`, `requireActive` and `requireRole` middleware (`PROFILE_INCOMPLETE`, `ACCOUNT_PENDING`, 403) | ⬜ To do |
