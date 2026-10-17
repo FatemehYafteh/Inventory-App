@@ -12,7 +12,7 @@ This plan has four separate parts: **1 Decisions** (settled with the owner), **2
 | # | Decision |
 |---|---|
 | Q1 | A duplicate category title or supplier name returns 409 `DUPLICATE_NAME` with a field-level message ("A category with this title already exists"). Comparison is case-insensitive, matching the existing collation indexes. The form shows the message under the title or name field. |
-| Q2 | A blocked delete returns 409 `IN_USE`, with the count in the message ("Used by 3 products, including archived ones"). The UI disables Delete when `productCount > 0` (tooltip explains), and still handles the 409 (toast, refresh the row) in case the data changed since the page loaded. |
+| Q2 | A blocked delete returns 409 `IN_USE`, with the count in the message ("Used by 3 products, including archived ones"). Suppliers report both counts (see Q10). The UI disables Delete when `productCount > 0` (suppliers: when either count is above 0, Q10) (tooltip explains), and still handles the 409 (toast, refresh the row) in case the data changed since the page loaded. |
 | Q4 | `GET /suppliers`: `active` omitted = all, `true` = active only, `false` = inactive only. Staff and admins both see inactive suppliers in the table with an "Inactive" badge. The M6 product picker calls `active=true`. `search` is a case-insensitive substring match with regex characters escaped, across name, contactPerson, phone and email. `sortBy` accepts only `name` (asc by default). `limit` defaults to 20 and is capped at 100. |
 | Q5 | An inactive supplier stays fully editable. `PATCH /suppliers/:id` with `isActive` is the only deactivate and reactivate path. Deactivating a supplier that still has products is allowed, with a normal confirm dialog. |
 | Q6 | On create and PATCH, an empty string for `description`, `contactPerson`, `phone`, `email`, `address` or `notes` clears the field (stored as unset). `email` is validated for format only when non-empty. `phone` is free text, max 40 characters. The rules live in the shared Zod schemas. |
@@ -48,14 +48,14 @@ In: Category and Supplier APIs, shared Zod schemas, the two pages and their comp
 ### 3.2 Server
 
 - **Categories** (`categories.service.js`): list (all, by title, with `productCount`), create, update, delete. `DUPLICATE_NAME` on a duplicate key (map the Mongo error). `IN_USE` on delete when a product references the category, archived included.
-- **Suppliers** (`suppliers.service.js`): list with search, `active`, `sortBy=name`, `order`, `page`, `limit` and `productCount`; create, update (including `isActive`), delete with the same two errors.
+- **Suppliers** (`suppliers.service.js`): list with search, `active`, `sortBy=name`, `order`, `page`, `limit`, `productCount` and `movementCount`; create, update (including `isActive`), delete with the same two errors (`IN_USE` counts products and stock movements, Q10).
 - **Routes and controllers** are thin and follow the table in sub-PRD 05 section 5. Every write uses `validate` with a schema from `shared/schemas` (`category.js`, `supplier.js`, exported from `index.js`).
 - Responses carry `productCount` on every category and supplier returned, and `movementCount` on every supplier (one grouped count over `StockMovement.supplier`; add a `{ supplier: 1 }` index check, the PRD already lists one).
 
 ### 3.3 Client
 
 - `/categories`: responsive grid of cards (title, description, product count); admin sees Add, Edit and Delete, staff sees plain cards. A card links to `/products?category=<id>`.
-- `/suppliers`: TanStack Table in manual server mode (Name, Contact person, Phone, Email, Product count, Actions), search, sort by name, pagination, "Inactive" badge. Admin actions: add, edit, deactivate or reactivate, delete. A row links to `/products?supplier=<id>`.
+- `/suppliers`: TanStack Table in manual server mode (Name, Contact person, Phone, Email, Product count, Actions), search, sort by name, pagination, "Inactive" badge. Admin actions: add, edit, deactivate or reactivate, delete (disabled unless product and movement counts are both zero). A row links to `/products?supplier=<id>`.
 - Forms use React Hook Form with the shared Zod schemas. Field-level `DUPLICATE_NAME` messages. Empty, loading and error states on both pages.
 
 ### 3.4 Seed data
@@ -109,3 +109,4 @@ Four issues, each labeled `enhancement` and `ready-for-agent`, each blocked by t
 | U2 | Whether to seed a category or supplier that has only archived products (see 3.4). Default: no, test it with fixtures. | Owner |
 | U3 | Whether the sidebar already has Categories and Suppliers items, and whether staff see them. Verify during 5.2 and 5.4. | Implementer |
 | U4 | The exact error response shape used by M4, for the client to read `code` and `message`. Verify during 5.1. | Implementer |
+| U6 | **How the 409 carries the counts.** Server rules say one error class `AppError(status, code, message)` with no extra payload. Q10 asks for the counts in the response. Either put both numbers in the message text only, or add an optional `details` object to `AppError` and the error handler (a small change to shared code that must not leak internals). Default: add optional `details` (`{ productCount, movementCount }`), tested, because the client should read numbers rather than parse text. | Owner |

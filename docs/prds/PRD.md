@@ -480,7 +480,7 @@ server/src
 - Each stock action creates exactly one movement with correct before/after values and `performedBy` set to the acting user; it is visible in the product history modal and the Movements page, and filterable by user. Receives record the product's supplier.
 - Shipping more than available is blocked.
 - Stock status filter and badges follow each product's reorder level.
-- Category or supplier with products cannot be deleted.
+- A category with products cannot be deleted. A supplier with products or stock movements cannot be deleted.
 - Sorting by title, quantity and price covers the whole dataset, not only the current page.
 - Forms validate with the same Zod schemas on client and server.
 
