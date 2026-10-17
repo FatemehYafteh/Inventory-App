@@ -2,7 +2,10 @@
 // an unverified email, a Telegram signup with no password yet, and a Telegram-only signup
 // with an incomplete profile.
 // `password: true` means the account gets the shared seed password.
-export const users = [
+// Optional timing fields (days before the seed runs): `signedUpDaysAgo` sets the signup date
+// (the Pending queue is oldest first), `lastLoginDaysAgo` the last login. `approvedBy` is the
+// key of the admin who approved the user; it becomes their pending to active status change.
+const handwritten = [
   {
     key: 'admin',
     name: 'Ada Admin',
@@ -116,4 +119,128 @@ export const users = [
     role: 'staff',
     status: 'pending',
   },
+];
+
+// Enough people to page, search and filter the Users page: more than one page of Active
+// staff (some Telegram-linked, some never logged in), a queue of Pending signups with
+// complete profiles, more unfinished signups, Rejected users with reasons, and one user who
+// was rejected and then reactivated (its history is in statusChanges.js).
+const ACTIVE_STAFF = [
+  'Aiden Brooks',
+  'Bella Carter',
+  'Caleb Diaz',
+  'Daria Evans',
+  'Eli Foster',
+  'Fiona Grant',
+  'Gabe Hughes',
+  'Hana Ito',
+  'Ian Jones',
+  'Jade Kim',
+  'Kofi Lane',
+  'Lila Moore',
+  'Mateo Novak',
+  'Nora Ortiz',
+  'Omar Patel',
+  'Pia Quinn',
+  'Raj Singh',
+  'Sofia Tran',
+  'Theo Underwood',
+  'Uma Vega',
+  'Vik Wong',
+  'Wren Xu',
+];
+
+const emailFor = (name) => `${name.toLowerCase().replace(' ', '.')}@example.com`;
+
+const activeStaff = ACTIVE_STAFF.map((name, index) => ({
+  key: `activeStaff${index + 1}`,
+  name,
+  email: emailFor(name),
+  emailVerified: true,
+  password: index % 3 !== 0,
+  // Every fifth person also signs in with Telegram.
+  ...(index % 5 === 0 && {
+    telegramId: `1000100${String(index).padStart(2, '0')}`,
+    telegramUsername: `${name.split(' ')[0].toLowerCase()}_tg`,
+  }),
+  role: 'staff',
+  status: 'active',
+  signedUpDaysAgo: 40 + index,
+  // Some have never logged in.
+  ...(index % 4 !== 0 && { lastLoginDaysAgo: index % 12 }),
+  approvedBy: index % 2 === 0 ? 'admin' : 'telegramAdmin',
+}));
+
+const pendingQueue = ['Pat Quill', 'Quinn Rowe', 'Rhea Stone', 'Sid Tate'].map((name, index) => ({
+  key: `pendingQueue${index + 1}`,
+  name,
+  email: emailFor(name),
+  emailVerified: true,
+  password: true,
+  role: 'staff',
+  status: 'pending',
+  // The first one has waited the longest.
+  signedUpDaysAgo: 4 - index,
+}));
+
+const unfinished = [
+  {
+    // Signed up with a password and never opened the verification link.
+    key: 'unverifiedPending',
+    name: 'Vera Unverified',
+    email: 'vera.unverified@example.com',
+    emailVerified: false,
+    password: true,
+    role: 'staff',
+    status: 'pending',
+    signedUpDaysAgo: 6,
+  },
+  {
+    key: 'telegramPlaceholder',
+    name: 'Tess Placeholder',
+    telegramId: '100000201',
+    telegramUsername: 'tess_tg',
+    role: 'staff',
+    status: 'pending',
+    signedUpDaysAgo: 3,
+  },
+];
+
+const rejectedStaff = [
+  ['Walt Duplicate', 'Duplicate account.'],
+  ['Xena Former', 'Left the company.'],
+  ['Yuri Outsider', 'Not part of the warehouse team.'],
+].map(([name, statusReason], index) => ({
+  key: `rejectedStaff${index + 1}`,
+  name,
+  email: emailFor(name),
+  emailVerified: true,
+  password: true,
+  role: 'staff',
+  status: 'rejected',
+  statusChangedBy: 'admin',
+  statusReason,
+  signedUpDaysAgo: 30 + index,
+}));
+
+const reactivated = {
+  key: 'reactivated',
+  name: 'Rory Returned',
+  email: 'rory.returned@example.com',
+  emailVerified: true,
+  password: true,
+  role: 'staff',
+  status: 'active',
+  statusChangedBy: 'admin',
+  signedUpDaysAgo: 25,
+  lastLoginDaysAgo: 1,
+};
+
+export const users = [
+  ...handwritten,
+  ...activeStaff,
+  ...pendingQueue,
+  ...unfinished,
+  ...rejectedStaff,
+  reactivated,
 ];

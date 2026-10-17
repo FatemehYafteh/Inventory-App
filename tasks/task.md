@@ -72,9 +72,9 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 |---|---|---|
 | 4.1 | `requireProfile`, `requireActive` and `requireRole` middleware (`PROFILE_INCOMPLETE`, `ACCOUNT_PENDING`, 403) | ✅ Done |
 | 4.2 | Admin bootstrap from `ADMIN_EMAILS` and `ADMIN_TELEGRAM_IDS` | ✅ Done |
-| 4.3 | User status service: transitions, change history, ending sessions on rejection, the last-admin rule | ⬜ To do |
-| 4.4 | Approve and reject notifications by email and Telegram bot | ⬜ To do |
-| 4.5 | Users API: `GET /users`, `PATCH /users/:id/status`, `PATCH /users/:id/role`, `GET /users/pending-count` | ⬜ To do |
+| 4.3 | User status service: transitions, change history, ending sessions on rejection, the last-admin rule | ✅ Done |
+| 4.4 | Approve and reject notifications by email and Telegram bot | ✅ Done |
+| 4.5 | Users API: `GET /users`, `PATCH /users/:id/status`, `PATCH /users/:id/role`, `GET /users/pending-count` | ✅ Done |
 | 4.6 | Users page: Pending, Active and Rejected tabs, table, actions | ⬜ To do |
 | 4.7 | User detail drawer: status history and a link to the user's movements | ⬜ To do |
 | 4.8 | Pending-count badge in the navigation, plus guards for incomplete profiles and admin-only pages | ⬜ To do |

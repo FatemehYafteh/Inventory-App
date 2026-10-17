@@ -87,7 +87,16 @@ export function buildHistory(spec, { productIndex, now, performers }) {
 async function seedUsers(passwordHash, now) {
   const byKey = {};
   let created = 0;
-  for (const { key, password, statusChangedBy, statusReason, ...fields } of users) {
+  for (const {
+    key,
+    password,
+    statusChangedBy,
+    statusReason,
+    signedUpDaysAgo,
+    lastLoginDaysAgo,
+    approvedBy,
+    ...fields
+  } of users) {
     const filter = fields.email ? { email: fields.email } : { telegramId: fields.telegramId };
     let user = await User.findOne(filter);
     if (!user) {
@@ -96,29 +105,39 @@ async function seedUsers(passwordHash, now) {
         passwordHash: password ? passwordHash : undefined,
         statusReason,
         statusChangedAt: fields.status === 'pending' ? undefined : new Date(now - 2 * DAY_MS),
+        ...(signedUpDaysAgo && { createdAt: new Date(now - signedUpDaysAgo * DAY_MS) }),
+        ...(lastLoginDaysAgo !== undefined && {
+          lastLoginAt: new Date(now - lastLoginDaysAgo * DAY_MS),
+        }),
       });
       created += 1;
     }
     byKey[key] = user;
     // Resolved after the referenced user exists.
-    if (statusChangedBy && !user.statusChangedBy) {
-      user.statusChangedBy = byKey[statusChangedBy]._id;
+    const changer = statusChangedBy ?? approvedBy;
+    if (changer && !user.statusChangedBy) {
+      user.statusChangedBy = byKey[changer]._id;
       await user.save();
     }
   }
   return { byKey, created };
 }
 
-/** Inserts each status change once; its date is when the user's status last changed. */
-async function seedStatusChanges(usersByKey) {
+/**
+ * Inserts each status change once, dated `daysAgo` before `now`. A user who got new rows has
+ * their `statusChangedAt` set to the date of the latest one, as a real change would.
+ */
+async function seedStatusChanges(usersByKey, now) {
   let created = 0;
-  for (const { user: key, from, to, changedBy, reason } of statusChanges) {
+  const latest = new Map();
+  for (const { user: key, from, to, changedBy, reason, daysAgo } of statusChanges) {
     const user = usersByKey[key];
     if (!user) throw new Error(`Status change for unknown user "${key}"`);
     if (await StatusChange.exists({ user: user._id, from, to })) continue;
 
     const changer = changedBy ? usersByKey[changedBy] : null;
     if (changedBy && !changer) throw new Error(`Status change by unknown user "${changedBy}"`);
+    const at = new Date(now - daysAgo * DAY_MS);
     await StatusChange.create({
       user: user._id,
       from,
@@ -126,9 +145,13 @@ async function seedStatusChanges(usersByKey) {
       changedBy: changer?._id ?? null,
       changedByName: changer?.name ?? SYSTEM_NAME,
       reason,
-      at: user.statusChangedAt,
+      at,
     });
+    if (!(latest.get(key) > at)) latest.set(key, at);
     created += 1;
+  }
+  for (const [key, at] of latest) {
+    await User.updateOne({ _id: usersByKey[key]._id }, { $set: { statusChangedAt: at } });
   }
   return created;
 }
@@ -233,7 +256,7 @@ export async function seedDatabase({
 
   const passwordHash = await hashPassword(password);
   const { byKey: usersByKey, created: usersCreated } = await seedUsers(passwordHash, now);
-  const statusChangesCreated = await seedStatusChanges(usersByKey);
+  const statusChangesCreated = await seedStatusChanges(usersByKey, now);
   const { byName: categoriesByTitle, created: categoriesCreated } = await upsertByName(
     Category,
     'title',

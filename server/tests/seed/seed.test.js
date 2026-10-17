@@ -149,6 +149,48 @@ describe('seedDatabase', () => {
     }
   });
 
+  it('seeds enough users to page, filter and search the Users page', async () => {
+    await seedDatabase({ now });
+    const seeded = await User.find();
+    const where = (status) => seeded.filter((user) => user.status === status);
+    const complete = (user) => Boolean(user.name && user.emailVerified);
+
+    expect(where('active').length).toBeGreaterThan(20);
+    expect(where('active').filter((user) => user.role === 'admin').length).toBeGreaterThanOrEqual(
+      2,
+    );
+    const queue = where('pending').filter(complete);
+    expect(queue.length).toBeGreaterThanOrEqual(3);
+    // Different signup dates, so "oldest first" has something to show.
+    expect(new Set(queue.map((user) => user.createdAt.getTime())).size).toBe(queue.length);
+    expect(where('pending').filter((user) => !complete(user)).length).toBeGreaterThanOrEqual(2);
+    expect(where('rejected').filter((user) => user.statusReason).length).toBeGreaterThanOrEqual(4);
+    expect(seeded.some((user) => user.telegramId && user.email && user.status === 'active')).toBe(
+      true,
+    );
+    expect(seeded.some((user) => user.lastLoginAt)).toBe(true);
+    expect(
+      seeded.filter((user) => user.status === 'active' && !user.lastLoginAt).length,
+    ).toBeGreaterThan(0);
+    const emails = seeded.map((user) => user.email).filter(Boolean);
+    expect(new Set(emails).size).toBe(emails.length);
+  });
+
+  it('seeds a user who was rejected and then reactivated', async () => {
+    await seedDatabase({ now });
+    const reactivated = [];
+    for (const user of await User.find({ status: 'active' })) {
+      const changes = await StatusChange.find({ user: user._id }).sort({ at: 1 });
+      const path = changes.map((change) => `${change.from}>${change.to}`).join();
+      if (path === 'pending>rejected,rejected>active') reactivated.push(user);
+    }
+
+    expect(reactivated).toHaveLength(1);
+    const [first, second] = await StatusChange.find({ user: reactivated[0]._id }).sort({ at: 1 });
+    expect(first.reason).toBeTruthy();
+    expect(first.at.getTime()).toBeLessThan(second.at.getTime());
+  });
+
   it('seeds an active Telegram admin with a verified email and no password', async () => {
     await seedDatabase({ now });
     const seeded = await User.find().select('+passwordHash');
