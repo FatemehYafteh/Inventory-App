@@ -176,19 +176,21 @@ describe('seedDatabase', () => {
     expect(new Set(emails).size).toBe(emails.length);
   });
 
-  it('seeds a user who was rejected and then reactivated', async () => {
+  it('seeds a user who was rejected, moved back to pending and then approved', async () => {
     await seedDatabase({ now });
     const reactivated = [];
     for (const user of await User.find({ status: 'active' })) {
       const changes = await StatusChange.find({ user: user._id }).sort({ at: 1 });
       const path = changes.map((change) => `${change.from}>${change.to}`).join();
-      if (path === 'pending>rejected,rejected>active') reactivated.push(user);
+      if (path === 'pending>rejected,rejected>pending,pending>active') reactivated.push(user);
     }
 
     expect(reactivated).toHaveLength(1);
-    const [first, second] = await StatusChange.find({ user: reactivated[0]._id }).sort({ at: 1 });
-    expect(first.reason).toBeTruthy();
-    expect(first.at.getTime()).toBeLessThan(second.at.getTime());
+    const changes = await StatusChange.find({ user: reactivated[0]._id }).sort({ at: 1 });
+    expect(changes[0].reason).toBeTruthy();
+    const times = changes.map((change) => change.at.getTime());
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+    expect(new Set(times).size).toBe(changes.length);
   });
 
   it('seeds an active Telegram admin with a verified email and no password', async () => {

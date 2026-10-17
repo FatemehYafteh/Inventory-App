@@ -15,6 +15,7 @@ export function usersRoutes(config) {
 
   router.get('/', ...adminOnly, validateQuery(listUsersQuerySchema), users.list);
   router.get('/pending-count', ...adminOnly, users.pendingCount);
+  router.get('/:id', ...adminOnly, users.detail);
   router.patch('/:id/status', ...adminOnly, validate(changeStatusSchema), users.changeStatus);
   router.patch('/:id/role', ...adminOnly, validate(changeRoleSchema), users.changeRole);
 

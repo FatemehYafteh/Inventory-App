@@ -31,7 +31,7 @@ const complete = (user) => user.profileComplete;
 
 /** An in-memory Users API that follows sub-PRD 04 section 5. Records every call. */
 function usersApi(initial, { me = admin } = {}) {
-  const state = { users: [...initial], lists: [], patches: [], failNext: null };
+  const state = { users: [...initial], lists: [], patches: [], failNext: null, history: {} };
 
   function matching(params) {
     const status = params.get('status');
@@ -56,6 +56,16 @@ function usersApi(initial, { me = admin } = {}) {
         count: state.users.filter((user) => user.status === 'pending' && complete(user)).length,
       }),
     ),
+    http.get('*/api/users/:id', ({ params }) => {
+      const user = state.users.find((candidate) => candidate.id === params.id);
+      if (!user) {
+        return HttpResponse.json(
+          { code: 'NOT_FOUND', message: 'User not found.' },
+          { status: 404 },
+        );
+      }
+      return HttpResponse.json({ user, history: state.history[user.id] ?? [] });
+    }),
     http.get('*/api/users', ({ request }) => {
       const params = new URL(request.url).searchParams;
       state.lists.push(Object.fromEntries(params));
@@ -399,5 +409,116 @@ describe('UsersPage actions', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/someone else already made it/);
     await waitFor(() => expect(api.lists.length).toBeGreaterThan(before));
     expect(await waitForRow('Pat Pending')).toBeInTheDocument();
+  });
+});
+
+const change = (overrides) => ({
+  id: `c-${overrides.to}-${overrides.at}`,
+  changedBy: 'a1',
+  changedByName: 'Ana Admin',
+  reason: null,
+  ...overrides,
+});
+
+describe('UsersPage detail drawer', () => {
+  async function openDrawer(name) {
+    const user = userEvent.setup();
+    await user.click(
+      within(await waitForRow(name)).getByRole('button', { name: new RegExp(name) }),
+    );
+    return { user, drawer: await screen.findByRole('dialog', { name: new RegExp(name) }) };
+  }
+
+  it('shows the profile summary of the user', async () => {
+    await open('/users?status=rejected');
+    const { drawer } = await openDrawer('Rex Rejected');
+
+    const d = within(drawer);
+    expect(d.getByText('rex@example.com')).toBeInTheDocument();
+    expect(d.getByText('Verified')).toBeInTheDocument();
+    expect(d.getByText('rejected')).toBeInTheDocument();
+    expect(d.getByText('staff')).toBeInTheDocument();
+    expect(d.getByText('Not on the team')).toBeInTheDocument();
+    expect(d.getByText('Never')).toBeInTheDocument();
+  });
+
+  it('lists the status changes in the order the server sends them, newest first', async () => {
+    const api = usersApi(everyone());
+    api.history['Rex Rejected'] = [
+      change({ from: 'rejected', to: 'active', at: '2026-10-10T10:00:00.000Z' }),
+      change({
+        from: 'pending',
+        to: 'rejected',
+        at: '2026-10-01T10:00:00.000Z',
+        reason: 'Wrong team',
+        changedByName: 'Tom Telegram-Admin',
+      }),
+      change({
+        from: 'pending',
+        to: 'active',
+        at: '2026-09-01T10:00:00.000Z',
+        changedBy: null,
+        changedByName: 'System (admin list)',
+      }),
+    ];
+    renderApp({ route: '/users?status=rejected' });
+    const { drawer } = await openDrawer('Rex Rejected');
+
+    const items = within(
+      await within(drawer).findByRole('list', { name: 'Status history' }),
+    ).getAllByRole('listitem');
+    expect(items).toHaveLength(3);
+    expect(items[0]).toHaveTextContent('Rejected to Active');
+    expect(items[0]).toHaveTextContent('Ana Admin');
+    expect(items[1]).toHaveTextContent('Pending to Rejected');
+    expect(items[1]).toHaveTextContent('Tom Telegram-Admin');
+    expect(items[1]).toHaveTextContent('Wrong team');
+    expect(items[2]).toHaveTextContent('System (admin list)');
+  });
+
+  it('says so when the status never changed', async () => {
+    await open();
+    const { drawer } = await openDrawer('Pat Pending');
+
+    expect(await within(drawer).findByText('No status changes yet.')).toBeInTheDocument();
+  });
+
+  it('links to the movements of the user once Movements ships, and is disabled until then', async () => {
+    await open();
+    const { drawer } = await openDrawer('Pat Pending');
+
+    const button = within(drawer).getByRole('button', { name: 'View movements' });
+    expect(button).toBeDisabled();
+    expect(within(drawer).getByText('Available once Movements ships.')).toBeInTheDocument();
+  });
+
+  it('keeps the open user in the URL, opens from a link, and closes', async () => {
+    const user = userEvent.setup();
+    await open('/users?status=rejected&user=Rex%20Rejected');
+
+    const drawer = await screen.findByRole('dialog', { name: /Rex Rejected/ });
+    expect(within(drawer).getByText('rex@example.com')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(await waitForRow('Rex Rejected')).toBeInTheDocument();
+  });
+
+  it('shows an error when the user cannot be loaded', async () => {
+    await open('/users?user=missing');
+
+    const drawer = await screen.findByRole('dialog');
+    expect(await within(drawer).findByRole('alert')).toHaveTextContent('User not found.');
+  });
+
+  it('does not open from the action buttons', async () => {
+    const user = userEvent.setup();
+    const api = await open();
+    await user.click(
+      within(await waitForRow('Pat Pending')).getByRole('button', { name: 'Approve' }),
+    );
+
+    await waitFor(() => expect(api.patches).toHaveLength(1));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

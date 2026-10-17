@@ -1,4 +1,7 @@
+import mongoose from 'mongoose';
+import { StatusChange } from '../models/StatusChange.js';
 import { User } from '../models/User.js';
+import { AppError } from '../utils/AppError.js';
 
 // A complete profile: a name and a verified email (see isProfileComplete).
 const COMPLETE_PROFILE = { name: { $exists: true, $ne: '' }, emailVerified: true };
@@ -47,4 +50,15 @@ export async function listUsers(query) {
 /** How many complete profiles wait for approval (the badge in the navigation). */
 export function pendingCount() {
   return User.countDocuments({ status: 'pending', ...COMPLETE_PROFILE });
+}
+
+/** One user with their status history, newest change first (the detail drawer). */
+export async function getUserWithHistory(userId) {
+  const user = mongoose.isValidObjectId(userId)
+    ? await User.findById(userId).select('+passwordHash')
+    : null;
+  if (!user) throw new AppError(404, 'NOT_FOUND', 'User not found.');
+
+  const history = await StatusChange.find({ user: user._id }).sort({ at: -1, _id: -1 });
+  return { user, history };
 }

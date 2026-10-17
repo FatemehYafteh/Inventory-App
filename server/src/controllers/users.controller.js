@@ -1,6 +1,6 @@
 import * as userStatus from '../services/userStatus.service.js';
 import * as usersService from '../services/users.service.js';
-import { toAdminUser } from '../utils/adminUser.js';
+import { toAdminUser, toStatusChange } from '../utils/adminUser.js';
 
 export async function list(req, res) {
   const { users, total, page, limit } = await usersService.listUsers(req.validatedQuery);
@@ -9,6 +9,11 @@ export async function list(req, res) {
 
 export async function pendingCount(_req, res) {
   res.json({ count: await usersService.pendingCount() });
+}
+
+export async function detail(req, res) {
+  const { user, history } = await usersService.getUserWithHistory(req.params.id);
+  res.json({ user: toAdminUser(user), history: history.map(toStatusChange) });
 }
 
 export async function changeStatus(req, res) {

@@ -23,7 +23,7 @@ const handwritten = [
     reason: 'Signed up by mistake.',
     daysAgo: 2,
   },
-  // Rejected, then let back in.
+  // Rejected, sent back to the queue, then approved by another admin.
   {
     user: 'reactivated',
     from: 'pending',
@@ -32,7 +32,8 @@ const handwritten = [
     reason: 'Signed up with the wrong team.',
     daysAgo: 9,
   },
-  { user: 'reactivated', from: 'rejected', to: 'active', changedBy: 'admin', daysAgo: 2 },
+  { user: 'reactivated', from: 'rejected', to: 'pending', changedBy: 'admin', daysAgo: 5 },
+  { user: 'reactivated', from: 'pending', to: 'active', changedBy: 'telegramAdmin', daysAgo: 2 },
 ];
 
 // Everyone approved by an admin has the pending to active change that did it.

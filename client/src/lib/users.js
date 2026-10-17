@@ -22,6 +22,15 @@ export function useUsers(filters) {
   });
 }
 
+/** One user with their status history, newest change first: `{ user, history }`. */
+export function useUser(id) {
+  return useQuery({
+    queryKey: [...USERS_QUERY_KEY, 'detail', id],
+    queryFn: () => api(`/users/${encodeURIComponent(id)}`),
+    enabled: Boolean(id),
+  });
+}
+
 /** How many complete profiles wait for approval, for the badge in the navigation. */
 export function usePendingCount({ enabled }) {
   return useQuery({

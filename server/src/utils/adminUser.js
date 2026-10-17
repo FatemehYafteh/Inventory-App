@@ -23,3 +23,16 @@ export function toAdminUser(user) {
     statusReason: user.statusReason ?? null,
   };
 }
+
+/** One status change as the detail drawer lists it. `changedBy` is null for the system. */
+export function toStatusChange(change) {
+  return {
+    id: change._id.toString(),
+    from: change.from,
+    to: change.to,
+    changedBy: change.changedBy ? change.changedBy.toString() : null,
+    changedByName: change.changedByName,
+    reason: change.reason ?? null,
+    at: change.at,
+  };
+}

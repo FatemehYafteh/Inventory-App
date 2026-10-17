@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChangeRoleDialog } from '@/components/users/ChangeRoleDialog';
 import { RejectUserDialog } from '@/components/users/RejectUserDialog';
+import { UserDrawer } from '@/components/users/UserDrawer';
 import { UsersTable } from '@/components/users/UsersTable';
 import { useMe } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
@@ -44,13 +45,15 @@ export function UsersPage() {
     ? Number(params.get('limit'))
     : DEFAULT_PAGE_SIZE;
   const page = Math.max(Number(params.get('page')) || 1, 1);
+  const openUserId = params.get('user');
 
-  // Changing any filter goes back to the first page.
+  // Changing any filter goes back to the first page; opening or closing a user keeps it.
   const update = useCallback(
-    (changes) => {
+    (changes, { keepPage = false } = {}) => {
       setParams((previous) => {
         const next = new URLSearchParams(previous);
-        for (const [key, value] of Object.entries({ page: undefined, ...changes })) {
+        const reset = keepPage ? {} : { page: undefined };
+        for (const [key, value] of Object.entries({ ...reset, ...changes })) {
           if (value === undefined || value === '' || value === false) next.delete(key);
           else next.set(key, String(value));
         }
@@ -91,6 +94,8 @@ export function UsersPage() {
   );
   const onReject = useCallback((user) => setRejecting(user), []);
   const onChangeRole = useCallback((user) => setChangingRole(user), []);
+  const onOpen = useCallback((user) => update({ user: user.id }, { keepPage: true }), [update]);
+  const closeDrawer = useCallback(() => update({ user: undefined }, { keepPage: true }), [update]);
 
   const pagination = useMemo(() => ({ pageIndex: page - 1, pageSize: limit }), [page, limit]);
 
@@ -150,10 +155,12 @@ export function UsersPage() {
             onReject={onReject}
             onReactivate={onReactivate}
             onChangeRole={onChangeRole}
+            onOpen={onOpen}
           />
         </TabsContent>
       </Tabs>
 
+      <UserDrawer userId={openUserId} onClose={closeDrawer} />
       <RejectUserDialog
         key={rejecting?.id}
         user={rejecting}

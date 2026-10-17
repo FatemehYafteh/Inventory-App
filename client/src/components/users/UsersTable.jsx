@@ -2,40 +2,9 @@ import { useMemo } from 'react';
 import { DataTable } from '@/components/data-table/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { EmailCell, SignInMethods, formatDate } from '@/components/users/userDisplay';
 
 const NO_SORTING = [];
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
-
-const formatDate = (value) => dateFormat.format(new Date(value));
-
-function EmailCell({ user }) {
-  if (!user.email) return <span className="text-muted-foreground">No email</span>;
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span>{user.email}</span>
-      <span className="text-xs text-muted-foreground">
-        {user.emailVerified ? 'Verified' : 'Not verified'}
-      </span>
-    </div>
-  );
-}
-
-function SignInMethods({ user }) {
-  const methods = [
-    user.email && user.hasPassword && 'Email',
-    user.hasTelegram && 'Telegram',
-  ].filter(Boolean);
-  if (!methods.length) return <span className="text-muted-foreground">None yet</span>;
-  return (
-    <div className="flex flex-wrap gap-1">
-      {methods.map((method) => (
-        <Badge key={method} variant="outline">
-          {method}
-        </Badge>
-      ))}
-    </div>
-  );
-}
 
 function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChangeRole }) {
   const buttons = [];
@@ -135,6 +104,7 @@ export function UsersTable({
   onReject,
   onReactivate,
   onChangeRole,
+  onOpen,
 }) {
   const columns = useMemo(
     () => [
@@ -144,7 +114,13 @@ export function UsersTable({
         enableSorting: false,
         cell: ({ row }) => (
           <span className="font-medium">
-            {row.original.name ?? 'No name yet'}
+            <button
+              type="button"
+              onClick={() => onOpen(row.original)}
+              className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            >
+              {row.original.name ?? 'No name yet'}
+            </button>
             {row.original.id === meId && <span className="text-muted-foreground"> (you)</span>}
           </span>
         ),
@@ -227,7 +203,7 @@ export function UsersTable({
         ),
       },
     ],
-    [meId, busy, onApprove, onReject, onReactivate, onChangeRole],
+    [meId, busy, onApprove, onReject, onReactivate, onChangeRole, onOpen],
   );
 
   return (
