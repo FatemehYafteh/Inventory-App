@@ -1,7 +1,7 @@
 # M5 implementation plan: categories and suppliers
 
 Inputs: `docs/prds/05-categories-suppliers.md`, PRD 4 (Category, Supplier), 5.3, 5.4, 6, 7, `tasks/task.md` (M5), `GLOSSARY.md` (Categories and suppliers).
-Interview held on 2026-10-17 (questions Q1 to Q10, all recommendations accepted). Q3 was settled after an assessment of the race (3.7); Q10 (supplier delete and stock movements) after a gap found in the model.
+Interview held on 2026-10-17 (questions Q1 to Q11, all recommendations accepted). Q3 was settled after an assessment of the race (3.7); Q10 (supplier delete and stock movements) after a gap found in the model.
 
 This plan has four separate parts: **1 Decisions** (settled with the owner), **2 Assumptions** (taken as true; what breaks if wrong), **3 Changes** (scope, behavior, edge cases, data, API, tickets), **4 Unknowns** (open, with who resolves them).
 
@@ -20,6 +20,7 @@ This plan has four separate parts: **1 Decisions** (settled with the owner), **2
 | Q8 | Keep the four tickets as written in `tasks/task.md`. Each API ticket ships its server implementation and server tests. Each page ticket ships its client implementation and client tests. Cross-layer tests where useful (see 3.5). The seed is verified, not rewritten (see 3.4). |
 | Q9 | `GLOSSARY.md` gains Category, Supplier, Active supplier, Inactive supplier, Deactivate and Product count. No ADR: nothing here is hard to reverse or surprising. |
 | Q10 | Supplier delete is blocked while any Product **or any StockMovement** references the supplier. The 409 `IN_USE` response carries both counts (`productCount`, `movementCount`) and a message that suggests deactivating instead ("Used by 2 products and 14 stock movements. Deactivate it instead."). Supplier responses include `movementCount` alongside `productCount`, and the UI enables Delete only when both are zero (tooltip explains). This extends the PRD rule, which names products only; update sub-PRD 05 section 4.2, section 5 and section 6 to match. Categories are unchanged (products only). |
+| Q11 | `AppError` gains an optional fifth constructor argument `details` (a plain object of counts or other safe values), and `errorHandler` adds `body.details` only when it is set, exactly as it already does for `errors`. Errors without details keep today's body (`{ message, code }`, plus `errors` when set). Supplier `409 IN_USE` sends `details: { productCount, movementCount }`; category `409 IN_USE` sends `details: { productCount }`. Only the service builds `details`, from numbers it computed itself, so nothing internal can leak; the 500 path is untouched and never includes it. Implemented in ticket 5.1 (the first to need it), reused by 5.3; the existing `errors` field (validation) is left alone. Update the error-class line in `server/CLAUDE.md` to mention `details` in that ticket. |
 | Q3 | Option C (see 3.7). In M5, category and supplier deletion runs in a Mongo transaction and counts every referencing product, archived included. In M6, product create and update first write ("touch") the referenced Category, and the Supplier when one is set or changed, so they conflict with a concurrent delete of the same document. M6 includes the concurrency test. **Full race protection depends on the M6 changes being implemented**; until then M5 alone does not close the race (it is harmless only because no products can be created before M6). |
 
 ---
@@ -47,6 +48,7 @@ In: Category and Supplier APIs, shared Zod schemas, the two pages and their comp
 
 ### 3.2 Server
 
+- **Shared error plumbing (5.1, Q11):** `AppError` optional `details`; `errorHandler` includes it only when present. Unit tests: with details, without details (body unchanged), and a 500 never carries it.
 - **Categories** (`categories.service.js`): list (all, by title, with `productCount`), create, update, delete. `DUPLICATE_NAME` on a duplicate key (map the Mongo error). `IN_USE` on delete when a product references the category, archived included.
 - **Suppliers** (`suppliers.service.js`): list with search, `active`, `sortBy=name`, `order`, `page`, `limit`, `productCount` and `movementCount`; create, update (including `isActive`), delete with the same two errors (`IN_USE` counts products and stock movements, Q10).
 - **Routes and controllers** are thin and follow the table in sub-PRD 05 section 5. Every write uses `validate` with a schema from `shared/schemas` (`category.js`, `supplier.js`, exported from `index.js`).
@@ -109,4 +111,3 @@ Four issues, each labeled `enhancement` and `ready-for-agent`, each blocked by t
 | U2 | Whether to seed a category or supplier that has only archived products (see 3.4). Default: no, test it with fixtures. | Owner |
 | U3 | Whether the sidebar already has Categories and Suppliers items, and whether staff see them. Verify during 5.2 and 5.4. | Implementer |
 | U4 | The exact error response shape used by M4, for the client to read `code` and `message`. Verify during 5.1. | Implementer |
-| U6 | **How the 409 carries the counts.** Server rules say one error class `AppError(status, code, message)` with no extra payload. Q10 asks for the counts in the response. Either put both numbers in the message text only, or add an optional `details` object to `AppError` and the error handler (a small change to shared code that must not leak internals). Default: add optional `details` (`{ productCount, movementCount }`), tested, because the client should read numbers rather than parse text. | Owner |
