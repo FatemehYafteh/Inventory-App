@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 // Pages are added here as their milestones land. `adminOnly` items are hidden from staff.
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true },
+  { to: '/categories', label: 'Categories' },
   { to: '/users', label: 'Users', adminOnly: true, badge: true },
 ];
 

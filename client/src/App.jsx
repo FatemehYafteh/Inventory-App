@@ -10,6 +10,7 @@ import {
 } from '@/lib/guards';
 import { AwaitingApprovalPage } from '@/pages/AwaitingApprovalPage';
 import { CompleteProfilePage } from '@/pages/CompleteProfilePage';
+import { CategoriesPage } from '@/pages/CategoriesPage';
 import { ConfirmLinkPage } from '@/pages/ConfirmLinkPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
@@ -45,6 +46,7 @@ export function App() {
       <Route element={<RequireActive />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
           <Route element={<RequireAdmin />}>
             <Route path="/users" element={<UsersPage />} />
           </Route>

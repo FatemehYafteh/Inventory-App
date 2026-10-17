@@ -8,10 +8,8 @@ import { ORIGIN, buildApp, createUser, useTestDatabase } from '../helpers/setup.
 useTestDatabase();
 
 function send(app, method, actor, path, body) {
-  const req = request(app)
-    [method](`/api/categories${path}`)
-    .set('Origin', ORIGIN)
-    .set('X-Requested-With', 'XMLHttpRequest');
+  const start = request(app)[method](`/api/categories${path}`);
+  const req = start.set('Origin', ORIGIN).set('X-Requested-With', 'XMLHttpRequest');
   if (actor) req.set('x-test-user', actor.id);
   return body === undefined ? req : req.send(body);
 }
