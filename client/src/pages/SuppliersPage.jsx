@@ -7,7 +7,7 @@ import {
   DeactivateSupplierDialog,
   DeleteSupplierDialog,
 } from '@/components/suppliers/SupplierDialogs';
-import { SupplierTable, inUseReason } from '@/components/suppliers/SupplierTable';
+import { SupplierTable } from '@/components/suppliers/SupplierTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useReturnFocus } from '@/hooks/useReturnFocus';
@@ -22,12 +22,6 @@ import {
 
 const DEFAULT_PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 250;
-
-/** A blocked delete says what uses the supplier, from the counts the server computed. */
-function deleteErrorMessage(error) {
-  if (error?.code === 'IN_USE' && error.details) return inUseReason(error.details);
-  return errorMessage(error);
-}
 
 /**
  * Everyone active browses and searches suppliers; admins add, edit, deactivate, reactivate and
@@ -128,7 +122,7 @@ export function SuppliersPage() {
     setDeleting(null);
     setActionError(null);
     deleteSupplier.mutate(supplier.id, {
-      onError: (error) => setActionError(deleteErrorMessage(error)),
+      onError: (error) => setActionError(errorMessage(error)),
     });
   }
 

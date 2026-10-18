@@ -403,13 +403,13 @@ describe('Suppliers page, admin', () => {
     expect(button.parentElement).toHaveAttribute('title', expect.stringContaining(reason));
   });
 
-  it('shows the counts and refreshes the row when a delete is blocked after all', async () => {
+  it('shows the server message and refreshes the row when a delete is blocked after all', async () => {
     const state = suppliersApi([northwind]);
     state.failNext = {
       status: 409,
       body: {
         code: 'IN_USE',
-        message: 'Used by 1 product and 3 stock movements. Deactivate it instead.',
+        message: 'Used by 1 product and 3 stock movements. The server wording wins.',
         details: { productCount: 1, movementCount: 3 },
       },
     };
@@ -423,7 +423,7 @@ describe('Suppliers page, admin', () => {
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Used by 1 product and 3 stock movements. Deactivate it instead.',
+      'Used by 1 product and 3 stock movements. The server wording wins.',
     );
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Delete Northwind Freight' })).toBeDisabled(),
