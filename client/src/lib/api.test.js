@@ -34,6 +34,19 @@ describe('api', () => {
     });
   });
 
+  it('carries the details of a 409 so pages can read the counts', async () => {
+    server.use(
+      http.delete('*/api/things/1', () =>
+        HttpResponse.json(
+          { message: 'Used', code: 'IN_USE', details: { productCount: 2 } },
+          { status: 409 },
+        ),
+      ),
+    );
+    const error = await api('/things/1', { method: 'DELETE' }).catch((err) => err);
+    expect(error.details).toEqual({ productCount: 2 });
+  });
+
   it('refreshes once after a 401 and retries the request', async () => {
     let calls = 0;
     const refresh = vi.fn(() => new HttpResponse(null, { status: 204 }));

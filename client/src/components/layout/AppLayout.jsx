@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/categories', label: 'Categories' },
+  { to: '/suppliers', label: 'Suppliers' },
   { to: '/users', label: 'Users', adminOnly: true, badge: true },
 ];
 

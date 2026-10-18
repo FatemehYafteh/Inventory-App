@@ -19,6 +19,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { SuppliersPage } from '@/pages/SuppliersPage';
 import { UsersPage } from '@/pages/UsersPage';
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 
@@ -47,6 +48,7 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/suppliers" element={<SuppliersPage />} />
           <Route element={<RequireAdmin />}>
             <Route path="/users" element={<UsersPage />} />
           </Route>

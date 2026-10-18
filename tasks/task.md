@@ -86,7 +86,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | 5.1 | Categories API (409 on delete while any product uses it, archived products included) | ✅ Done |
 | 5.2 | Categories page: card grid, admin add/edit/delete, read-only for staff | ✅ Done |
 | 5.3 | Suppliers API: search, sort, pagination, deactivate and reactivate, 409 on delete while in use | ✅ Done |
-| 5.4 | Suppliers page: table, form, admin actions | ⬜ To do |
+| 5.4 | Suppliers page: table, form, admin actions | ✅ Done |
 
 ## M6: Products catalog [sub-PRD 06](../docs/prds/06-products.md)
 

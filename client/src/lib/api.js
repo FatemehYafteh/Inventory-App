@@ -21,6 +21,7 @@ export class ApiError extends Error {
     this.status = status;
     this.code = body?.code;
     this.errors = body?.errors;
+    this.details = body?.details;
   }
 }
 
@@ -60,7 +61,7 @@ function refreshSession() {
 }
 
 // On a 401, refresh the session once and retry the request; every failure becomes an ApiError
-// carrying the server's { message, code, errors }.
+// carrying the server's { message, code, errors, details }.
 http.interceptors.response.use(undefined, async (error) => {
   const { config, response } = error;
   if (!response) throw new ApiError(0, { message: NETWORK_ERROR });
