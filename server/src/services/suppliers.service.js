@@ -137,8 +137,10 @@ function inUseMessage(productCount, movementCount) {
 
 /**
  * Counts the products (archived included) and stock movements and deletes in one transaction.
- * Full protection against a product being assigned to this supplier at the same moment also
- * needs M6's product writes to touch the supplier document (plan section 3.7).
+ * Product create and update write the supplier document in their own transaction
+ * (products.service.js), so a product being assigned to this supplier at the same moment
+ * conflicts with this delete: either the delete retries and reports IN_USE, or the product
+ * write is refused.
  */
 export async function deleteSupplier(id) {
   if (!mongoose.isValidObjectId(id)) throw notFound();

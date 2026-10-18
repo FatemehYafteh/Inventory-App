@@ -71,9 +71,10 @@ export async function updateCategory(id, { title, description }) {
 }
 
 /**
- * Counts the products (archived included) and deletes in one transaction. Full protection
- * against a product being created for this category at the same moment also needs M6's
- * product writes to touch the category document (plan section 3.7).
+ * Counts the products (archived included) and deletes in one transaction. Product create and
+ * update write this category document in their own transaction (products.service.js), so a
+ * product being assigned at the same moment conflicts with this delete: either the delete
+ * retries and reports IN_USE, or the product write is refused.
  */
 export async function deleteCategory(id) {
   if (!mongoose.isValidObjectId(id)) throw notFound();
