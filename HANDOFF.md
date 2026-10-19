@@ -1,4 +1,4 @@
-# Handoff: M6 Products catalog, server done; Design Foundation planned (2026-10-18)
+# Handoff: Design Foundation (D0 to D7) done and pushed; M6 Products UI next (2026-10-19)
 
 This replaces the M5 handoff of 2026-10-17, which was never committed. It is kept word for word in the appendix at the end of this file.
 Written at the end of the session. Each claim carries a tag saying where it comes from:
@@ -7,6 +7,33 @@ Written at the end of the session. Each claim carries a tag saying where it come
 - **[reported earlier]**: observed earlier in this same session and not re-run for this file.
 - **[prior session]**: copied from an older handoff and not re-checked.
 - **(verify)**: not checked at all.
+
+## 0. Update at the end of the 2026-10-19 session (read this first)
+
+Sections 1 to 5 and 8 to 10 below describe the state at the end of 2026-10-18 (branch `feat/products`, M6 server). They are still accurate for M6. The Design Foundation described in section 6 has since been **built, reviewed in a browser and pushed**.
+
+**Git state [checked at the end of the session]**
+
+- **Branch:** `feat/design-foundation`, created from `feat/products` (`65a83e5`). It tracks `origin/feat/design-foundation`. After the push of the D7 commit, local and remote were identical (0 ahead, 0 behind). The commit that adds this section is newer; run `git status -sb` to see whether it was pushed too.
+- **Commits on the branch**, oldest first: `0f1173d` D0 (tasks section), `583f5f1` test fix (stub `/auth/me` in the pending-login test), `8025852` D1 (tokens, light and dark), `25ba048` D2 (components on tokens), `59e18ae` D3 (navy sidebar shell), `97fef87` D4 (PageHeader, StatusBadge), `cf78661` D6 (design-system doc, tokens-only rule), `b8b41c3` D7 (Profile page). D5 was the browser pass and has no commit.
+- **Not done on purpose:** no PR was opened, nothing was merged, no base branch changed. The PR order in section 2 (M5, then M6) is unchanged, and this branch stacks on `feat/products`. Do not open, retarget or merge anything without the owner's explicit approval.
+- **Working tree:** clean at the end of the session.
+
+**What the Design Foundation delivered.** Light and dark design tokens (the app stays light; nothing applies `.dark`), restyled shared components, a navy sidebar from 1024px with a mobile menu, `PageHeader` and `StatusBadge`, a redesigned Profile page, and `docs/design-system.md` plus a tokens-only rule in `client/CLAUDE.md`. Read `docs/design-system.md` before changing any UI.
+
+**Verification before the D7 commit** [checked]: `npm test -w client` 309 of 309 tests in 22 files, `npm run lint`, `prettier --check` on the changed client files and `git diff --check`, all passing. The server tests were **not** re-run this session (no server code changed since M6; the last server results are in section 5).
+
+**Browser checks** [checked, on throwaway databases with the Telegram bot and mailer disabled; nothing in the repo or the owner's dev database changed]: D5 (all pages, four widths, four roles; see "D5 results" in section 6) and a Profile-page check at 360, 768, 1024 and 1280px as admin and as a pending user. That check found that long email addresses overflowed on phones; the fix (`[overflow-wrap:anywhere]` and a `minmax(0,1fr)` column) was verified at 360px with a 70-character and a 105-character address. The screenshots were saved outside the repo in the temp folder `d7-profile-screenshots` and may no longer exist.
+
+**Unfinished or needs the owner's attention**
+
+1. **Phase T (theme switching and a saved preference) is not started.** Dark mode has only been checked numerically, never in a browser. The owner could not find a dark mode option because it does not exist yet; `document.documentElement.classList.add('dark')` in the browser console previews it roughly.
+2. **Products 6.4 to 6.6 are not started.** The plan is in section 7. `StatusBadge` already maps the stock statuses.
+3. **Open observations** (none blocking): the Profile "Name" card title is followed by a field labelled "Name"; the Profile page has two prominent blue buttons (the full-width "Connect Telegram" belongs to `TelegramSignIn.jsx`, out of scope so far); the focus ring on a blue button is the same blue as the button; about 240px stays empty beside the Profile column at 1280px with the sidebar.
+4. **Known follow-ups:** four page-level files still use the faint `ring-ring/50` focus ring (`DataTableColumnHeader`, `DataTablePagination`, `SupplierTable`, `UsersTable`); `ui/command.jsx` keeps `placeholder:text-muted-foreground`; the mobile menu's close button ring is 3.19:1 on navy; wide tables scroll inside their card (Users on its Rejected tab even at 1280px); the Suppliers search placeholder is clipped at 360px; `AwaitingApprovalPage` still uses `CardTitle` as its heading.
+5. **Section 2 is unchanged:** local `feat/roles-approval` is still ahead of its remote, and the PR and base-branch questions are still open.
+
+**Next steps, each needing the owner's approval first:** Products 6.4, 6.5, 6.6 (section 7), then Phase T, then the M5 and M6 PRs (section 11). The working style used this session: a read-only review, a proposal with options, approval of the exact file list, implementation, the full checks, then one local commit per step. Commits and pushes happen only on the owner's explicit instruction.
 
 ## 1. Where things stand
 
@@ -95,11 +122,11 @@ Defaults used in the API (taken from the approved plan; the owner approved the p
 
 **Never run:** a browser, `npm run dev`, `npm run seed`. The API has not been exercised outside the tests.
 
-## 6. Design Foundation (planned, nothing created yet)
+## 6. Design Foundation (D0 to D7 done 2026-10-19; the original plan and decisions are kept below)
 
-Everything in this section is a proposal discussed in this session [reported earlier]. Nothing has been created or implemented.
+The Design Foundation was approved and built one step at a time (D0 to D7), then pushed. The text below is the original plan and decisions; the plan table rows are updated to their final state, and the notes after it record what was learned. Section 0 has the commit list.
 
-The owner wants the site design settled **before Phase 6.4**, as its own phase with local commits only, one per approved step, no push. Proposed branch: `feat/design-foundation` off `feat/products` (not created). Constraint: UI only, no changes to API contracts, backend behaviour, authentication, permissions, business logic or form validation.
+Constraint kept throughout: UI only, no changes to API contracts, backend behaviour, authentication, permissions, business logic or form validation. Branch `feat/design-foundation` was created from `feat/products` as planned.
 
 **Decisions so far**
 
@@ -137,9 +164,9 @@ The owner wants the site design settled **before Phase 6.4**, as its own phase w
 
 Out of scope: server, `shared/`, per-page content redesign, charts and dashboard palette, dark mode switching (tokens exist from D1; the toggle is phase T), sidebar collapse, Phase 6.4.
 
-**Waiting on the owner:** approval of the sidebar impact analysis, a navy hex (or approval of `#0F1E3D`), approval of D0 to D6, and the choice of A, B or C for handling this file's uncommitted changes before the branch is created (A: branch with the file left as is; B: the owner commits or moves it first; C: stash and restore).
+**Resolved:** the sidebar layout, the navy values (`#0F1E3D` light, `#0B1426` dark), the D0 to D7 plan and the branch were all approved and built.
 
-## 7. Phase 6.4 plan (waiting on the design decision)
+## 7. Phase 6.4 plan (the design foundation is done; waiting on the owner to start 6.4)
 
 Plain-language plan, not yet approved: add `lib/products.js` (`useProducts`, keeping previous rows visible while refetching); a `/products` route and a "Products" nav item for all active users; a page with a 300 ms debounced search, category and supplier selects, a stock-status select and an admin-only "Show archived" checkbox; a `DataTable` with Title (SKU underneath, "Archived" badge), Category, Supplier, Price, Quantity, Stock status badge, Created date; sortable Title, Quantity and Price; all state in the URL; msw-based tests; then lint, Prettier, both suites and a first real browser check with the seed.
 
@@ -194,20 +221,21 @@ Open recommendations for 6.4, to be confirmed with the design: no Actions column
 
 ## 11. Next steps
 
-1. The owner reviews this file and answers the open questions in section 6 (sidebar impact, navy hex, D0 to D6 plan, A/B/C for this file).
-2. On approval: create `feat/design-foundation` from `feat/products` (the working-tree state of this file decides how), add D0 to `tasks/task.md`, then do D1 to D6 one step at a time with an owner review and one local commit per step.
+1. The owner reviews this file and the pushed branch `feat/design-foundation` (section 0), and decides what comes next: Products 6.4 to 6.6, Phase T, or the follow-ups in section 0.
+2. The Design Foundation (D0 to D7) is finished, so there is nothing left to build there. Any new UI work follows `docs/design-system.md`.
 3. Then Phase 6.4, 6.5 and 6.6 on top of the design foundation, each with its own approval.
 4. After M6: sort out section 2 (fetch, then decide rebase or merge), push, and open the milestone PRs in order (M5, then M6). Run `/mattpocock-skills:code-review` over the changes first if the owner wants it.
 
 ## 12. Resume prompt (copy this)
 
 ```text
-Read HANDOFF.md at the repo root, then read docs/prds/06-products.md and tasks/task.md.
+Read HANDOFF.md at the repo root (start with section 0), then docs/design-system.md, tasks/task.md and docs/prds/06-products.md.
 Do not change any code, run git commands that modify anything, or start any phase yet.
-First verify the actual state: current branch, git status, git log --oneline -6, and
+First verify the actual state: current branch, git status -sb, git log --oneline -10, and
 gh issue list --state open. Report where reality differs from the handoff.
-Then summarise the open decisions in section 6 and wait for my approval before doing anything.
-Rules: no commit, push, branch change, rebase or merge without my explicit approval.
+Then summarise the options (Products 6.4, Phase T, follow-ups) and wait for my approval.
+Rules: review-first (read, propose, wait for approval of the exact file list, then implement);
+no commit, push, branch change, rebase or merge without my explicit approval.
 ```
 
 ---
