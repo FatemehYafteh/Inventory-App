@@ -116,14 +116,15 @@ The owner wants the site design settled **before Phase 6.4**, as its own phase w
 | Step | Work | Main files |
 |---|---|---|
 | D0 | Add a "Design Foundation" section to `tasks/task.md` | `tasks/task.md` |
-| D1 | Tokens: colours, hover token, radius 0.5rem, system font stack, tabular numbers, success and warning tokens, `theme-color` | `client/src/index.css`, `client/index.html` |
+| D1 | Tokens for light and dark themes (`:root` and `.dark`; the app stays light, nothing applies `.dark`), hover token, radius 0.5rem, system font stack, tabular numbers, success/warning/danger/neutral tokens, static light `theme-color` `#F8FAFC`, contrast test | `client/src/index.css`, `client/index.html`, `client/src/styles/tokens.test.js` |
 | D2 | Components: `success` and `warning` badge variants, restyle button, input, select, card, table, toaster; move `FormAlert` success onto tokens | `client/src/components/ui/*`, `form/FormAlert.jsx`, `ui/ui.test.jsx` |
 | D3 | Shell: navy sidebar, mobile top bar and Sheet nav, skip link, `MinimalLayout`, Categories grid | `layout/AppLayout.jsx` (+test), `layout/MinimalLayout.jsx`, `pages/CategoriesPage.jsx` |
 | D4 | `PageHeader` and `StatusBadge`; move the five repeated `<h1>`s (Categories, Dashboard, NotFound, Suppliers, Users) onto `PageHeader`, keeping the focus-return refs | new `layout/PageHeader.jsx`, `StatusBadge.jsx`, the five pages |
 | D5 | Browser pass at about 360, 768, 1024 and 1280 px as admin and staff (written report) | none |
 | D6 | `docs/design-system.md` and a "tokens only" line in `client/CLAUDE.md` (note that D2 deliberately hand-edits `components/ui/`) | docs |
+| T | Theme switching and persisted preference (applies `.dark`); planned separately after D6, not started | later |
 
-Out of scope: server, `shared/`, per-page content redesign, charts and dashboard palette, dark mode, sidebar collapse, Phase 6.4.
+Out of scope: server, `shared/`, per-page content redesign, charts and dashboard palette, dark mode switching (tokens exist from D1; the toggle is phase T), sidebar collapse, Phase 6.4.
 
 **Waiting on the owner:** approval of the sidebar impact analysis, a navy hex (or approval of `#0F1E3D`), approval of D0 to D6, and the choice of A, B or C for handling this file's uncommitted changes before the branch is created (A: branch with the file left as is; B: the owner commits or moves it first; C: stash and restore).
 

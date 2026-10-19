@@ -104,12 +104,13 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | Phase | Task | Status |
 |---|---|---|
 | D0 | Add this section to `tasks/task.md` | ✅ Done |
-| D1 | Tokens: colours (primary `#2563EB`, hover `#1D4ED8`, navy `#0F1E3D`), success and warning, radius, system font stack, tabular numbers, `theme-color` | ⬜ To do |
+| D1 | Tokens for light and dark themes (app stays light, dark not activated): colours (primary `#2563EB`, hover `#1D4ED8`, navy `#0F1E3D` light and `#0B1426` dark), success, warning, danger, radius, system font stack, tabular numbers, static light `theme-color`, contrast test | ✅ Done |
 | D2 | Components: `success` and `warning` badge variants; restyle button, input, select, card, table, toaster; `FormAlert` success on tokens | ⬜ To do |
 | D3 | Shell: navy sidebar, mobile top bar with `Sheet` nav, skip link, `MinimalLayout`, Categories grid | ⬜ To do |
 | D4 | `PageHeader` and `StatusBadge`; move the five repeated page headings onto `PageHeader` | ⬜ To do |
 | D5 | Browser pass at about 360, 768, 1024 and 1280 px as admin and staff (written report) | ⬜ To do |
 | D6 | `docs/design-system.md` and a "tokens only" line in `client/CLAUDE.md` | ⬜ To do |
+| T | Theme switching and persisted user preference (applies the `.dark` class); planned separately, after D6 | ⬜ Not started |
 
 ## M7: Stock engine and history [sub-PRD 07](../docs/prds/07-stock-engine.md)
 
