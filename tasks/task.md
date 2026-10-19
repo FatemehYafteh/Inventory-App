@@ -106,7 +106,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | D0 | Add this section to `tasks/task.md` | ✅ Done |
 | D1 | Tokens for light and dark themes (app stays light, dark not activated): colours (primary `#2563EB`, hover `#1D4ED8`, navy `#0F1E3D` light and `#0B1426` dark), success, warning, danger, radius, system font stack, tabular numbers, static light `theme-color`, contrast test | ✅ Done |
 | D2 | Components on tokens: `success`, `warning` and `danger` badge variants; button hover, input and select placeholders, full-strength focus rings on the `ui/` components, overlays, toaster icons, `FormAlert` and the danger text on tokens; source guard in `ui.test.jsx` | ✅ Done |
-| D3 | Shell: navy sidebar, mobile top bar with `Sheet` nav, skip link, `MinimalLayout`, Categories grid | ⬜ To do |
+| D3 | Shell: navy sidebar from `lg`, navy top bar with a `Sheet` menu below it, skip link, `MinimalLayout`, Categories grid on container queries | ✅ Done |
 | D4 | `PageHeader` and `StatusBadge`; move the five repeated page headings onto `PageHeader` | ⬜ To do |
 | D5 | Browser pass at about 360, 768, 1024 and 1280 px as admin and staff (written report) | ⬜ To do |
 | D6 | `docs/design-system.md` and a "tokens only" line in `client/CLAUDE.md` | ⬜ To do |

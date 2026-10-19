@@ -54,7 +54,7 @@ export function CategoriesPage() {
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="@container flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
         <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold outline-none">
           Categories
@@ -72,7 +72,7 @@ export function CategoriesPage() {
       {categories.isSuccess && items.length === 0 && (
         <p className="text-sm text-muted-foreground">No categories yet.</p>
       )}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 @lg:grid-cols-2 @3xl:grid-cols-3">
         {items.map((category) => (
           <CategoryCard
             key={category.id}
