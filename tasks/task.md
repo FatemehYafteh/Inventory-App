@@ -108,8 +108,8 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | D2 | Components on tokens: `success`, `warning` and `danger` badge variants; button hover, input and select placeholders, full-strength focus rings on the `ui/` components, overlays, toaster icons, `FormAlert` and the danger text on tokens; source guard in `ui.test.jsx` | ✅ Done |
 | D3 | Shell: navy sidebar from `lg`, navy top bar with a `Sheet` menu below it, skip link, `MinimalLayout`, Categories grid on container queries | ✅ Done |
 | D4 | `PageHeader` and `StatusBadge`: the five page headings (Categories, Dashboard, Not found, Suppliers, Users) on `PageHeader`; status badges on Users, the user drawer and Suppliers on `StatusBadge` (same text, colour from the status) | ✅ Done |
-| D5 | Browser pass at about 360, 768, 1024 and 1280 px as admin and staff (written report) | ⬜ To do |
-| D6 | `docs/design-system.md` and a "tokens only" line in `client/CLAUDE.md` | ⬜ To do |
+| D5 | Browser pass at about 360, 768, 1024 and 1280 px as admin, staff, pending and rejected (written report, in chat) | ✅ Done |
+| D6 | `docs/design-system.md` and a tokens-only rule in `client/CLAUDE.md` | ✅ Done |
 | T | Theme switching and persisted user preference (applies the `.dark` class); planned separately, after D6 | ⬜ Not started |
 
 ## M7: Stock engine and history [sub-PRD 07](../docs/prds/07-stock-engine.md)

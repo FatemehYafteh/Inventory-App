@@ -5,7 +5,7 @@ Applies in addition to the root `CLAUDE.md`. Requirements: `docs/PRD.md` section
 ## Structure
 ```
 client/src/
-  components/ui/          shadcn components (generated, do not hand-edit casually)
+  components/ui/          shadcn components; D2 hand-edited them onto the design tokens, keep them token-only
   components/data-table/  reusable TanStack Table wrapper (sortable header, pagination, toolbar)
   components/products/    ProductTable, ProductFilters, StockAdjustDialog, StockHistoryDialog, ProductForm
   components/categories/  CategoryCard, CategoryForm
@@ -26,6 +26,7 @@ client/src/
 - Role-based UI is only a convenience. The server enforces everything (staff must never see the Archive action).
 - Inline quantity +/-: optimistic update with rollback on error. Send a delta, never an absolute value. Queue rapid clicks.
 - Use shadcn components and Tailwind utilities. Stock status is shown with text plus color, never color alone.
+- Colour comes from the design tokens only (`src/index.css`). No hard-coded hex or palette utilities (`bg-white`, `text-white`, `emerald-*`, `bg-black/50`) in components. Use `text-primary-text` for blue text, `text-danger` for error text and a full-strength `ring-ring`. See `docs/design-system.md`.
 - Keyboard accessible dialogs, tables and the OTP input (use the shadcn input-otp component).
 - Show loading, empty and error states on every list and form.
 
