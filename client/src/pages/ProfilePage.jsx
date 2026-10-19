@@ -2,14 +2,37 @@ import { updateProfileSchema } from '@inventory/shared/schemas';
 import { ConnectTelegram } from '@/components/auth/TelegramSignIn';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import { useForgotPassword, useMe, useUpdateProfile } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
 const RESET_COOLDOWN_SECONDS = 60;
+
+/**
+ * One settings section: a titled card, inside a named region unless `region` is false (the Name
+ * section: its field is already labelled "Name", so a region of the same name would be redundant).
+ * CardTitle is an h1, so the title is an h2 here.
+ */
+function ProfileSection({ id, title, description, region = true, children }) {
+  const Wrapper = region ? 'section' : 'div';
+  return (
+    <Wrapper aria-labelledby={region ? id : undefined}>
+      <Card>
+        <CardHeader>
+          <h2 id={id} className="text-lg font-semibold leading-none">
+            {title}
+          </h2>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>{children}</CardContent>
+      </Card>
+    </Wrapper>
+  );
+}
 
 function NameForm({ user }) {
   const updateProfile = useUpdateProfile();
@@ -54,25 +77,20 @@ function SignInMethods({ user }) {
     : 'Not connected';
 
   return (
-    <section aria-labelledby="sign-in-methods" className="flex flex-col gap-3 text-sm">
-      <h2 id="sign-in-methods" className="font-medium">
-        Sign-in methods
-      </h2>
-      <dl className="grid grid-cols-[6rem_1fr] gap-x-4 gap-y-3">
-        <dt className="text-muted-foreground">Email</dt>
-        <dd className="flex flex-wrap items-center gap-2">
-          <span>{user.email}</span>
-          <span className="text-muted-foreground">
-            {user.emailVerified ? 'Verified' : 'Not verified'}
-          </span>
-        </dd>
-        <dt className="text-muted-foreground">Telegram</dt>
-        <dd className="flex flex-col items-stretch gap-2">
-          <span>{telegram}</span>
-          {!user.telegramConnected && <ConnectTelegram />}
-        </dd>
-      </dl>
-    </section>
+    <dl className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm">
+      <dt className="text-muted-foreground">Email</dt>
+      <dd className="flex flex-wrap items-center gap-2">
+        <span className="[overflow-wrap:anywhere]">{user.email}</span>
+        <span className="text-muted-foreground">
+          {user.emailVerified ? 'Verified' : 'Not verified'}
+        </span>
+      </dd>
+      <dt className="text-muted-foreground">Telegram</dt>
+      <dd className="flex flex-col items-stretch gap-2">
+        <span>{telegram}</span>
+        {!user.telegramConnected && <ConnectTelegram />}
+      </dd>
+    </dl>
   );
 }
 
@@ -85,11 +103,7 @@ function PasswordReset({ email }) {
     forgotPassword.mutate(email, { onSuccess: () => startCooldown(RESET_COOLDOWN_SECONDS) });
 
   return (
-    <section aria-labelledby="password" className="flex flex-col items-start gap-3 text-sm">
-      <h2 id="password" className="font-medium">
-        Password
-      </h2>
-      <p className="text-muted-foreground">To set or change your password, we email you a link.</p>
+    <div className="flex flex-col items-start gap-3 text-sm">
       <Button
         type="button"
         variant="outline"
@@ -106,7 +120,7 @@ function PasswordReset({ email }) {
         <FormAlert tone="success">Check {email} for a link to set a new password.</FormAlert>
       )}
       <FormAlert>{errorMessage(forgotPassword.error)}</FormAlert>
-    </section>
+    </div>
   );
 }
 
@@ -117,16 +131,32 @@ export function ProfilePage() {
   if (!user) return null;
 
   return (
-    <Card className="mx-auto w-full max-w-xl">
-      <CardHeader>
-        <CardTitle>Profile</CardTitle>
-        <CardDescription>Your name and the ways you sign in.</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-8">
-        <NameForm user={user} />
-        <SignInMethods user={user} />
-        <PasswordReset email={user.email} />
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Profile" description="Your name and the ways you sign in." />
+      <div className="flex w-full max-w-3xl flex-col gap-6">
+        <ProfileSection
+          id="name-heading"
+          title="Name"
+          description="How you appear in the app."
+          region={false}
+        >
+          <NameForm user={user} />
+        </ProfileSection>
+        <ProfileSection
+          id="sign-in-methods-heading"
+          title="Sign-in methods"
+          description="How you log in to this account."
+        >
+          <SignInMethods user={user} />
+        </ProfileSection>
+        <ProfileSection
+          id="password-heading"
+          title="Password"
+          description="To set or change your password, we email you a link."
+        >
+          <PasswordReset email={user.email} />
+        </ProfileSection>
+      </div>
+    </div>
   );
 }

@@ -61,6 +61,7 @@ Use the utility form (`bg-card`, `text-muted-foreground`, `border-input`, ...). 
   | `inactive`, `archived`, anything else | `outline` |
 
 - **`PageHeader`** (`layout/PageHeader.jsx`): the page's level-1 heading, with an optional description and an `actions` slot that wraps on narrow screens. Its ref goes to the `<h1>`, which tests and `useReturnFocus` use to put focus back after a dialog closes.
+- **Settings-style pages** (Profile): a `PageHeader`, then one `Card` per section in a left-aligned `max-w-3xl` column with `gap-6`. Section titles are `<h2 class="text-lg font-semibold">` (`CardTitle` is an `<h1>`), each with a one-line muted description. A section is a named region (`<section aria-labelledby>`) unless its title would repeat its field label, as with Name.
 - **`FormAlert`**: `error` (role `alert`) and `success` (role `status`) tones on the danger and success tokens. Field errors in `TextField` use `text-danger`.
 - **Button**: the default variant hovers to `--primary-hover`. Every control uses a full-strength focus ring.
 - **Overlays, menus and toasts** read `--overlay`, `--popover` and the status tokens, so they follow the theme.
@@ -88,6 +89,7 @@ Use the utility form (`bg-card`, `text-muted-foreground`, `border-input`, ...). 
 - `ui/command.jsx` still uses `placeholder:text-muted-foreground`.
 - The close button on the mobile menu keeps the page ring, which is 3.19:1 on navy (above 3:1, with little margin).
 - Observed in the browser pass (D5): wide tables, such as Users on its Rejected tab, scroll inside their card even at 1280px; the Suppliers search placeholder is clipped at 360px.
+- `AwaitingApprovalPage` still uses `CardTitle` (an `<h1>`) as its heading instead of `PageHeader`.
 - Dark mode is untested in a browser, because nothing applies it yet.
 
 ## Changing a token

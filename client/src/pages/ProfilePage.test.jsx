@@ -256,6 +256,38 @@ describe('Profile page', () => {
     expect(requests.reset).toEqual([{ email: 'ana@example.com' }]);
   });
 
+  it('lays the page out as a Profile heading above three titled sections', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profile' })).toBeInTheDocument();
+    for (const name of ['Name', 'Sign-in methods', 'Password']) {
+      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
+    }
+    expect(screen.getByRole('region', { name: 'Sign-in methods' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Password' })).toBeInTheDocument();
+  });
+
+  it('shows a pending user the same sections in the minimal layout', async () => {
+    profileHandlers(pendingUser);
+    renderApp({ route: '/profile' });
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profile' })).toBeInTheDocument();
+    for (const name of ['Name', 'Sign-in methods', 'Password']) {
+      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back to Awaiting approval' })).toBeInTheDocument();
+  });
+
+  it('does not name a region after the Name field it contains', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    expect(await screen.findByLabelText('Name')).toHaveAttribute('id', 'name');
+    expect(screen.queryByRole('region', { name: 'Name' })).not.toBeInTheDocument();
+  });
+
   it('is not shown before the profile is complete', async () => {
     profileHandlers({ ...pendingUser, emailVerified: false, profileComplete: false });
     renderApp({ route: '/profile' });
