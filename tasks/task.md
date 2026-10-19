@@ -99,6 +99,18 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | 6.5 | Add and Edit product form | ⬜ To do |
 | 6.6 | Archive and restore in the UI, with a confirm dialog | ⬜ To do |
 
+## Design Foundation (before 6.4): UI only, no API, auth, permission or validation changes
+
+| Phase | Task | Status |
+|---|---|---|
+| D0 | Add this section to `tasks/task.md` | ✅ Done |
+| D1 | Tokens: colours (primary `#2563EB`, hover `#1D4ED8`, navy `#0F1E3D`), success and warning, radius, system font stack, tabular numbers, `theme-color` | ⬜ To do |
+| D2 | Components: `success` and `warning` badge variants; restyle button, input, select, card, table, toaster; `FormAlert` success on tokens | ⬜ To do |
+| D3 | Shell: navy sidebar, mobile top bar with `Sheet` nav, skip link, `MinimalLayout`, Categories grid | ⬜ To do |
+| D4 | `PageHeader` and `StatusBadge`; move the five repeated page headings onto `PageHeader` | ⬜ To do |
+| D5 | Browser pass at about 360, 768, 1024 and 1280 px as admin and staff (written report) | ⬜ To do |
+| D6 | `docs/design-system.md` and a "tokens only" line in `client/CLAUDE.md` | ⬜ To do |
+
 ## M7: Stock engine and history [sub-PRD 07](../docs/prds/07-stock-engine.md)
 
 | Phase | Task | Status |
