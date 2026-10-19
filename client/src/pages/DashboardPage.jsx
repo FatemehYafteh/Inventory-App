@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/layout/PageHeader';
 import { useMe } from '@/lib/auth';
 
 export function DashboardPage() {
@@ -5,10 +6,10 @@ export function DashboardPage() {
 
   return (
     <section className="flex flex-col gap-2">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p className="text-muted-foreground">
-        Welcome, {user?.name}. Inventory figures appear here in a later milestone.
-      </p>
+      <PageHeader
+        title="Dashboard"
+        description={`Welcome, ${user?.name ?? ''}. Inventory figures appear here in a later milestone.`}
+      />
     </section>
   );
 }

@@ -3,6 +3,7 @@ import { CategoryCard } from '@/components/categories/CategoryCard';
 import { CategoryForm } from '@/components/categories/CategoryForm';
 import { DeleteCategoryDialog } from '@/components/categories/DeleteCategoryDialog';
 import { FormAlert } from '@/components/form/FormAlert';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { useReturnFocus } from '@/hooks/useReturnFocus';
 import { useMe } from '@/lib/auth';
@@ -55,12 +56,11 @@ export function CategoriesPage() {
 
   return (
     <section className="@container flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-4">
-        <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold outline-none">
-          Categories
-        </h1>
-        {canManage && <Button onClick={() => openForm(null)}>Add category</Button>}
-      </div>
+      <PageHeader
+        ref={headingRef}
+        title="Categories"
+        actions={canManage && <Button onClick={() => openForm(null)}>Add category</Button>}
+      />
       <FormAlert>{actionError}</FormAlert>
 
       {categories.isPending && (

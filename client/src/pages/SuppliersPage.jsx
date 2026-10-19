@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PAGE_SIZE_OPTIONS } from '@/components/data-table/DataTablePagination';
 import { FormAlert } from '@/components/form/FormAlert';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { SupplierForm } from '@/components/suppliers/SupplierForm';
 import {
   DeactivateSupplierDialog,
@@ -131,12 +132,11 @@ export function SuppliersPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-4">
-        <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold outline-none">
-          Suppliers
-        </h1>
-        {canManage && <Button onClick={() => onEdit(null)}>Add supplier</Button>}
-      </div>
+      <PageHeader
+        ref={headingRef}
+        title="Suppliers"
+        actions={canManage && <Button onClick={() => onEdit(null)}>Add supplier</Button>}
+      />
       <FormAlert>{actionError}</FormAlert>
 
       <SupplierTable
