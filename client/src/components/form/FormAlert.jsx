@@ -1,8 +1,8 @@
 import { cn } from '@/lib/utils';
 
 const TONES = {
-  error: 'border-destructive/30 bg-destructive/5 text-destructive',
-  success: 'border-emerald-600/30 bg-emerald-600/5 text-emerald-800',
+  error: 'border-danger/30 bg-danger-soft text-danger',
+  success: 'border-success/30 bg-success-soft text-success',
 };
 
 export function FormAlert({ tone = 'error', children }) {

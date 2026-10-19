@@ -27,7 +27,7 @@ function InputOTPSlot({ index, className, ...props }) {
     <div
       data-active={isActive}
       className={cn(
-        'relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-base shadow-xs transition-all first:rounded-l-md first:border-l last:rounded-r-md data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-[3px] data-[active=true]:ring-ring/50',
+        'relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-base shadow-xs transition-all first:rounded-l-md first:border-l last:rounded-r-md data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-[3px] data-[active=true]:ring-ring',
         className,
       )}
       {...props}

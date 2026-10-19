@@ -38,8 +38,7 @@ const DropdownMenuItem = forwardRef(function DropdownMenuItem(
       ref={ref}
       className={cn(
         itemClasses,
-        variant === 'destructive' &&
-          'text-destructive focus:bg-destructive/10 focus:text-destructive',
+        variant === 'destructive' && 'text-danger focus:bg-danger-soft focus:text-danger',
         className,
       )}
       {...props}

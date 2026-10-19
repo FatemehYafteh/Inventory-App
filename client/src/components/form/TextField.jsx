@@ -16,7 +16,7 @@ export const TextField = forwardRef(function TextField({ id, label, error, ...pr
         {...props}
       />
       {error && (
-        <p id={errorId} className="text-sm text-destructive">
+        <p id={errorId} className="text-sm text-danger">
           {error.message}
         </p>
       )}

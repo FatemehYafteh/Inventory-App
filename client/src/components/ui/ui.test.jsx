@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import toast from 'react-hot-toast';
@@ -33,6 +35,7 @@ import { Select, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Toaster } from '@/components/ui/toaster';
+import { FormAlert } from '@/components/form/FormAlert';
 
 // Smoke tests: each shadcn component renders and keeps its accessible roles.
 describe('ui components', () => {
@@ -181,4 +184,127 @@ describe('ui components', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Product saved');
     act(() => toast.remove());
   });
+});
+
+describe('status colours', () => {
+  it.each(['success', 'warning', 'danger', 'destructive', 'secondary', 'outline'])(
+    'renders a %s badge with its text',
+    (variant) => {
+      render(<Badge variant={variant}>Label</Badge>);
+      expect(screen.getByText('Label')).toBeInTheDocument();
+    },
+  );
+
+  it('announces an error alert and keeps the error tone on the danger tokens', () => {
+    render(<FormAlert>Something failed</FormAlert>);
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('Something failed');
+    expect(alert).toHaveClass('bg-danger-soft', 'text-danger');
+  });
+
+  it('announces a success alert politely and keeps the success tone on the success tokens', () => {
+    render(<FormAlert tone="success">Saved</FormAlert>);
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Saved');
+    expect(status).toHaveClass('bg-success-soft', 'text-success');
+  });
+
+  it('renders nothing without a message', () => {
+    const { container } = render(<FormAlert>{undefined}</FormAlert>);
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+// Source guard: each rule checks one targeted migration. `present` proves the intended token
+// class is there; `absent` is only used where every occurrence in the file was meant to go.
+//
+// Intentional exceptions, deliberately not asserted:
+// - `bg-destructive` on the solid destructive badge (now paired with text-destructive-foreground).
+// - `aria-invalid:border-destructive` / `aria-invalid:ring-destructive/20` on fields: non-text
+//   outlines, 4.83:1 on white and 3.56:1 on the dark card, above the 3:1 minimum.
+// - `placeholder:text-muted-foreground` in command.jsx (out of scope, 7.58:1).
+// - `ring-ring/50` in page-level files (DataTable*, SupplierTable, UsersTable): not read here.
+describe('token migration guard', () => {
+  const read = (file) => readFileSync(resolve(import.meta.dirname, file), 'utf8');
+  // ring-ring at full strength: nothing after it but a space, quote or end of class.
+  const FULL_RING = /ring-ring(?![/\w-])/;
+  const OLD_RING = /ring-ring\/50/;
+  // Plain text-destructive only; text-destructive-foreground is a legitimate token.
+  const PLAIN_DESTRUCTIVE = /text-destructive(?![-\w])/;
+
+  // `line` narrows the check to the lines that mention it; otherwise the whole file is used.
+  const RULES = [
+    { file: './badge.jsx', line: /destructive:/, present: [/text-destructive-foreground/] },
+    { file: './badge.jsx', line: /success:/, present: [/bg-success-soft/, /text-success/] },
+    { file: './badge.jsx', line: /warning:/, present: [/bg-warning-soft/, /text-warning/] },
+    { file: './badge.jsx', line: /danger:/, present: [/bg-danger-soft/, /text-danger/] },
+    { file: './badge.jsx', absent: [/text-white/] },
+    {
+      file: './button.jsx',
+      present: [/hover:bg-primary-hover/, FULL_RING],
+      absent: [/hover:bg-primary\/90/, OLD_RING],
+    },
+    {
+      file: './input.jsx',
+      present: [/placeholder:text-placeholder/, FULL_RING],
+      absent: [/placeholder:text-muted-foreground/, OLD_RING],
+    },
+    {
+      file: './select.jsx',
+      present: [/data-\[placeholder\]:text-placeholder/, FULL_RING],
+      absent: [/data-\[placeholder\]:text-muted-foreground/, OLD_RING],
+    },
+    { file: './dialog.jsx', present: [/bg-overlay/], absent: [/bg-black/] },
+    {
+      file: './dialog.jsx',
+      line: /Primitive\.Close className/,
+      present: [FULL_RING],
+      absent: [OLD_RING],
+    },
+    { file: './sheet.jsx', present: [/bg-overlay/], absent: [/bg-black/] },
+    {
+      file: './sheet.jsx',
+      line: /Primitive\.Close className/,
+      present: [FULL_RING],
+      absent: [OLD_RING],
+    },
+    { file: './alert-dialog.jsx', present: [/bg-overlay/], absent: [/bg-black/] },
+    { file: './tabs.jsx', present: [FULL_RING], absent: [OLD_RING] },
+    { file: './input-otp.jsx', present: [FULL_RING], absent: [OLD_RING] },
+    {
+      file: './dropdown-menu.jsx',
+      line: /variant === 'destructive'/,
+      present: [/text-danger/, /focus:bg-danger-soft/, /focus:text-danger/],
+    },
+    { file: './dropdown-menu.jsx', absent: [PLAIN_DESTRUCTIVE, /bg-destructive\/10/] },
+    { file: './toaster.jsx', present: [/iconTheme/, /var\(--success\)/, /var\(--danger\)/] },
+    { file: '../form/FormAlert.jsx', line: /error:/, present: [/bg-danger-soft/, /text-danger/] },
+    {
+      file: '../form/FormAlert.jsx',
+      line: /success:/,
+      present: [/bg-success-soft/, /text-success/],
+    },
+    {
+      file: '../form/FormAlert.jsx',
+      absent: [/emerald-/, PLAIN_DESTRUCTIVE, /bg-destructive\/5/],
+    },
+    { file: '../form/TextField.jsx', present: [/text-danger/], absent: [PLAIN_DESTRUCTIVE] },
+    { file: '../auth/TelegramSignIn.jsx', present: [/text-danger/], absent: [PLAIN_DESTRUCTIVE] },
+  ];
+
+  it.each(RULES.map((rule) => [`${rule.file} ${rule.line ?? '(file)'}`, rule]))(
+    '%s uses the intended tokens',
+    (_name, { file, line, present = [], absent = [] }) => {
+      const source = read(file);
+      const text = line
+        ? source
+            .split('\n')
+            .filter((l) => line.test(l))
+            .join('\n')
+        : source;
+      expect(text, `no line matches ${line}`).not.toBe('');
+      for (const pattern of present) expect(text).toMatch(pattern);
+      for (const pattern of absent) expect(text).not.toMatch(pattern);
+    },
+  );
 });

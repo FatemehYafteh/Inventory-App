@@ -7,6 +7,9 @@ function Toaster(props) {
       position="top-right"
       toastOptions={{
         className: 'text-sm',
+        // The library's default icon colours are hard-coded; take them from the tokens instead.
+        success: { iconTheme: { primary: 'var(--success)', secondary: 'var(--card)' } },
+        error: { iconTheme: { primary: 'var(--danger)', secondary: 'var(--card)' } },
         style: {
           background: 'var(--popover)',
           color: 'var(--popover-foreground)',

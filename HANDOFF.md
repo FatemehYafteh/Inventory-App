@@ -117,12 +117,14 @@ The owner wants the site design settled **before Phase 6.4**, as its own phase w
 |---|---|---|
 | D0 | Add a "Design Foundation" section to `tasks/task.md` | `tasks/task.md` |
 | D1 | Tokens for light and dark themes (`:root` and `.dark`; the app stays light, nothing applies `.dark`), hover token, radius 0.5rem, system font stack, tabular numbers, success/warning/danger/neutral tokens, static light `theme-color` `#F8FAFC`, contrast test | `client/src/index.css`, `client/index.html`, `client/src/styles/tokens.test.js` |
-| D2 | Components: `success` and `warning` badge variants, restyle button, input, select, card, table, toaster; move `FormAlert` success onto tokens | `client/src/components/ui/*`, `form/FormAlert.jsx`, `ui/ui.test.jsx` |
+| D2 | Components on tokens: `success`, `warning` and `danger` badge variants; button hover, input and select placeholders, full-strength focus rings on the seven `ui/` components that had one, `bg-overlay` on the three overlays, toaster icons, `FormAlert`, and `text-danger` in `TextField`, `TelegramSignIn` and `dropdown-menu`; source guard in `ui/ui.test.jsx`. Card and table were already token-driven and are unchanged | `client/src/components/ui/*`, `form/FormAlert.jsx`, `form/TextField.jsx`, `auth/TelegramSignIn.jsx`, `ui/ui.test.jsx` |
 | D3 | Shell: navy sidebar, mobile top bar and Sheet nav, skip link, `MinimalLayout`, Categories grid | `layout/AppLayout.jsx` (+test), `layout/MinimalLayout.jsx`, `pages/CategoriesPage.jsx` |
 | D4 | `PageHeader` and `StatusBadge`; move the five repeated `<h1>`s (Categories, Dashboard, NotFound, Suppliers, Users) onto `PageHeader`, keeping the focus-return refs | new `layout/PageHeader.jsx`, `StatusBadge.jsx`, the five pages |
 | D5 | Browser pass at about 360, 768, 1024 and 1280 px as admin and staff (written report) | none |
 | D6 | `docs/design-system.md` and a "tokens only" line in `client/CLAUDE.md` (note that D2 deliberately hand-edits `components/ui/`) | docs |
 | T | Theme switching and persisted preference (applies `.dark`); planned separately after D6, not started | later |
+
+**Follow-up left by D2 (page-level, not changed):** `DataTableColumnHeader`, `DataTablePagination`, `SupplierTable` and `UsersTable` still use the faint `ring-ring/50` focus ring (about 2.1:1 in light mode, below the 3:1 a focus indicator needs). `ui/command.jsx` still uses `placeholder:text-muted-foreground`. Neither blocks D2; fix them in a step you approve.
 
 Out of scope: server, `shared/`, per-page content redesign, charts and dashboard palette, dark mode switching (tokens exist from D1; the toggle is phase T), sidebar collapse, Phase 6.4.
 
