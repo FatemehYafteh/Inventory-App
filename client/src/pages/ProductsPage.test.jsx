@@ -90,6 +90,13 @@ function productsApi(items, { me = admin, failList = false } = {}) {
       }
       return HttpResponse.json({ product: product({ id: params.id, ...body }) });
     }),
+    http.patch('*/api/products/:id/:action', ({ params }) => {
+      state.writes.push({ method: 'PATCH', id: params.id, action: params.action });
+      if (state.failNext) {
+        return HttpResponse.json(state.failNext.body, { status: state.failNext.status });
+      }
+      return HttpResponse.json({ product: product({ id: params.id }) });
+    }),
     http.get('*/api/products', ({ request }) => {
       state.lists.push(Object.fromEntries(new URL(request.url).searchParams));
       if (failList) return HttpResponse.json({ message: 'boom' }, { status: 500 });
@@ -131,12 +138,86 @@ describe('Products page', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Products' })).toBeInTheDocument();
   });
 
-  it('has no Archive action yet', async () => {
-    productsApi([hammer]);
+  it('gives staff no Archive or Restore action', async () => {
+    productsApi([hammer], { me: staff });
     renderApp({ route: '/products' });
 
     await row('Claw Hammer');
     expect(screen.queryByRole('button', { name: /archive|restore/i })).not.toBeInTheDocument();
+  });
+
+  describe('Archive and Restore', () => {
+    it('archives only after a confirmation, then reloads the list', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+
+      await row('Claw Hammer');
+      await user.click(screen.getByRole('button', { name: 'Archive Claw Hammer' }));
+      const dialog = await screen.findByRole('alertdialog', { name: 'Archive Claw Hammer?' });
+      expect(state.writes).toEqual([]);
+
+      const listsBefore = state.lists.length;
+      await user.click(within(dialog).getByRole('button', { name: 'Archive' }));
+
+      await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+      expect(state.writes).toEqual([{ method: 'PATCH', id: 'p1', action: 'archive' }]);
+      await waitFor(() => expect(state.lists.length).toBeGreaterThan(listsBefore));
+    });
+
+    it('does nothing when the confirmation is cancelled', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+
+      await row('Claw Hammer');
+      await user.click(screen.getByRole('button', { name: 'Archive Claw Hammer' }));
+      await user.click(
+        within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Cancel' }),
+      );
+
+      await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+      expect(state.writes).toEqual([]);
+      expect(screen.getByRole('button', { name: 'Archive Claw Hammer' })).toHaveFocus();
+    });
+
+    it('restores an archived product straight away', async () => {
+      const state = productsApi([hammer, oldLamp]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products?archived=true' });
+
+      const lamp = await row('Old Lamp');
+      expect(within(lamp).queryByRole('button', { name: /^Archive/ })).not.toBeInTheDocument();
+      expect(
+        within(await row('Claw Hammer')).queryByRole('button', { name: /^Restore/ }),
+      ).not.toBeInTheDocument();
+
+      await user.click(within(lamp).getByRole('button', { name: 'Restore Old Lamp' }));
+
+      await waitFor(() =>
+        expect(state.writes).toEqual([{ method: 'PATCH', id: 'p3', action: 'restore' }]),
+      );
+    });
+
+    it('shows the server message when the change is refused', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      state.failNext = {
+        status: 409,
+        body: { message: 'This product is already archived', code: 'ALREADY_ARCHIVED' },
+      };
+
+      await row('Claw Hammer');
+      await user.click(screen.getByRole('button', { name: 'Archive Claw Hammer' }));
+      await user.click(
+        within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Archive' }),
+      );
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'This product is already archived',
+      );
+    });
   });
 
   it('marks archived products with an Archived badge', async () => {

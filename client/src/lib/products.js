@@ -49,3 +49,13 @@ export function useCreateProduct() {
 export function useUpdateProduct() {
   return useProductMutation(({ id, ...body }) => api(`/products/${id}`, { method: 'PATCH', body }));
 }
+
+/** The product id. Admin only; the API answers 409 if it is already archived. */
+export function useArchiveProduct() {
+  return useProductMutation((id) => api(`/products/${id}/archive`, { method: 'PATCH' }));
+}
+
+/** The product id. Admin only; the API answers 409 if it is not archived. */
+export function useRestoreProduct() {
+  return useProductMutation((id) => api(`/products/${id}/restore`, { method: 'PATCH' }));
+}

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PAGE_SIZE_OPTIONS } from '@/components/data-table/DataTablePagination';
+import { FormAlert } from '@/components/form/FormAlert';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { ArchiveProductDialog } from '@/components/products/ArchiveProductDialog';
 import { ProductFilters, STATUS_OPTIONS } from '@/components/products/ProductFilters';
 import { ProductForm } from '@/components/products/ProductForm';
 import { ProductTable } from '@/components/products/ProductTable';
@@ -9,7 +11,14 @@ import { Button } from '@/components/ui/button';
 import { useReturnFocus } from '@/hooks/useReturnFocus';
 import { useMe } from '@/lib/auth';
 import { useCategories } from '@/lib/categories';
-import { useCreateProduct, useProducts, useUpdateProduct } from '@/lib/products';
+import { errorMessage } from '@/lib/errors';
+import {
+  useArchiveProduct,
+  useCreateProduct,
+  useProducts,
+  useRestoreProduct,
+  useUpdateProduct,
+} from '@/lib/products';
 import { useSuppliers } from '@/lib/suppliers';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -20,7 +29,8 @@ const OBJECT_ID = /^[a-f\d]{24}$/i;
 const SUPPLIER_FILTER_LIMIT = 100;
 
 /**
- * Everyone active browses products, and admins and staff add and edit them. Search, filters, sort and
+ * Everyone active browses products, admins and staff add and edit them, and only admins archive
+ * and restore them. Search, filters, sort and
  * page live in the URL, and a value that does not make sense falls back to its default. Only
  * admins can include archived products (the API refuses it for staff).
  */
@@ -86,6 +96,8 @@ export function ProductsPage() {
   });
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
+  const { mutate: archiveProduct } = useArchiveProduct();
+  const { mutate: restoreProduct } = useRestoreProduct();
 
   // `form` is null (closed), { product: null } (add) or { product } (edit).
   const [form, setForm] = useState(null);
@@ -99,6 +111,28 @@ export function ProductsPage() {
     [remember],
   );
 
+  const [archiving, setArchiving] = useState(null);
+  const [actionError, setActionError] = useState(null);
+  const openArchive = useCallback(
+    (product) => {
+      remember();
+      setArchiving(product);
+    },
+    [remember],
+  );
+  const restore = useCallback(
+    (product) => {
+      setActionError(null);
+      restoreProduct(product.id, { onError: (error) => setActionError(errorMessage(error)) });
+    },
+    [restoreProduct],
+  );
+  function confirmArchive(product) {
+    setArchiving(null);
+    setActionError(null);
+    archiveProduct(product.id, { onError: (error) => setActionError(errorMessage(error)) });
+  }
+
   const sorting = useMemo(() => [{ id: sortBy, desc: order === 'desc' }], [sortBy, order]);
   const pagination = useMemo(() => ({ pageIndex: page - 1, pageSize: limit }), [page, limit]);
   const filtered = Boolean(search || category || supplier || status || archived);
@@ -111,6 +145,7 @@ export function ProductsPage() {
         description="Find products and check their stock."
         actions={<Button onClick={() => openForm(null)}>Add Product</Button>}
       />
+      <FormAlert>{actionError}</FormAlert>
       <ProductTable
         products={products.data?.items ?? []}
         total={products.data?.total ?? 0}
@@ -132,6 +167,9 @@ export function ProductsPage() {
           });
         }}
         onEdit={openForm}
+        canArchive={isAdmin}
+        onArchive={openArchive}
+        onRestore={restore}
         isLoading={products.isPending}
         error={products.error}
         emptyMessage={filtered ? 'No products match your filters.' : 'No products yet.'}
@@ -160,6 +198,12 @@ export function ProductsPage() {
             }}
           />
         }
+      />
+      <ArchiveProductDialog
+        product={archiving}
+        onCancel={() => setArchiving(null)}
+        onCloseAutoFocus={onCloseAutoFocus}
+        onConfirm={confirmArchive}
       />
       {form && (
         <ProductForm

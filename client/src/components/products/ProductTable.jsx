@@ -8,8 +8,8 @@ const dash = <span className="text-muted-foreground">—</span>;
 
 /**
  * The products table. The server searches, filters, sorts and pages; `sorting` is [{ id, desc }]
- * and `pagination` is { pageIndex, pageSize }. Title, Quantity and Price sort. Archive and the
- * stock actions arrive in later phases.
+ * and `pagination` is { pageIndex, pageSize }. Title, Quantity and Price sort. Archive and
+ * Restore show only when `canArchive` (admins); the stock actions arrive in a later phase.
  */
 export function ProductTable({
   products,
@@ -23,6 +23,9 @@ export function ProductTable({
   emptyMessage,
   toolbar,
   onEdit,
+  canArchive,
+  onArchive,
+  onRestore,
 }) {
   const columns = useMemo(
     () => [
@@ -94,18 +97,32 @@ export function ProductTable({
         header: 'Actions',
         enableSorting: false,
         cell: ({ row }) => (
-          <Button
-            variant="outline"
-            size="sm"
-            aria-label={`Edit ${row.original.title}`}
-            onClick={() => onEdit(row.original)}
-          >
-            Edit
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={`Edit ${row.original.title}`}
+              onClick={() => onEdit(row.original)}
+            >
+              Edit
+            </Button>
+            {canArchive && (
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label={`${row.original.isArchived ? 'Restore' : 'Archive'} ${row.original.title}`}
+                onClick={() =>
+                  row.original.isArchived ? onRestore(row.original) : onArchive(row.original)
+                }
+              >
+                {row.original.isArchived ? 'Restore' : 'Archive'}
+              </Button>
+            )}
+          </div>
         ),
       },
     ],
-    [onEdit],
+    [onEdit, canArchive, onArchive, onRestore],
   );
 
   return (
