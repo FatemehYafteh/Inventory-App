@@ -87,27 +87,23 @@ export function ProductFilters({
           onChange={(value) => onChange({ status: value })}
         />
       </div>
-      {(canShowArchived || canClear) && (
-        <div className="flex flex-wrap items-center gap-4">
-          {canShowArchived && (
-            <div className="flex items-center gap-2">
-              <input
-                id="show-archived"
-                type="checkbox"
-                className="size-4 accent-primary"
-                checked={showArchived}
-                onChange={(event) => onChange({ archived: event.target.checked ? 'true' : '' })}
-              />
-              <Label htmlFor="show-archived">Show archived</Label>
-            </div>
-          )}
-          {canClear && (
-            <Button variant="outline" size="sm" onClick={onClear}>
-              Clear filters
-            </Button>
-          )}
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-4">
+        {canShowArchived && (
+          <div className="flex items-center gap-2">
+            <input
+              id="show-archived"
+              type="checkbox"
+              className="size-4 accent-primary"
+              checked={showArchived}
+              onChange={(event) => onChange({ archived: event.target.checked ? 'true' : '' })}
+            />
+            <Label htmlFor="show-archived">Show archived</Label>
+          </div>
+        )}
+        <Button variant="outline" size="sm" disabled={!canClear} onClick={onClear}>
+          Clear filters
+        </Button>
+      </div>
     </div>
   );
 }

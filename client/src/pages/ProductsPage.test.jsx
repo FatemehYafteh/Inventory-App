@@ -256,7 +256,35 @@ describe('Products page', () => {
       expect(lastList(state)).toEqual({ sortBy: 'title', order: 'asc', page: '1', limit: '20' }),
     );
     expect(screen.getByRole('searchbox', { name: 'Search products' })).toHaveValue('');
-    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeDisabled();
+  });
+
+  it('keeps Clear filters visible, disabled until a filter is active', async () => {
+    productsApi([hammer]);
+    const user = userEvent.setup();
+    renderApp({ route: '/products' });
+
+    await row('Claw Hammer');
+    const clear = screen.getByRole('button', { name: 'Clear filters' });
+    expect(clear).toBeDisabled();
+    await user.click(screen.getByRole('checkbox', { name: 'Show archived' }));
+    await waitFor(() => expect(clear).toBeEnabled());
+    await user.click(screen.getByRole('checkbox', { name: 'Show archived' }));
+    await waitFor(() => expect(clear).toBeDisabled());
+  });
+
+  it('keeps Clear filters enabled when Show archived is unchecked but another filter is active', async () => {
+    productsApi([hammer]);
+    const user = userEvent.setup();
+    renderApp({ route: '/products?archived=true&status=low_stock' });
+
+    await row('Claw Hammer');
+    await user.click(screen.getByRole('checkbox', { name: 'Show archived' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('checkbox', { name: 'Show archived' })).not.toBeChecked(),
+    );
+    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeEnabled();
   });
 
   it('says so when nothing matches, and when there are no products at all', async () => {
@@ -268,7 +296,7 @@ describe('Products page', () => {
     productsApi([]);
     renderApp({ route: '/products' });
     expect(await screen.findByText('No products yet.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeDisabled();
   });
 
   it('shows an error when the products cannot be loaded', async () => {
