@@ -62,6 +62,7 @@ Use the utility form (`bg-card`, `text-muted-foreground`, `border-input`, ...). 
 
 - **`PageHeader`** (`layout/PageHeader.jsx`): the page's level-1 heading, with an optional description and an `actions` slot that wraps on narrow screens. Its ref goes to the `<h1>`, which tests and `useReturnFocus` use to put focus back after a dialog closes.
 - **Settings-style pages** (Profile): a `PageHeader`, then one `Card` per section in a left-aligned `max-w-3xl` column with `gap-6`. Section titles are `<h2 class="text-lg font-semibold">` (`CardTitle` is an `<h1>`), each with a one-line muted description. A section is a named region (`<section aria-labelledby>`) unless its title would repeat its field label, as with Name.
+- **Profile layout** (D8): an identity card (initials avatar, name, email, role and status badges), then from `lg` two columns (Name and Password on the left, Sign-in methods in a 22rem column on the right) in a `max-w-5xl` container; one column below `lg`. Every user-supplied string (name, email, Telegram username) uses `[overflow-wrap:anywhere]` inside a `min-w-0` parent so long values wrap instead of overflowing.
 - **`FormAlert`**: `error` (role `alert`) and `success` (role `status`) tones on the danger and success tokens. Field errors in `TextField` use `text-danger`.
 - **Button**: the default variant hovers to `--primary-hover`. Every control uses a full-strength focus ring.
 - **Overlays, menus and toasts** read `--overlay`, `--popover` and the status tokens, so they follow the theme.

@@ -111,6 +111,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | D5 | Browser pass at about 360, 768, 1024 and 1280 px as admin, staff, pending and rejected (written report, in chat) | ✅ Done |
 | D6 | `docs/design-system.md` and a tokens-only rule in `client/CLAUDE.md` | ✅ Done |
 | D7 | Profile page on the design system: `PageHeader`, one card per section (Name, Sign-in methods, Password), `max-w-3xl` column, long emails wrap | ✅ Done |
+| D8 | Profile page redesign: identity card with avatar, role and status badges; two-column layout from `lg`; sign-in methods with badges; long names and emails wrap | ✅ Done |
 | T | Theme switching and persisted user preference (applies the `.dark` class); planned separately, after D6 | ⬜ Not started |
 
 ## M7: Stock engine and history [sub-PRD 07](../docs/prds/07-stock-engine.md)
