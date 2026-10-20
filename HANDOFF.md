@@ -8,7 +8,25 @@ Written at the end of the session. Each claim carries a tag saying where it come
 - **[prior session]**: copied from an older handoff and not re-checked.
 - **(verify)**: not checked at all.
 
-## 00. Update at the end of the 2026-10-20 session (read this first)
+## 000. Shutdown update, end of 2026-10-20 (read this first; it overrides 00 where they differ)
+
+**Git state [checked now]**
+- Branch `feat/design-foundation`, tracking `origin/feat/design-foundation`. Everything below was pushed to it; no PR, merge or base change.
+- Latest commits, newest first: `53f510e` 7.1 `stock.service` (atomic conditional update plus movement in one transaction, concurrency tests); `263731d` fix: Archived badge moved to its own admin-only column; `4f68b42` 6.6; `6f6a1ab` 6.5; `46b09c7` and `1bb45a6` 6.4. The commit that adds this section is newer than `53f510e`; run `git status -sb` to see whether it was pushed. Section 00 says "nothing pushed": that is now out of date.
+- Working tree clean after the commit of this file.
+
+**Completed:** Design Foundation D0 to D8; Products 6.4, 6.5, 6.6; Phase 7.1.
+**Results [checked now, on the tree at `53f510e`]:** `npm run lint` clean; server 368 of 368 tests (32 files); client 344 of 344 tests (23 files).
+
+**Not done / not checked**
+- Phase 7.2 to 7.6 not started. Phase T (theme switching) not started.
+- 7.1 and the Archived-column fix were not checked in a browser (the column fix has unit tests only).
+- The M5 and M6 PRs and the base-branch questions (sections 2 and 11) are still open.
+- A stale background job `task file docs` (`99105165`) still shows `blocked` waiting for "approved". Its D0 to D8 work was in fact done by other sessions; ignore or discard it.
+
+**Exact next step for the next session:** read this section, run `git status -sb`, then ask the owner what to do next. **Phase 7.3 must NOT begin without the owner's explicit approval.** The natural next item is 7.2 (`POST /products/:id/stock` and `GET /products/:id/movements`, using `stock.service`), but it also needs approval first.
+
+## 00. Update at the end of the 2026-10-20 session
 
 - **D8, Profile page redesign, is done and committed locally; not pushed.** Branch `feat/design-foundation` is 2 commits ahead of origin before this file's commit: the redesign, then a fix so the Sign-in methods card matches the left column height. The page has an identity card (initials avatar, name, email, role and status badges), then from `lg` two columns (Name and Password left, Sign-in methods right, bottoms aligned), one column below. Long names, emails and Telegram usernames wrap. Checked in Chrome at 360, 768, 1024, 1280 and 1440px as admin on a throwaway database: no sideways scroll, cards aligned. `npm run lint` and `npm test -w client` (311 tests) passed before the redesign commit; after the height fix only the Profile tests and lint were re-run. Server tests were not re-run (no server change).
 - **The owner accepted the Profile page as good enough for now.** Polish follow-ups, none blocking: the full-width blue "Connect Telegram" button (in `TelegramSignIn.jsx`); about 120px blank under it on desktop; the "Name" card title above a field also labelled "Name"; a very long email was only tested in unit tests, not in the browser.
