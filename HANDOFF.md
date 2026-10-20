@@ -14,7 +14,8 @@ Written at the end of the session. Each claim carries a tag saying where it come
 - Merge order: #19, then retarget #20 to `sub-prds` and merge, then retarget #21 and merge. Use merge commits (not squash) so the stack needs no rebase. `origin/sub-prds` has 2 commits the stack lacks (merges of #8 and #14); a dry-run merge showed no conflicts.
 - Local `feat/roles-approval` is still 5 commits ahead of its remote (already inside the stack); local `sub-prds` is 33 behind. Both left alone.
 - Sections 2 and 11 below are superseded on the PR and base-branch questions. 7.2 and 7.3 still need explicit approval.
-- **Verified [checked now]:** #19, #20 and #21 are open, mergeable, and their bases are as listed above. Branch relationships matched the plan.
+- **UPDATE, all three merged into `sub-prds` as merge commits [checked now]:** #19 `30cb473` (closed #15 to #18), #20 `eef30ad`, #21 `fcda7c1`. The stack is fully merged; the branch list and merge-order notes in this section are now history. The next work needs a new branch off the updated `sub-prds`. Remaining decisions: approval for 7.2 and 7.3, Phase T, UI polish, and cleanup of old local branches / the stale local `sub-prds`.
+- (Earlier) **Verified:** #19, #20 and #21 were open, mergeable, and their bases are as listed above. Branch relationships matched the plan.
 - **Remaining decisions for the owner:** (1) review and merge #19, #20, #21 in that order (merge commits, retarget each next PR first); (2) whether to push local-only commits on `feat/roles-approval` (not needed) and fast-forward local `sub-prds`; (3) whether to clean up old local branches; (4) approval for 7.2 and, separately, 7.3; (5) Phase T (theme switching) and the UI polish list, deferred by the owner.
 - **Next recommended step:** merge #19, then #20, then #21; then ask for approval to start 7.2 (`POST /products/:id/stock`, `GET /products/:id/movements`, using `stock.service`). Do not start 7.2 or 7.3 without it.
 
