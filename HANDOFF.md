@@ -8,7 +8,63 @@ Written at the end of the session. Each claim carries a tag saying where it come
 - **[prior session]**: copied from an older handoff and not re-checked.
 - **(verify)**: not checked at all.
 
-## 0000. PRs opened (2026-10-20, owner approved Option 1: stacked PRs, one per milestone)
+## 00000. Final shutdown state, 2026-10-20 (READ THIS FIRST; it overrides every section below where they differ)
+
+**What happened this session**
+1. Read the shutdown notes, checked git. Owner checked the app in a browser and found it good; UI refinements deferred.
+2. Reviewed the PR and base-branch questions and presented options; owner approved Option 1 (stacked PRs, one per milestone, order M5, M6, Design Foundation and 7.1). Bodies written with the `mattpocock-skills:pr` template.
+3. Opened #19, #20, #21, then merged them one at a time into `sub-prds` as **merge commits** (no squash, no rebase). The first #19 merge attempts failed on GitHub TLS timeouts; PR state was checked before retrying, then it merged.
+4. Pushed the HANDOFF docs commits to `feat/design-foundation` at the owner's request.
+
+**Merges [checked now, after `git fetch --prune`]**
+
+| PR | Content | Base when merged | Merge commit |
+|---|---|---|---|
+| #19 | M5 Categories and Suppliers (closed issues #15 to #18) | `sub-prds` | `30cb473` |
+| #20 | M6 Products API | retargeted to `sub-prds` | `eef30ad` |
+| #21 | Design Foundation D0 to D8, Products UI 6.4 to 6.6, `stock.service` 7.1 | retargeted to `sub-prds` | `fcda7c1` |
+
+No open issues remain. No open PRs remain.
+
+**Remote and local state [checked now]**
+- `origin/sub-prds` = `fcda7c1` (also `origin/HEAD`). It contains the whole stack, including the merges of #8 and #14.
+- `origin/feat/design-foundation` = `3b83161` and local `feat/design-foundation` = `3b83161`, in sync. Its PR #21 was merged at the earlier head `fb9c355`, so **the docs commits after `fb9c355` (`3b83161` and the one that adds this section) are NOT in `sub-prds`.** They only change `HANDOFF.md`.
+- Remote branches left in place (merged, not deleted): `feat/categories-suppliers` `769f39b`, `feat/products` `65a83e5`, `feat/roles-approval` `7b41d8a`, `feat/telegram-identity`, `chore/repo-setup`, `main` `b820c2f`.
+- Local `sub-prds` is stale at `7404e65` (72 behind origin). Local `feat/roles-approval` still has 5 commits its remote lacks (all already in `sub-prds` through the stack). Old local branches (`feat/auth-login`, `feat/auth-password-reset`, `feat/foundation-email-auth`, others) left alone. `chore/repo-setup` is checked out in a worktree at `.claude/worktrees/sub-prds`.
+- The commit that adds this section is local only and **not pushed** (owner said: push nothing unless necessary).
+
+**Unchanged context (all still true)**
+- Last verified results, at `53f510e`: lint clean, server 368 of 368, client 344 of 344. Not re-run after the merges.
+- Done: M3, M4, M5, M6 API, Design Foundation D0 to D8, Products 6.4 to 6.6, Phase 7.1. Seed-data and full-stack-per-feature rules in the CLAUDE.md files and memory still apply.
+- Known non-blocking UI items (section 0 and 00 below) stay open.
+
+**Deferred / needs the owner**
+- **Phases 7.2 and 7.3 require the owner's explicit approval before starting.** 7.2 is `POST /products/:id/stock` and `GET /products/:id/movements` using `stock.service`; 7.3 adds `initialQuantity` and the "Initial stock" receive movement. 7.4 to 7.6 come after.
+- **Phase T (theme switching) and all UI polish remain deferred.** Do not start them.
+- Cleanup of old local branches, the stale local `sub-prds` and remote merged branches: not decided.
+
+## Plan for the next session
+
+1. Read this section. Do not start any phase.
+2. Sync and verify (read-only first):
+   ```bash
+   git status -sb && git fetch --prune
+   git log --oneline -3 origin/sub-prds        # expect fcda7c1 on top
+   git rev-list --count origin/sub-prds..feat/design-foundation   # docs-only commits, expect 2 (or 3 if this section's commit counts)
+   gh pr list --state open                      # expect none
+   gh issue list --state open                   # expect none
+   ```
+3. Carry the HANDOFF update into a new branch off the updated base (the docs commits touch only `HANDOFF.md`, so no conflict is expected):
+   ```bash
+   git switch -c docs/handoff-after-merge origin/sub-prds
+   git checkout feat/design-foundation -- HANDOFF.md
+   git commit -m "docs: HANDOFF after PRs 19, 20 and 21 merged"
+   ```
+   If the local `feat/design-foundation` commit was lost, take the file from `origin/feat/design-foundation` instead (it holds everything up to `3b83161`; this section exists only in the local commit). Push and open a small PR only with the owner's approval.
+4. Run `npm run lint`, `npm test -w server` and `npm test -w client` on the updated base to re-verify (not run since `53f510e`). Report real results.
+5. Then **ask the owner** what to start: 7.2 (needs approval), 7.3 (needs separate approval), Phase T or UI polish (deferred), or branch cleanup. Any feature work goes on a new branch off `origin/sub-prds`, one commit per ticket as `feat: <title> (#<issue>)` per the CLAUDE.md workflow; create GitHub issues first if the work has none.
+
+## 0000. PRs opened (history, superseded by the section above; 2026-10-20, owner approved Option 1)
 
 - #19 M5 (`feat/categories-suppliers` into `sub-prds`, closes #15 to #18), #20 M6 (`feat/products` into `feat/categories-suppliers`), #21 Design Foundation, Products UI and 7.1 (`feat/design-foundation` into `feat/products`). Nothing merged; no rebase, no base change on any branch.
 - Merge order: #19, then retarget #20 to `sub-prds` and merge, then retarget #21 and merge. Use merge commits (not squash) so the stack needs no rebase. `origin/sub-prds` has 2 commits the stack lacks (merges of #8 and #14); a dry-run merge showed no conflicts.
