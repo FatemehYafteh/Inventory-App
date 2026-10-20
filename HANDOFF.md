@@ -1,4 +1,4 @@
-# Handoff: Design Foundation (D0 to D7) done and pushed; M6 Products UI next (2026-10-19)
+# Handoff: Design Foundation (D0 to D8) done; Products 6.4 planned, not started (2026-10-20)
 
 This replaces the M5 handoff of 2026-10-17, which was never committed. It is kept word for word in the appendix at the end of this file.
 Written at the end of the session. Each claim carries a tag saying where it comes from:
@@ -7,6 +7,13 @@ Written at the end of the session. Each claim carries a tag saying where it come
 - **[reported earlier]**: observed earlier in this same session and not re-run for this file.
 - **[prior session]**: copied from an older handoff and not re-checked.
 - **(verify)**: not checked at all.
+
+## 00. Update at the end of the 2026-10-20 session (read this first)
+
+- **D8, Profile page redesign, is done and committed locally; not pushed.** Branch `feat/design-foundation` is 2 commits ahead of origin before this file's commit: the redesign, then a fix so the Sign-in methods card matches the left column height. The page has an identity card (initials avatar, name, email, role and status badges), then from `lg` two columns (Name and Password left, Sign-in methods right, bottoms aligned), one column below. Long names, emails and Telegram usernames wrap. Checked in Chrome at 360, 768, 1024, 1280 and 1440px as admin on a throwaway database: no sideways scroll, cards aligned. `npm run lint` and `npm test -w client` (311 tests) passed before the redesign commit; after the height fix only the Profile tests and lint were re-run. Server tests were not re-run (no server change).
+- **The owner accepted the Profile page as good enough for now.** Polish follow-ups, none blocking: the full-width blue "Connect Telegram" button (in `TelegramSignIn.jsx`); about 120px blank under it on desktop; the "Name" card title above a field also labelled "Name"; a very long email was only tested in unit tests, not in the browser.
+- **Next: Products 6.4**, plan in section 7 (updated). It needs the owner's approval before any code.
+- Nothing has been pushed this session. Do not push, open a PR, or change the base without explicit approval.
 
 ## 0. Update at the end of the 2026-10-19 session (read this first)
 
@@ -166,11 +173,32 @@ Out of scope: server, `shared/`, per-page content redesign, charts and dashboard
 
 **Resolved:** the sidebar layout, the navy values (`#0F1E3D` light, `#0B1426` dark), the D0 to D7 plan and the branch were all approved and built.
 
-## 7. Phase 6.4 plan (the design foundation is done; waiting on the owner to start 6.4)
+## 7. Phase 6.4 plan: Products page table (updated 2026-10-20, not approved, no code written)
 
-Plain-language plan, not yet approved: add `lib/products.js` (`useProducts`, keeping previous rows visible while refetching); a `/products` route and a "Products" nav item for all active users; a page with a 300 ms debounced search, category and supplier selects, a stock-status select and an admin-only "Show archived" checkbox; a `DataTable` with Title (SKU underneath, "Archived" badge), Category, Supplier, Price, Quantity, Stock status badge, Created date; sortable Title, Quantity and Price; all state in the URL; msw-based tests; then lint, Prettier, both suites and a first real browser check with the seed.
+Scope: read-only list page. No Add, Edit, Archive or stock actions (6.5, 6.6, M7). No server change; the API from 6.1 is used as is.
 
-Open recommendations for 6.4, to be confirmed with the design: no Actions column and no "Add Product" button until 6.5/6.6; USD formatting in one helper (currency is unspecified in the PRD); the supplier filter can load at most 100 suppliers (the API cap, which must not change); ignore `?archived=true` in the page for non-admins so staff never send it; fall back to defaults on invalid URL values; an optional "Clear filters" button.
+**Files**
+- New `client/src/lib/products.js`: `useProducts(filters)` (TanStack Query, key `['products', filters]`, `placeholderData: keepPreviousData`), modelled on `lib/suppliers.js`.
+- One `formatPrice` helper (USD, since the PRD names no currency) and a date formatter, in `lib/utils.js` or a new `lib/format.js`.
+- New `client/src/components/products/ProductTable.jsx` and `ProductFilters.jsx`, replacing the README placeholder.
+- New `client/src/pages/ProductsPage.jsx`; route `/products` in `App.jsx` for all active users; a "Products" item in `SidebarNav.jsx`.
+- Tests: `ProductsPage.test.jsx` (MSW) and a nav test update. Update `tasks/task.md` 6.4, and `docs/design-system.md` only if a new pattern appears.
+
+**Behaviour**
+- `PageHeader` "Products"; toolbar with search (300 ms debounce, title and SKU), Category and Supplier selects, a Stock status select (All, In, Low, Out) and, for admins only, a "Show archived" checkbox.
+- Columns: Title (SKU below, an "Archived" badge when archived), Category, Supplier (a dash when none), Price, Quantity, Stock status (`StatusBadge`, text always shown), Created. Sortable: Title, Quantity, Price. Server-side pagination, page sizes from `DataTablePagination`, default 20.
+- Search, filters, sort, page and limit live in the URL; invalid values fall back to defaults; any change resets the page to 1. `?category=<id>` and `?supplier=<id>` from the Categories and Suppliers pages work and show in the selects.
+- Staff never send `archived=true` (the page ignores it in the URL for non-admins).
+- Loading (previous rows stay visible), empty (no products, and no matches with a "Clear filters" button) and error states.
+- Layout: the table scrolls inside its card on narrow screens; the toolbar wraps. Colour from tokens only.
+
+**Open points for the owner**
+1. Currency: USD in one helper, easy to change. OK?
+2. The supplier select loads at most 100 suppliers (the API cap, which stays). Acceptable for now?
+3. Include a "Clear filters" button? (recommended)
+4. No Actions column or Add Product button until 6.5 and 6.6. OK?
+
+**Verification:** lint, Prettier, both suites, then a browser pass at 360, 768, 1024 and 1280px as admin and staff on a throwaway seeded database (the seed already has every stock status, archived products, a no-supplier product and an inactive supplier). One local commit, no push.
 
 ## 8. Known limitations and open items
 
