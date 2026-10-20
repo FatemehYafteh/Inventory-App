@@ -95,7 +95,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | 6.1 | Products list API: search, filters, sort, pagination, indexes, under 300 ms at 10,000 products | ✅ Done |
 | 6.2 | Create and edit product API (SKU unique regardless of case, quantity not editable) | ✅ Done |
 | 6.3 | Archive and restore API, admin only | ✅ Done |
-| 6.4 | Products page table, with search, filters, sort and page kept in the URL | ⬜ To do |
+| 6.4 | Products page table, with search, filters, sort and page kept in the URL | ✅ Done |
 | 6.5 | Add and Edit product form | ⬜ To do |
 | 6.6 | Archive and restore in the UI, with a confirm dialog | ⬜ To do |
 

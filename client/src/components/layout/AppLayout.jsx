@@ -1,4 +1,11 @@
-import { LayoutDashboardIcon, MenuIcon, TagsIcon, TruckIcon, UsersIcon } from 'lucide-react';
+import {
+  LayoutDashboardIcon,
+  MenuIcon,
+  PackageIcon,
+  TagsIcon,
+  TruckIcon,
+  UsersIcon,
+} from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,6 +23,7 @@ import { SidebarNav, SkipLink } from './SidebarNav';
 // Pages are added here as their milestones land. `adminOnly` items are hidden from staff.
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboardIcon, end: true },
+  { to: '/products', label: 'Products', icon: PackageIcon },
   { to: '/categories', label: 'Categories', icon: TagsIcon },
   { to: '/suppliers', label: 'Suppliers', icon: TruckIcon },
   { to: '/users', label: 'Users', icon: UsersIcon, adminOnly: true, badge: true },
