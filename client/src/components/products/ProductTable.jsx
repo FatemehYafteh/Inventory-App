@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
 import { DataTable } from '@/components/data-table/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
+import { Button } from '@/components/ui/button';
 import { formatDate, formatPrice } from '@/lib/format';
 
 const dash = <span className="text-muted-foreground">—</span>;
 
 /**
  * The products table. The server searches, filters, sorts and pages; `sorting` is [{ id, desc }]
- * and `pagination` is { pageIndex, pageSize }. Title, Quantity and Price sort. Read-only: the
- * Add, Edit, Archive and stock actions arrive in later phases.
+ * and `pagination` is { pageIndex, pageSize }. Title, Quantity and Price sort. Archive and the
+ * stock actions arrive in later phases.
  */
 export function ProductTable({
   products,
@@ -21,6 +22,7 @@ export function ProductTable({
   error,
   emptyMessage,
   toolbar,
+  onEdit,
 }) {
   const columns = useMemo(
     () => [
@@ -87,8 +89,23 @@ export function ProductTable({
           <span className="whitespace-nowrap">{formatDate(row.original.createdAt)}</span>
         ),
       },
+      {
+        id: 'actions',
+        header: 'Actions',
+        enableSorting: false,
+        cell: ({ row }) => (
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={`Edit ${row.original.title}`}
+            onClick={() => onEdit(row.original)}
+          >
+            Edit
+          </Button>
+        ),
+      },
     ],
-    [],
+    [onEdit],
   );
 
   return (

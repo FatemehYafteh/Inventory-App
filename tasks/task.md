@@ -96,7 +96,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | 6.2 | Create and edit product API (SKU unique regardless of case, quantity not editable) | ✅ Done |
 | 6.3 | Archive and restore API, admin only | ✅ Done |
 | 6.4 | Products page table, with search, filters, sort and page kept in the URL | ✅ Done |
-| 6.5 | Add and Edit product form | ⬜ To do |
+| 6.5 | Add and Edit product form | ✅ Done |
 | 6.6 | Archive and restore in the UI, with a confirm dialog | ⬜ To do |
 
 ## Design Foundation (before 6.4): UI only, no API, auth, permission or validation changes

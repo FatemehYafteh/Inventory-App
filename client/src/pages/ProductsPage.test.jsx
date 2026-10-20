@@ -11,6 +11,7 @@ const staff = { ...activeUser, id: 's1', name: 'Sam Staff', role: 'staff' };
 const TOOLS_ID = 'c'.repeat(24);
 const PAPER_ID = 'd'.repeat(24);
 const ACME_ID = 'a'.repeat(24);
+const OLD_MILL_ID = 'b'.repeat(24);
 
 const product = (fields) => ({
   description: '',
@@ -52,7 +53,7 @@ const oldLamp = product({
 
 /** A Products API that records every list request; the filtering itself is the server's job. */
 function productsApi(items, { me = admin, failList = false } = {}) {
-  const state = { lists: [] };
+  const state = { lists: [], writes: [], failNext: null };
   server.use(
     http.get('*/api/auth/me', () => HttpResponse.json({ user: me })),
     http.get('*/api/users/pending-count', () => HttpResponse.json({ count: 0 })),
@@ -64,14 +65,31 @@ function productsApi(items, { me = admin, failList = false } = {}) {
         ],
       }),
     ),
-    http.get('*/api/suppliers', () =>
-      HttpResponse.json({
-        items: [{ id: ACME_ID, name: 'Acme Tools' }],
-        total: 1,
-        page: 1,
-        limit: 100,
-      }),
-    ),
+    http.get('*/api/suppliers', ({ request }) => {
+      const query = Object.fromEntries(new URL(request.url).searchParams);
+      const all = [
+        { id: ACME_ID, name: 'Acme Tools', isActive: true },
+        { id: OLD_MILL_ID, name: 'Old Mill Paper Co.', isActive: false },
+      ];
+      const found = query.active === 'true' ? all.filter((item) => item.isActive) : all;
+      return HttpResponse.json({ items: found, total: found.length, page: 1, limit: 100 });
+    }),
+    http.post('*/api/products', async ({ request }) => {
+      const body = await request.json();
+      state.writes.push({ method: 'POST', body });
+      if (state.failNext) {
+        return HttpResponse.json(state.failNext.body, { status: state.failNext.status });
+      }
+      return HttpResponse.json({ product: product({ id: 'new', ...body }) }, { status: 201 });
+    }),
+    http.patch('*/api/products/:id', async ({ params, request }) => {
+      const body = await request.json();
+      state.writes.push({ method: 'PATCH', id: params.id, body });
+      if (state.failNext) {
+        return HttpResponse.json(state.failNext.body, { status: state.failNext.status });
+      }
+      return HttpResponse.json({ product: product({ id: params.id, ...body }) });
+    }),
     http.get('*/api/products', ({ request }) => {
       state.lists.push(Object.fromEntries(new URL(request.url).searchParams));
       if (failList) return HttpResponse.json({ message: 'boom' }, { status: 500 });
@@ -113,13 +131,12 @@ describe('Products page', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Products' })).toBeInTheDocument();
   });
 
-  it('has no Add, Edit or Archive actions yet', async () => {
+  it('has no Archive action yet', async () => {
     productsApi([hammer]);
     renderApp({ route: '/products' });
 
     await row('Claw Hammer');
-    expect(screen.queryByRole('button', { name: /add product/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /edit|archive/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /archive|restore/i })).not.toBeInTheDocument();
   });
 
   it('marks archived products with an Archived badge', async () => {
@@ -314,5 +331,216 @@ describe('Products page', () => {
 
     expect((await screen.findByText(title)).className).toContain('[overflow-wrap:anywhere]');
     expect(screen.getByText(sku).className).toContain('[overflow-wrap:anywhere]');
+  });
+
+  describe('Add and Edit form', () => {
+    const sheet = () => within(screen.getByRole('dialog'));
+
+    async function openAdd(user) {
+      await row('Claw Hammer');
+      await user.click(screen.getByRole('button', { name: 'Add Product' }));
+      await screen.findByRole('dialog', { name: 'Add product' });
+    }
+
+    async function fillRequired(user) {
+      await user.type(sheet().getByLabelText('Title'), 'Cable Ties');
+      await user.type(sheet().getByLabelText('SKU'), 'cab-010');
+      await user.type(sheet().getByLabelText('Price'), '4.5');
+      await user.click(sheet().getByRole('combobox', { name: 'Category' }));
+      await user.click(await screen.findByRole('option', { name: 'Tools' }));
+    }
+
+    it('shows the fields, without a quantity', async () => {
+      productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      for (const label of ['Title', 'SKU', 'Description', 'Price', 'Reorder level']) {
+        expect(sheet().getByLabelText(label)).toBeInTheDocument();
+      }
+      expect(sheet().getByRole('combobox', { name: 'Category' })).toBeInTheDocument();
+      expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('No supplier');
+      expect(sheet().queryByLabelText(/^quantity|initial/i)).not.toBeInTheDocument();
+    });
+
+    it('validates before sending anything', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      await user.click(sheet().getByRole('button', { name: 'Save' }));
+
+      for (const message of [
+        'Enter a title',
+        'Enter a SKU',
+        'Choose a category',
+        'Enter a price',
+      ]) {
+        expect(await sheet().findByText(message, { selector: 'p' })).toBeInTheDocument();
+      }
+      expect(state.writes).toEqual([]);
+    });
+
+    it('creates a product with an uppercase SKU, then reloads the list and closes', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+      const listsBefore = state.lists.length;
+
+      await fillRequired(user);
+      await user.click(sheet().getByRole('combobox', { name: 'Supplier' }));
+      await user.click(await screen.findByRole('option', { name: 'Acme Tools' }));
+      await user.click(sheet().getByRole('button', { name: 'Save' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(state.writes).toEqual([
+        {
+          method: 'POST',
+          body: {
+            title: 'Cable Ties',
+            sku: 'CAB-010',
+            description: '',
+            category: TOOLS_ID,
+            supplier: ACME_ID,
+            price: 4.5,
+            reorderLevel: 0,
+          },
+        },
+      ]);
+      await waitFor(() => expect(state.lists.length).toBeGreaterThan(listsBefore));
+    });
+
+    it('sends no supplier as null', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      await fillRequired(user);
+      await user.click(sheet().getByRole('button', { name: 'Save' }));
+
+      await waitFor(() => expect(state.writes).toHaveLength(1));
+      expect(state.writes[0].body.supplier).toBeNull();
+    });
+
+    it('offers only active suppliers for a new product', async () => {
+      productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      await user.click(sheet().getByRole('combobox', { name: 'Supplier' }));
+      expect(await screen.findByRole('option', { name: 'Acme Tools' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: /Old Mill/ })).not.toBeInTheDocument();
+    });
+
+    it('puts a duplicate SKU on the SKU field and keeps the form open', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+      state.failNext = {
+        status: 409,
+        body: {
+          message: 'SKU already exists',
+          code: 'DUPLICATE_SKU',
+          errors: { sku: 'This SKU is already used by another product.' },
+        },
+      };
+
+      await fillRequired(user);
+      await user.click(sheet().getByRole('button', { name: 'Save' }));
+
+      expect(
+        await sheet().findByText('This SKU is already used by another product.'),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('shows other server errors above the fields', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+      state.failNext = { status: 400, body: { message: 'Choose an active supplier', code: 'X' } };
+
+      await fillRequired(user);
+      await user.click(sheet().getByRole('button', { name: 'Save' }));
+
+      expect(await sheet().findByRole('alert')).toHaveTextContent('Choose an active supplier');
+    });
+
+    it('edits a product from its row, starting from its current values', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+
+      await row('Claw Hammer');
+      await user.click(screen.getByRole('button', { name: 'Edit Claw Hammer' }));
+      await screen.findByRole('dialog', { name: 'Edit product' });
+      expect(sheet().getByLabelText('Title')).toHaveValue('Claw Hammer');
+      expect(sheet().getByLabelText('SKU')).toHaveValue('HAM-001');
+      expect(sheet().getByLabelText('Price')).toHaveValue(12.5);
+      expect(sheet().getByRole('combobox', { name: 'Category' })).toHaveTextContent('Tools');
+      expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('Acme Tools');
+
+      await user.clear(sheet().getByLabelText('Title'));
+      await user.type(sheet().getByLabelText('Title'), 'Steel Claw Hammer');
+      await user.click(sheet().getByRole('button', { name: 'Save' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(state.writes).toEqual([
+        {
+          method: 'PATCH',
+          id: 'p1',
+          body: {
+            title: 'Steel Claw Hammer',
+            sku: 'HAM-001',
+            description: '',
+            category: TOOLS_ID,
+            supplier: ACME_ID,
+            price: 12.5,
+            reorderLevel: 2,
+          },
+        },
+      ]);
+    });
+
+    it('lets a product keep its inactive supplier, labelled as inactive', async () => {
+      productsApi([
+        product({
+          id: 'p4',
+          title: 'Ream',
+          sku: 'REAM-1',
+          supplier: { id: OLD_MILL_ID, name: 'Old Mill Paper Co.' },
+        }),
+      ]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+
+      await row('Ream');
+      await user.click(screen.getByRole('button', { name: 'Edit Ream' }));
+
+      expect(await sheet().findByRole('combobox', { name: 'Supplier' })).toHaveTextContent(
+        'Old Mill Paper Co. (inactive)',
+      );
+    });
+
+    it('lets staff add and edit, and Cancel closes without saving', async () => {
+      const state = productsApi([hammer], { me: staff });
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      await user.type(sheet().getByLabelText('Title'), 'Draft');
+      await user.click(sheet().getByRole('button', { name: 'Cancel' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(state.writes).toEqual([]);
+      expect(screen.getByRole('button', { name: 'Edit Claw Hammer' })).toBeInTheDocument();
+    });
   });
 });

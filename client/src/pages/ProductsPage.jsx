@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PAGE_SIZE_OPTIONS } from '@/components/data-table/DataTablePagination';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ProductFilters, STATUS_OPTIONS } from '@/components/products/ProductFilters';
+import { ProductForm } from '@/components/products/ProductForm';
 import { ProductTable } from '@/components/products/ProductTable';
+import { Button } from '@/components/ui/button';
+import { useReturnFocus } from '@/hooks/useReturnFocus';
 import { useMe } from '@/lib/auth';
 import { useCategories } from '@/lib/categories';
-import { useProducts } from '@/lib/products';
+import { useCreateProduct, useProducts, useUpdateProduct } from '@/lib/products';
 import { useSuppliers } from '@/lib/suppliers';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -17,7 +20,7 @@ const OBJECT_ID = /^[a-f\d]{24}$/i;
 const SUPPLIER_FILTER_LIMIT = 100;
 
 /**
- * Everyone active browses products; the table is read-only for now. Search, filters, sort and
+ * Everyone active browses products, and admins and staff add and edit them. Search, filters, sort and
  * page live in the URL, and a value that does not make sense falls back to its default. Only
  * admins can include archived products (the API refuses it for staff).
  */
@@ -75,6 +78,26 @@ export function ProductsPage() {
   });
   const categories = useCategories();
   const suppliers = useSuppliers({ sortBy: 'name', limit: SUPPLIER_FILTER_LIMIT });
+  // New choices in the form are limited to active suppliers.
+  const activeSuppliers = useSuppliers({
+    active: 'true',
+    sortBy: 'name',
+    limit: SUPPLIER_FILTER_LIMIT,
+  });
+  const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
+
+  // `form` is null (closed), { product: null } (add) or { product } (edit).
+  const [form, setForm] = useState(null);
+  const headingRef = useRef(null);
+  const { remember, onCloseAutoFocus } = useReturnFocus(headingRef);
+  const openForm = useCallback(
+    (product) => {
+      remember();
+      setForm({ product });
+    },
+    [remember],
+  );
 
   const sorting = useMemo(() => [{ id: sortBy, desc: order === 'desc' }], [sortBy, order]);
   const pagination = useMemo(() => ({ pageIndex: page - 1, pageSize: limit }), [page, limit]);
@@ -82,7 +105,12 @@ export function ProductsPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title="Products" description="Find products and check their stock." />
+      <PageHeader
+        ref={headingRef}
+        title="Products"
+        description="Find products and check their stock."
+        actions={<Button onClick={() => openForm(null)}>Add Product</Button>}
+      />
       <ProductTable
         products={products.data?.items ?? []}
         total={products.data?.total ?? 0}
@@ -103,6 +131,7 @@ export function ProductsPage() {
             limit: next.pageSize === DEFAULT_PAGE_SIZE ? undefined : next.pageSize,
           });
         }}
+        onEdit={openForm}
         isLoading={products.isPending}
         error={products.error}
         emptyMessage={filtered ? 'No products match your filters.' : 'No products yet.'}
@@ -132,6 +161,24 @@ export function ProductsPage() {
           />
         }
       />
+      {form && (
+        <ProductForm
+          key={form.product?.id ?? 'new'}
+          product={form.product}
+          categories={categories.data?.items ?? []}
+          suppliers={activeSuppliers.data?.items ?? []}
+          onCancel={() => setForm(null)}
+          onCloseAutoFocus={onCloseAutoFocus}
+          onSubmit={async (values) => {
+            if (form.product) {
+              await updateProduct.mutateAsync({ id: form.product.id, ...values });
+            } else {
+              await createProduct.mutateAsync(values);
+            }
+            setForm(null);
+          }}
+        />
+      )}
     </section>
   );
 }
