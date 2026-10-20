@@ -22,8 +22,8 @@ const RESET_COOLDOWN_SECONDS = 60;
 function ProfileSection({ id, title, description, region = true, children }) {
   const Wrapper = region ? 'section' : 'div';
   return (
-    <Wrapper aria-labelledby={region ? id : undefined}>
-      <Card>
+    <Wrapper aria-labelledby={region ? id : undefined} className="h-full">
+      <Card className="h-full">
         <CardHeader>
           <h2 id={id} className="text-lg font-semibold leading-none">
             {title}
@@ -181,7 +181,7 @@ export function ProfilePage() {
       <PageHeader title="Profile" description="Your name and the ways you sign in." />
       <div className="flex w-full max-w-5xl flex-col gap-6">
         <IdentityCard user={user} />
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
           <div className="flex min-w-0 flex-col gap-6">
             <ProfileSection
               id="name-heading"
