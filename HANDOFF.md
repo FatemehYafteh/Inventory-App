@@ -8,6 +8,13 @@ Written at the end of the session. Each claim carries a tag saying where it come
 - **[prior session]**: copied from an older handoff and not re-checked.
 - **(verify)**: not checked at all.
 
+## 0000. PRs opened (2026-10-20, owner approved Option 1: stacked PRs, one per milestone)
+
+- #19 M5 (`feat/categories-suppliers` into `sub-prds`, closes #15 to #18), #20 M6 (`feat/products` into `feat/categories-suppliers`), #21 Design Foundation, Products UI and 7.1 (`feat/design-foundation` into `feat/products`). Nothing merged; no rebase, no base change on any branch.
+- Merge order: #19, then retarget #20 to `sub-prds` and merge, then retarget #21 and merge. Use merge commits (not squash) so the stack needs no rebase. `origin/sub-prds` has 2 commits the stack lacks (merges of #8 and #14); a dry-run merge showed no conflicts.
+- Local `feat/roles-approval` is still 5 commits ahead of its remote (already inside the stack); local `sub-prds` is 33 behind. Both left alone.
+- Sections 2 and 11 below are superseded on the PR and base-branch questions. 7.2 and 7.3 still need explicit approval.
+
 ## 000. Shutdown update, end of 2026-10-20 (read this first; it overrides 00 where they differ)
 
 **Git state [checked now]**
