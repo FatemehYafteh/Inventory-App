@@ -6,6 +6,13 @@ import { EmailCell, SignInMethods, formatDate } from '@/components/users/userDis
 
 const NO_SORTING = [];
 
+/** Keeps a rejected user's dates on one line; other tabs wrap as before. */
+function NoWrapOnRejected({ user, children }) {
+  return (
+    <span className={user.status === 'rejected' ? 'whitespace-nowrap' : undefined}>{children}</span>
+  );
+}
+
 function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChangeRole }) {
   const buttons = [];
   // Why the buttons the rules disable are disabled: a tooltip on them, and a note under them.
@@ -88,7 +95,11 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex flex-wrap gap-2">{buttons}</div>
+      <div
+        className={`flex gap-2 ${user.status === 'rejected' ? 'flex-nowrap whitespace-nowrap' : 'flex-wrap'}`}
+      >
+        {buttons}
+      </div>
       {note && <p className="text-xs text-muted-foreground">{note}</p>}
     </div>
   );
@@ -182,7 +193,11 @@ export function UsersTable({
         id: 'createdAt',
         header: 'Signed up',
         enableSorting: false,
-        cell: ({ row }) => formatDate(row.original.createdAt),
+        cell: ({ row }) => (
+          <NoWrapOnRejected user={row.original}>
+            {formatDate(row.original.createdAt)}
+          </NoWrapOnRejected>
+        ),
       },
       {
         id: 'lastLoginAt',
@@ -190,7 +205,9 @@ export function UsersTable({
         enableSorting: false,
         cell: ({ row }) =>
           row.original.lastLoginAt ? (
-            formatDate(row.original.lastLoginAt)
+            <NoWrapOnRejected user={row.original}>
+              {formatDate(row.original.lastLoginAt)}
+            </NoWrapOnRejected>
           ) : (
             <span className="text-muted-foreground">Never</span>
           ),

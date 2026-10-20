@@ -73,3 +73,29 @@ _Avoid_: Seed admin, superadmin
 **Last active admin**:
 The only User who is both Admin and Active. They can never be rejected or demoted, and nobody can reject or demote themselves.
 _Avoid_: Final admin, root
+
+## Categories and suppliers
+
+**Category**:
+A named group that every Product belongs to. Its title is unique.
+_Avoid_: Type, department, tag
+
+**Supplier**:
+A company Products are sourced from, with contact details. A Product currently has at most one. Its name is unique.
+_Avoid_: Vendor, manufacturer
+
+**Active supplier**:
+A Supplier that can be chosen for new Products.
+_Avoid_: Enabled supplier
+
+**Inactive supplier**:
+A Supplier that cannot be chosen for new Products but stays on the Products that already have it.
+_Avoid_: Disabled supplier, archived supplier
+
+**Deactivate**:
+An Admin turning an Active supplier into an Inactive one; reactivating reverses it. Used only for Suppliers, never for Users (those are Rejected).
+_Avoid_: Disable, suspend, archive
+
+**Product count**:
+The number of Products, archived ones included, that use a Category or Supplier.
+_Avoid_: Usage, item count

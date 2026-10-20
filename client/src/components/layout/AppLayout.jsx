@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 // Pages are added here as their milestones land. `adminOnly` items are hidden from staff.
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true },
+  { to: '/categories', label: 'Categories' },
+  { to: '/suppliers', label: 'Suppliers' },
   { to: '/users', label: 'Users', adminOnly: true, badge: true },
 ];
 
@@ -21,7 +23,7 @@ export function AppLayout() {
   return (
     <div className="min-h-svh">
       <header className="border-b">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
+        <div className="mx-auto flex h-14 max-w-[90rem] items-center gap-6 px-4">
           <span className="font-semibold">Inventory</span>
           <nav aria-label="Main" className="flex flex-1 gap-1">
             {items.map((item) => (
@@ -62,7 +64,7 @@ export function AppLayout() {
           </Button>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-[90rem] px-4 py-6">
         <Outlet />
       </main>
     </div>

@@ -1,5 +1,5 @@
 # components/suppliers
 
-Supplier UI from sub-PRD 05: `SupplierTable` and `SupplierForm`.
+Supplier UI from sub-PRD 05: `SupplierTable`, `SupplierForm` and the confirm dialogs in `SupplierDialogs`.
 
-Filled in phase 5.4 (see `tasks/task.md`).
+Used by the Suppliers page (`pages/SuppliersPage.jsx`).
