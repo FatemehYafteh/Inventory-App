@@ -95,17 +95,32 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | 6.1 | Products list API: search, filters, sort, pagination, indexes, under 300 ms at 10,000 products | ✅ Done |
 | 6.2 | Create and edit product API (SKU unique regardless of case, quantity not editable) | ✅ Done |
 | 6.3 | Archive and restore API, admin only | ✅ Done |
-| 6.4 | Products page table, with search, filters, sort and page kept in the URL | ⬜ To do |
-| 6.5 | Add and Edit product form | ⬜ To do |
-| 6.6 | Archive and restore in the UI, with a confirm dialog | ⬜ To do |
+| 6.4 | Products page table, with search, filters, sort and page kept in the URL | ✅ Done |
+| 6.5 | Add and Edit product form | ✅ Done |
+| 6.6 | Archive and restore in the UI, with a confirm dialog | ✅ Done |
+
+## Design Foundation (before 6.4): UI only, no API, auth, permission or validation changes
+
+| Phase | Task | Status |
+|---|---|---|
+| D0 | Add this section to `tasks/task.md` | ✅ Done |
+| D1 | Tokens for light and dark themes (app stays light, dark not activated): colours (primary `#2563EB`, hover `#1D4ED8`, navy `#0F1E3D` light and `#0B1426` dark), success, warning, danger, radius, system font stack, tabular numbers, static light `theme-color`, contrast test | ✅ Done |
+| D2 | Components on tokens: `success`, `warning` and `danger` badge variants; button hover, input and select placeholders, full-strength focus rings on the `ui/` components, overlays, toaster icons, `FormAlert` and the danger text on tokens; source guard in `ui.test.jsx` | ✅ Done |
+| D3 | Shell: navy sidebar from `lg`, navy top bar with a `Sheet` menu below it, skip link, `MinimalLayout`, Categories grid on container queries | ✅ Done |
+| D4 | `PageHeader` and `StatusBadge`: the five page headings (Categories, Dashboard, Not found, Suppliers, Users) on `PageHeader`; status badges on Users, the user drawer and Suppliers on `StatusBadge` (same text, colour from the status) | ✅ Done |
+| D5 | Browser pass at about 360, 768, 1024 and 1280 px as admin, staff, pending and rejected (written report, in chat) | ✅ Done |
+| D6 | `docs/design-system.md` and a tokens-only rule in `client/CLAUDE.md` | ✅ Done |
+| D7 | Profile page on the design system: `PageHeader`, one card per section (Name, Sign-in methods, Password), `max-w-3xl` column, long emails wrap | ✅ Done |
+| D8 | Profile page redesign: identity card with avatar, role and status badges; two-column layout from `lg`; sign-in methods with badges; long names and emails wrap | ✅ Done |
+| T | Theme switching and persisted user preference (applies the `.dark` class); planned separately, after D6 | ⬜ Not started |
 
 ## M7: Stock engine and history [sub-PRD 07](../docs/prds/07-stock-engine.md)
 
 | Phase | Task | Status |
 |---|---|---|
-| 7.1 | `stock.service`: one atomic update and its movement in one transaction, with concurrency tests | ⬜ To do |
+| 7.1 | `stock.service`: one atomic update and its movement in one transaction, with concurrency tests | ✅ Done |
 | 7.2 | `POST /products/:id/stock` and `GET /products/:id/movements` | ⬜ To do |
-| 7.3 | Initial stock when a product is created ("Initial stock" receive in the same transaction) | ⬜ To do |
+| 7.3 | Initial stock when a product is created ("Initial stock" receive in the same transaction) | ⬜ To do (do NOT start without the owner's explicit approval) |
 | 7.4 | Inline +/- buttons: optimistic update, rollback on error, rapid clicks queued | ⬜ To do |
 | 7.5 | Adjust stock modal (Receive, Ship, Adjust) | ⬜ To do |
 | 7.6 | Stock history modal | ⬜ To do |

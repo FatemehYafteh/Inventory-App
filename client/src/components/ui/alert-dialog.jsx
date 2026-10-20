@@ -9,7 +9,7 @@ const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 const AlertDialogContent = forwardRef(function AlertDialogContent({ className, ...props }, ref) {
   return (
     <AlertDialogPrimitive.Portal>
-      <AlertDialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
+      <AlertDialogPrimitive.Overlay className="fixed inset-0 z-50 bg-overlay" />
       <AlertDialogPrimitive.Content
         ref={ref}
         className={cn(

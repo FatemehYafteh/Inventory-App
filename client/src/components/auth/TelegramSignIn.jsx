@@ -157,7 +157,7 @@ function CodeForm({ requestId, useVerify, onWrongCode }) {
         )}
       />
       {errors.otp && (
-        <p id="otp-error" className="text-sm text-destructive">
+        <p id="otp-error" className="text-sm text-danger">
           {errors.otp.message}
         </p>
       )}

@@ -5,7 +5,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it } from 'vitest';
 import { ACCESS_DENIED_KEY } from '@/lib/auth';
 import { renderApp } from '@/test/render';
-import { activeUser, server } from '@/test/server';
+import { activeUser, notAuthenticated, server } from '@/test/server';
 
 async function fillAndSubmit(user, { email, password }) {
   if (email) await user.type(screen.getByLabelText('Email'), email);
@@ -82,9 +82,16 @@ describe('LoginPage', () => {
   });
 
   it('sends a pending user to the awaiting-approval screen', async () => {
+    const pendingUser = { ...activeUser, status: 'pending' };
+    // The awaiting-approval page re-reads the session on mount, so /auth/me must answer too.
+    let loggedIn = false;
     server.use(
-      http.post('*/api/auth/login', () =>
-        HttpResponse.json({ user: { ...activeUser, status: 'pending' } }),
+      http.post('*/api/auth/login', () => {
+        loggedIn = true;
+        return HttpResponse.json({ user: pendingUser });
+      }),
+      http.get('*/api/auth/me', () =>
+        loggedIn ? HttpResponse.json({ user: pendingUser }) : notAuthenticated(),
       ),
     );
     const user = userEvent.setup();

@@ -256,6 +256,63 @@ describe('Profile page', () => {
     expect(requests.reset).toEqual([{ email: 'ana@example.com' }]);
   });
 
+  it('lays the page out as a Profile heading above three titled sections', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profile' })).toBeInTheDocument();
+    for (const name of ['Name', 'Sign-in methods', 'Password']) {
+      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
+    }
+    expect(screen.getByRole('region', { name: 'Sign-in methods' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Password' })).toBeInTheDocument();
+  });
+
+  it('shows a pending user the same sections in the minimal layout', async () => {
+    profileHandlers(pendingUser);
+    renderApp({ route: '/profile' });
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profile' })).toBeInTheDocument();
+    for (const name of ['Name', 'Sign-in methods', 'Password']) {
+      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back to Awaiting approval' })).toBeInTheDocument();
+  });
+
+  it('does not name a region after the Name field it contains', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    expect(await screen.findByLabelText('Name')).toHaveAttribute('id', 'name');
+    expect(screen.queryByRole('region', { name: 'Name' })).not.toBeInTheDocument();
+  });
+
+  it('shows who is signed in with role and status badges', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    await screen.findByRole('heading', { name: 'Profile' });
+    expect(screen.getByText('AA')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByText('Active')).toBeInTheDocument();
+  });
+
+  it('wraps a very long email and name instead of overflowing', async () => {
+    const email = `${'a'.repeat(90)}@${'b'.repeat(60)}.example.com`;
+    const name = 'Bartholomew '.repeat(12).trim();
+    profileHandlers({ ...activeUser, name, email });
+    renderApp({ route: '/profile' });
+
+    await screen.findByRole('heading', { name: 'Profile' });
+    const emails = screen.getAllByText(email);
+    expect(emails.length).toBeGreaterThanOrEqual(2);
+    for (const node of emails) expect(node.className).toContain('[overflow-wrap:anywhere]');
+    expect(screen.getByText(name, { selector: 'p' }).className).toContain(
+      '[overflow-wrap:anywhere]',
+    );
+  });
+
   it('is not shown before the profile is complete', async () => {
     profileHandlers({ ...pendingUser, emailVerified: false, profileComplete: false });
     renderApp({ route: '/profile' });

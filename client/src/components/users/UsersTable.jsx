@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { DataTable } from '@/components/data-table/DataTable';
+import { StatusBadge } from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmailCell, SignInMethods, formatDate } from '@/components/users/userDisplay';
@@ -180,9 +181,8 @@ export function UsersTable({
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex flex-col gap-0.5">
-            <Badge variant={row.original.status === 'rejected' ? 'destructive' : 'outline'}>
-              {row.original.status}
-            </Badge>
+            {/* label keeps the stored lower-case text; only the colour comes from the status. */}
+            <StatusBadge status={row.original.status} label={row.original.status} />
             {row.original.status === 'rejected' && row.original.statusReason && (
               <span className="text-xs text-muted-foreground">{row.original.statusReason}</span>
             )}

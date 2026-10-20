@@ -21,6 +21,9 @@ globalThis.ResizeObserver ??= class ResizeObserver {
   unobserve() {}
   disconnect() {}
 };
+// Radix Select reads pointer capture when an option is chosen.
+Element.prototype.hasPointerCapture ??= () => false;
+Element.prototype.releasePointerCapture ??= () => {};
 Element.prototype.scrollIntoView ??= function scrollIntoView() {};
 
 beforeAll(() => {

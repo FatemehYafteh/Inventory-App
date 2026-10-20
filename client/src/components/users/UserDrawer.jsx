@@ -1,4 +1,5 @@
 import { FormAlert } from '@/components/form/FormAlert';
+import { StatusBadge } from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -64,9 +65,7 @@ function Details({ user, history }) {
           <Badge variant="secondary">{user.role}</Badge>
         </Field>
         <Field label="Status">
-          <Badge variant={user.status === 'rejected' ? 'destructive' : 'outline'}>
-            {user.status}
-          </Badge>
+          <StatusBadge status={user.status} label={user.status} />
         </Field>
         {user.statusReason && <Field label="Reason">{user.statusReason}</Field>}
         <Field label="Signed up">{formatDate(user.createdAt)}</Field>

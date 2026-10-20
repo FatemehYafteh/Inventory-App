@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { productCountLabel } from '@/components/categories/CategoryCard';
 import { DataTable } from '@/components/data-table/DataTable';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 
 function movementCountLabel(count) {
@@ -100,7 +100,7 @@ export function SupplierTable({
             >
               {row.original.name}
             </Link>
-            {!row.original.isActive && <Badge variant="outline">Inactive</Badge>}
+            {!row.original.isActive && <StatusBadge status="inactive" />}
           </span>
         ),
       },

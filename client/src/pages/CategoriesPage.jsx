@@ -3,6 +3,7 @@ import { CategoryCard } from '@/components/categories/CategoryCard';
 import { CategoryForm } from '@/components/categories/CategoryForm';
 import { DeleteCategoryDialog } from '@/components/categories/DeleteCategoryDialog';
 import { FormAlert } from '@/components/form/FormAlert';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { useReturnFocus } from '@/hooks/useReturnFocus';
 import { useMe } from '@/lib/auth';
@@ -54,13 +55,12 @@ export function CategoriesPage() {
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-4">
-        <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold outline-none">
-          Categories
-        </h1>
-        {canManage && <Button onClick={() => openForm(null)}>Add category</Button>}
-      </div>
+    <section className="@container flex flex-col gap-4">
+      <PageHeader
+        ref={headingRef}
+        title="Categories"
+        actions={canManage && <Button onClick={() => openForm(null)}>Add category</Button>}
+      />
       <FormAlert>{actionError}</FormAlert>
 
       {categories.isPending && (
@@ -72,7 +72,7 @@ export function CategoriesPage() {
       {categories.isSuccess && items.length === 0 && (
         <p className="text-sm text-muted-foreground">No categories yet.</p>
       )}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 @lg:grid-cols-2 @3xl:grid-cols-3">
         {items.map((category) => (
           <CategoryCard
             key={category.id}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PAGE_SIZE_OPTIONS } from '@/components/data-table/DataTablePagination';
 import { FormAlert } from '@/components/form/FormAlert';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChangeRoleDialog } from '@/components/users/ChangeRoleDialog';
@@ -101,7 +102,7 @@ export function UsersPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">Users</h1>
+      <PageHeader title="Users" />
       <FormAlert>{actionError}</FormAlert>
 
       <Tabs value={status} onValueChange={(value) => update({ status: value, incomplete: false })}>
