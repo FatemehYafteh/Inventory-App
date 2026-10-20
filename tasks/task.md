@@ -118,7 +118,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 
 | Phase | Task | Status |
 |---|---|---|
-| 7.1 | `stock.service`: one atomic update and its movement in one transaction, with concurrency tests | ⬜ To do |
+| 7.1 | `stock.service`: one atomic update and its movement in one transaction, with concurrency tests | ✅ Done |
 | 7.2 | `POST /products/:id/stock` and `GET /products/:id/movements` | ⬜ To do |
 | 7.3 | Initial stock when a product is created ("Initial stock" receive in the same transaction) | ⬜ To do |
 | 7.4 | Inline +/- buttons: optimistic update, rollback on error, rapid clicks queued | ⬜ To do |
