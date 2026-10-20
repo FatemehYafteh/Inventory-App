@@ -228,6 +228,34 @@ describe('Products page', () => {
     expect(within(await row('Claw Hammer')).queryByText('Archived')).not.toBeInTheDocument();
   });
 
+  // jsdom has no layout, so this guards the structure that keeps rows from shifting: the badge
+  // lives in its own fixed-width column for admins, never inside the Title cell.
+  it('keeps the Archived badge out of the Title cell, in a fixed-width column of its own', async () => {
+    productsApi([hammer, oldLamp]);
+    renderApp({ route: '/products?archived=true' });
+
+    const archivedRow = await row('Old Lamp');
+    const activeRow = await row('Claw Hammer');
+    const titleCell = within(archivedRow).getByText('Old Lamp').closest('td');
+    const badge = within(archivedRow).getByText('Archived');
+
+    expect(titleCell).not.toContainElement(badge);
+    expect(badge.parentElement).toHaveClass('w-[4.5rem]');
+    const slot = within(activeRow).getByText('Claw Hammer').closest('td').nextElementSibling;
+    expect(slot.firstElementChild).toHaveClass('w-[4.5rem]');
+    expect(slot.firstElementChild).toBeEmptyDOMElement();
+    expect(activeRow.cells).toHaveLength(archivedRow.cells.length);
+    expect(screen.getByRole('columnheader', { name: 'Archived' })).toBeInTheDocument();
+  });
+
+  it('shows no Archived column to staff', async () => {
+    productsApi([hammer], { me: staff });
+    renderApp({ route: '/products' });
+
+    await row('Claw Hammer');
+    expect(screen.queryByRole('columnheader', { name: 'Archived' })).not.toBeInTheDocument();
+  });
+
   it('starts from the URL: filters are sent to the API and shown in the controls', async () => {
     const state = productsApi([hammer]);
     renderApp({

@@ -34,16 +34,29 @@ export function ProductTable({
         header: 'Title',
         cell: ({ row }) => (
           <div className="flex min-w-48 flex-col gap-0.5">
-            <span className="flex flex-wrap items-center gap-2 font-medium [overflow-wrap:anywhere]">
-              {row.original.title}
-              {row.original.isArchived && <StatusBadge status="archived" />}
-            </span>
+            <span className="font-medium [overflow-wrap:anywhere]">{row.original.title}</span>
             <span className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
               {row.original.sku}
             </span>
           </div>
         ),
       },
+      // Admins only (staff never see archived products). The column is always there, at a fixed
+      // width, so the badge appearing or disappearing moves nothing in the Title cell.
+      ...(canArchive
+        ? [
+            {
+              id: 'archived',
+              header: 'Archived',
+              enableSorting: false,
+              cell: ({ row }) => (
+                <div className="w-[4.5rem]">
+                  {row.original.isArchived && <StatusBadge status="archived" />}
+                </div>
+              ),
+            },
+          ]
+        : []),
       {
         id: 'category',
         header: 'Category',
