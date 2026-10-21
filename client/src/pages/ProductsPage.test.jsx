@@ -459,18 +459,25 @@ describe('Products page', () => {
       await user.click(await screen.findByRole('option', { name: 'Tools' }));
     }
 
-    it('shows the fields, without a quantity', async () => {
+    it('shows the fields, with an initial quantity of 0', async () => {
       productsApi([hammer]);
       const user = userEvent.setup();
       renderApp({ route: '/products' });
       await openAdd(user);
 
-      for (const label of ['Title', 'SKU', 'Description', 'Price', 'Reorder level']) {
+      for (const label of [
+        'Title',
+        'SKU',
+        'Description',
+        'Price',
+        'Reorder level',
+        'Initial quantity',
+      ]) {
         expect(sheet().getByLabelText(label)).toBeInTheDocument();
       }
       expect(sheet().getByRole('combobox', { name: 'Category' })).toBeInTheDocument();
       expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('No supplier');
-      expect(sheet().queryByLabelText(/^quantity|initial/i)).not.toBeInTheDocument();
+      expect(sheet().getByLabelText('Initial quantity')).toHaveValue(0);
     });
 
     it('validates before sending anything', async () => {
@@ -516,10 +523,34 @@ describe('Products page', () => {
             supplier: ACME_ID,
             price: 4.5,
             reorderLevel: 0,
+            initialQuantity: 0,
           },
         },
       ]);
       await waitFor(() => expect(state.lists.length).toBeGreaterThan(listsBefore));
+    });
+
+    it('sends the initial quantity, and refuses a negative one before sending', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      await fillRequired(user);
+      await user.clear(sheet().getByLabelText('Initial quantity'));
+      await user.type(sheet().getByLabelText('Initial quantity'), '-3');
+      await user.click(sheet().getByRole('button', { name: 'Save' }));
+      expect(
+        await sheet().findByText('Initial quantity must be 0 or more', { selector: 'p' }),
+      ).toBeInTheDocument();
+      expect(state.writes).toEqual([]);
+
+      await user.clear(sheet().getByLabelText('Initial quantity'));
+      await user.type(sheet().getByLabelText('Initial quantity'), '8');
+      await user.click(sheet().getByRole('button', { name: 'Save' }));
+
+      await waitFor(() => expect(state.writes).toHaveLength(1));
+      expect(state.writes[0].body.initialQuantity).toBe(8);
     });
 
     it('sends no supplier as null', async () => {
@@ -593,6 +624,7 @@ describe('Products page', () => {
       expect(sheet().getByLabelText('Title')).toHaveValue('Claw Hammer');
       expect(sheet().getByLabelText('SKU')).toHaveValue('HAM-001');
       expect(sheet().getByLabelText('Price')).toHaveValue(12.5);
+      expect(sheet().queryByLabelText('Initial quantity')).not.toBeInTheDocument();
       expect(sheet().getByRole('combobox', { name: 'Category' })).toHaveTextContent('Tools');
       expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('Acme Tools');
 

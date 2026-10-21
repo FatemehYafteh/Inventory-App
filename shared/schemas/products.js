@@ -53,6 +53,12 @@ const reorderLevel = z
   .int('Reorder level must be a whole number')
   .min(0, 'Reorder level must be 0 or more');
 
+// Only on create: it becomes the first "Initial stock" receive. Zero means no movement.
+const initialQuantity = z
+  .number({ invalid_type_error: 'Initial quantity must be a whole number' })
+  .int('Initial quantity must be a whole number')
+  .min(0, 'Initial quantity must be 0 or more');
+
 // Strict: quantity is changed only by stock actions, and archiving has its own endpoints.
 const STRICT_MESSAGE =
   'Only title, SKU, description, category, supplier, price and reorder level can be set here. Stock quantity changes through stock actions.';
@@ -66,6 +72,7 @@ export const createProductSchema = z
     supplier: supplier.optional(),
     price,
     reorderLevel: reorderLevel.optional(),
+    initialQuantity: initialQuantity.optional(),
   })
   .strict(STRICT_MESSAGE);
 

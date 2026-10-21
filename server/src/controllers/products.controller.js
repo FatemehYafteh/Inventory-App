@@ -10,7 +10,7 @@ export async function get(req, res) {
 }
 
 export async function create(req, res) {
-  res.status(201).json({ product: await products.createProduct(req.body) });
+  res.status(201).json({ product: await products.createProduct(req.user, req.body) });
 }
 
 export async function update(req, res) {

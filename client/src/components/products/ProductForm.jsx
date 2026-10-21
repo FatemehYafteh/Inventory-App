@@ -24,7 +24,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { useZodForm } from '@/hooks/useZodForm';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
-const FIELDS = ['title', 'sku', 'description', 'category', 'supplier', 'price', 'reorderLevel'];
+const FIELDS = [
+  'title',
+  'sku',
+  'description',
+  'category',
+  'supplier',
+  'price',
+  'reorderLevel',
+  'initialQuantity',
+];
 // Radix Select cannot hold an empty value, so "no supplier" is this word in the control only.
 const NO_SUPPLIER = 'none';
 
@@ -45,11 +54,11 @@ function Field({ id, label, error, children }) {
 }
 
 /**
- * Add (no `product`) or edit a product in a sheet. Quantity is not a field: new products start at
- * 0 and stock changes through stock actions. `suppliers` are the active ones; a product keeps an
- * inactive supplier it already has, shown as an extra choice. `onSubmit(values)` returns a
- * promise; a server validation or duplicate-SKU error lands on its field, anything else shows
- * above the fields.
+ * Add (no `product`) or edit a product in a sheet. Only adding has a quantity field (the initial
+ * stock, 0 for none); an existing product's stock changes through stock actions. `suppliers` are
+ * the active ones; a product keeps an inactive supplier it already has, shown as an extra choice.
+ * `onSubmit(values)` returns a promise; a server validation or duplicate-SKU error lands on its
+ * field, anything else shows above the fields.
  */
 export function ProductForm({
   product,
@@ -74,6 +83,7 @@ export function ProductForm({
       supplier: product?.supplier?.id ?? '',
       price: product?.price ?? '',
       reorderLevel: product?.reorderLevel ?? 0,
+      ...(!product && { initialQuantity: 0 }),
     },
   });
   const [formError, setFormError] = useState(null);
@@ -101,8 +111,10 @@ export function ProductForm({
           <SheetHeader>
             <SheetTitle>{product ? 'Edit product' : 'Add product'}</SheetTitle>
             <SheetDescription>
-              SKUs are unique, ignoring letter case. New products start with a quantity of 0; change
-              stock with stock actions.
+              SKUs are unique, ignoring letter case.{' '}
+              {product
+                ? 'Change stock with stock actions.'
+                : 'Set an initial quantity to record it as the first stock receipt.'}
             </SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-4 px-4">
@@ -206,6 +218,18 @@ export function ProductForm({
                 {...register('reorderLevel', { valueAsNumber: true })}
               />
             </div>
+            {!product && (
+              <TextField
+                id="product-initial-quantity"
+                label="Initial quantity"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                step="1"
+                error={errors.initialQuantity}
+                {...register('initialQuantity', { valueAsNumber: true })}
+              />
+            )}
           </div>
           <SheetFooter className="flex-col-reverse sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={onCancel}>

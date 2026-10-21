@@ -1,10 +1,12 @@
 import mongoose from 'mongoose';
 import { Category } from '../models/Category.js';
 import { Product } from '../models/Product.js';
+import { StockMovement } from '../models/StockMovement.js';
 import { Supplier } from '../models/Supplier.js';
 import { AppError } from '../utils/AppError.js';
 
 const CASE_INSENSITIVE = { locale: 'en', strength: 2 };
+const INITIAL_STOCK_NOTE = 'Initial stock';
 
 function notFound() {
   return new AppError(404, 'NOT_FOUND', 'Product not found');
@@ -139,8 +141,16 @@ async function presentById(id) {
   return present(await withRelations(Product.findById(id)));
 }
 
-/** A new product starts with no stock: quantity only ever changes through stock actions. */
-export async function createProduct({ supplier, description, ...fields }) {
+/**
+ * A new product starts at 0, or at `initialQuantity`: then the product and one "Initial stock"
+ * receive movement (recording the product's supplier and the creator) are written in the same
+ * transaction, so quantity and history agree from the start. After that, quantity only changes
+ * through stock actions.
+ */
+export async function createProduct(
+  user,
+  { supplier, description, initialQuantity = 0, ...fields },
+) {
   const id = new mongoose.Types.ObjectId();
   try {
     await inTransaction(async (session) => {
@@ -151,12 +161,31 @@ export async function createProduct({ supplier, description, ...fields }) {
           {
             _id: id,
             ...fields,
+            quantity: initialQuantity,
             ...(supplier && { supplier }),
             ...(description && { description }),
           },
         ],
         { session },
       );
+      if (initialQuantity > 0) {
+        await StockMovement.create(
+          [
+            {
+              product: id,
+              type: 'receive',
+              quantityChange: initialQuantity,
+              quantityBefore: 0,
+              quantityAfter: initialQuantity,
+              ...(supplier && { supplier }),
+              note: INITIAL_STOCK_NOTE,
+              performedBy: user._id,
+              performedByName: user.name,
+            },
+          ],
+          { session },
+        );
+      }
     });
   } catch (error) {
     if (error?.code === 11000) throw duplicateSku();
