@@ -17,7 +17,7 @@
   "backToAwaitingApproval": "Back to Awaiting approval",
   "dashboard": {
     "title": "Dashboard",
-    "description": "Welcome, {{name}}. Inventory figures appear here in a later milestone."
+    "description": "Welcome, {{name}}."
   },
   "notFound": {
     "title": "Page not found",

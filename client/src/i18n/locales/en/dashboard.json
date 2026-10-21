@@ -1,0 +1,33 @@
+{
+  "loading": "Loading the dashboard…",
+  "summaryLabel": "Inventory summary",
+  "cards": {
+    "activeProducts": "Active products",
+    "totalUnits": "Total units",
+    "inventoryValue": "Inventory value",
+    "lowStock": "Low stock",
+    "outOfStock": "Out of stock",
+    "pendingApprovals": "Pending approvals"
+  },
+  "pending": {
+    "review": "Review users",
+    "waiting": "waiting for approval",
+    "none": "Nobody is waiting."
+  },
+  "lowStock": {
+    "title": "Needs restocking",
+    "description": "Out of stock and low stock products, lowest stock first.",
+    "empty": "Nothing needs restocking.",
+    "units": "{{quantity}} in stock, reorder at {{level}}",
+    "receive": "Receive",
+    "receiveLabel": "Receive {{title}}",
+    "viewLow": "View all low stock",
+    "viewOut": "View all out of stock"
+  },
+  "recent": {
+    "title": "Recent movements",
+    "description": "The last 10 stock changes.",
+    "empty": "No stock movements yet.",
+    "viewAll": "View all movements"
+  }
+}

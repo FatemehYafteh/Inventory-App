@@ -17,7 +17,7 @@
   "backToAwaitingApproval": "بازگشت به در انتظار تأیید",
   "dashboard": {
     "title": "داشبورد",
-    "description": "{{name}}، خوش آمدید. آمار موجودی در یکی از مراحل بعدی اینجا نمایش داده می‌شود."
+    "description": "{{name}}، خوش آمدید."
   },
   "notFound": {
     "title": "صفحه پیدا نشد",
