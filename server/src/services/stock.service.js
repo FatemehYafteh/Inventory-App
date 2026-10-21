@@ -39,6 +39,7 @@ async function refusal(productId, session) {
  * Returns `{ product, movement }` (documents).
  */
 export async function changeStock(productId, user, { type, quantity, note }) {
+  if (!mongoose.isValidObjectId(productId)) throw notFound();
   const session = await mongoose.startSession();
   try {
     let result;
@@ -93,4 +94,49 @@ export async function changeStock(productId, user, { type, quantity, note }) {
   } finally {
     await session.endSession();
   }
+}
+
+function presentMovement(movement) {
+  return {
+    id: movement.id,
+    type: movement.type,
+    quantityChange: movement.quantityChange,
+    quantityBefore: movement.quantityBefore,
+    quantityAfter: movement.quantityAfter,
+    supplier: movement.supplier?.name
+      ? { id: movement.supplier.id, name: movement.supplier.name }
+      : null,
+    note: movement.note ?? '',
+    performedBy: { id: String(movement.performedBy), name: movement.performedByName },
+    createdAt: movement.createdAt,
+  };
+}
+
+/** The response of a stock change: the product's new quantity and the movement it wrote. */
+export async function presentStockResult({ product, movement }) {
+  await movement.populate('supplier', 'name');
+  return {
+    product: { id: product.id, quantity: product.quantity, stockStatus: product.stockStatus },
+    movement: presentMovement(movement),
+  };
+}
+
+/**
+ * One page of a product's movements, newest first (the id breaks ties so pages never repeat).
+ * Staff cannot see archived products, so for them an archived product's history does not exist.
+ */
+export async function listMovements(user, productId, { page, limit }) {
+  if (!mongoose.isValidObjectId(productId)) throw notFound();
+  const product = await Product.findById(productId).select('isArchived');
+  if (!product || (product.isArchived && user.role !== 'admin')) throw notFound();
+  const filter = { product: productId };
+  const [movements, total] = await Promise.all([
+    StockMovement.find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('supplier', 'name'),
+    StockMovement.countDocuments(filter),
+  ]);
+  return { items: movements.map(presentMovement), total, page, limit };
 }
