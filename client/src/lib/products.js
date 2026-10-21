@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useRef } from 'react';
 import { api } from './api';
 import { CATEGORIES_QUERY_KEY } from './categories';
 import { SUPPLIERS_QUERY_KEY } from './suppliers';
@@ -58,4 +59,75 @@ export function useArchiveProduct() {
 /** The product id. Admin only; the API answers 409 if it is not archived. */
 export function useRestoreProduct() {
   return useProductMutation((id) => api(`/products/${id}/restore`, { method: 'PATCH' }));
+}
+
+// Same rule as the server: stock status is derived from quantity and reorder level.
+function stockStatusOf(quantity, reorderLevel) {
+  if (quantity === 0) return 'out_of_stock';
+  return quantity <= reorderLevel ? 'low_stock' : 'in_stock';
+}
+
+/** Adds `delta` to one product's quantity in every cached list page. */
+function patchQuantity(queryClient, id, delta) {
+  queryClient.setQueriesData(
+    { queryKey: [...PRODUCTS_QUERY_KEY, 'list'] },
+    (page) =>
+      page && {
+        ...page,
+        items: page.items.map((item) => {
+          if (item.id !== id) return item;
+          const quantity = Math.max(0, item.quantity + delta);
+          return { ...item, quantity, stockStatus: stockStatusOf(quantity, item.reorderLevel) };
+        }),
+      },
+  );
+}
+
+/**
+ * The inline +/- buttons. `step(product, delta, { onError })` takes `delta` 1 or -1: it changes
+ * the quantity in the cached lists at once, then sends one `increment` or `decrement`. A product's
+ * requests go one after another, so rapid clicks each reach the server in order; the server
+ * applies a delta, never an absolute value. A failed request takes back only its own change, and
+ * the lists reload from the server once a product has nothing left in flight.
+ */
+export function useStockStep() {
+  const queryClient = useQueryClient();
+  const queues = useRef(new Map());
+
+  return useCallback(
+    (product, delta, { onError } = {}) => {
+      const { id } = product;
+      const queue = queues.current.get(id) ?? { tail: Promise.resolve(), inFlight: 0 };
+      queues.current.set(id, queue);
+      queue.inFlight += 1;
+
+      const listKey = [...PRODUCTS_QUERY_KEY, 'list'];
+      const applied = queryClient
+        .cancelQueries({ queryKey: listKey })
+        .then(() => patchQuantity(queryClient, id, delta));
+
+      queue.tail = Promise.all([applied, queue.tail])
+        .then(() =>
+          api(`/products/${id}/stock`, {
+            method: 'POST',
+            body: { type: delta > 0 ? 'increment' : 'decrement' },
+          }),
+        )
+        .catch((error) => {
+          patchQuantity(queryClient, id, -delta);
+          onError?.(error);
+        })
+        .finally(() => {
+          queue.inFlight -= 1;
+          if (queue.inFlight > 0) return;
+          queues.current.delete(id);
+          return Promise.all(
+            [PRODUCTS_QUERY_KEY, CATEGORIES_QUERY_KEY, SUPPLIERS_QUERY_KEY].map((queryKey) =>
+              queryClient.invalidateQueries({ queryKey }),
+            ),
+          );
+        });
+    },
+    [queryClient],
+  );
 }

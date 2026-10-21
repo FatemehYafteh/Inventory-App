@@ -53,7 +53,9 @@ const oldLamp = product({
 
 /** A Products API that records every list request; the filtering itself is the server's job. */
 function productsApi(items, { me = admin, failList = false } = {}) {
-  const state = { lists: [], writes: [], failNext: null };
+  const state = { lists: [], writes: [], failNext: null, gate: null };
+  // The list answers from this copy, which stock changes update, like the real server.
+  const live = items.map((item) => ({ ...item }));
   server.use(
     http.get('*/api/auth/me', () => HttpResponse.json({ user: me })),
     http.get('*/api/users/pending-count', () => HttpResponse.json({ count: 0 })),
@@ -97,10 +99,24 @@ function productsApi(items, { me = admin, failList = false } = {}) {
       }
       return HttpResponse.json({ product: product({ id: params.id }) });
     }),
+    http.post('*/api/products/:id/stock', async ({ params, request }) => {
+      const body = await request.json();
+      state.writes.push({ method: 'POST', id: params.id, action: 'stock', body });
+      if (state.gate) await state.gate;
+      if (state.failNext) {
+        return HttpResponse.json(state.failNext.body, { status: state.failNext.status });
+      }
+      const item = live.find((entry) => entry.id === params.id);
+      item.quantity += body.type === 'increment' ? 1 : -1;
+      return HttpResponse.json(
+        { product: { id: item.id, quantity: item.quantity } },
+        { status: 201 },
+      );
+    }),
     http.get('*/api/products', ({ request }) => {
       state.lists.push(Object.fromEntries(new URL(request.url).searchParams));
       if (failList) return HttpResponse.json({ message: 'boom' }, { status: 500 });
-      return HttpResponse.json({ items, total: items.length, page: 1, limit: 20 });
+      return HttpResponse.json({ items: live, total: live.length, page: 1, limit: 20 });
     }),
   );
   return state;
@@ -440,6 +456,103 @@ describe('Products page', () => {
 
     expect((await screen.findByText(title)).className).toContain('[overflow-wrap:anywhere]');
     expect(screen.getByText(sku).className).toContain('[overflow-wrap:anywhere]');
+  });
+
+  describe('Inline quantity', () => {
+    const stockWrites = (state) => state.writes.filter((write) => write.action === 'stock');
+
+    it('adds and removes one with a single delta request each, and keeps the new quantity', async () => {
+      const state = productsApi([hammer], { me: staff });
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      const hammerRow = await row('Claw Hammer');
+
+      await user.click(
+        within(hammerRow).getByRole('button', { name: 'Increase quantity of Claw Hammer' }),
+      );
+      expect(within(hammerRow).getByText('41')).toBeInTheDocument();
+      await user.click(
+        within(hammerRow).getByRole('button', { name: 'Decrease quantity of Claw Hammer' }),
+      );
+      await user.click(
+        within(hammerRow).getByRole('button', { name: 'Decrease quantity of Claw Hammer' }),
+      );
+
+      await waitFor(() => expect(stockWrites(state)).toHaveLength(3));
+      expect(stockWrites(state).map((write) => write.body)).toEqual([
+        { type: 'increment' },
+        { type: 'decrement' },
+        { type: 'decrement' },
+      ]);
+      await waitFor(() => expect(within(hammerRow).getByText('39')).toBeInTheDocument());
+    });
+
+    it('turns off - at 0 and both buttons for an archived product', async () => {
+      productsApi([glue, oldLamp]);
+      renderApp({ route: '/products?archived=true' });
+
+      const glueRow = await row('Wood Glue');
+      expect(
+        within(glueRow).getByRole('button', { name: 'Decrease quantity of Wood Glue' }),
+      ).toBeDisabled();
+      expect(
+        within(glueRow).getByRole('button', { name: 'Increase quantity of Wood Glue' }),
+      ).toBeEnabled();
+      const lampRow = await row('Old Lamp');
+      expect(
+        within(lampRow).getByRole('button', { name: 'Decrease quantity of Old Lamp' }),
+      ).toBeDisabled();
+      expect(
+        within(lampRow).getByRole('button', { name: 'Increase quantity of Old Lamp' }),
+      ).toBeDisabled();
+    });
+
+    it('queues rapid clicks: the count moves at once and requests go one at a time', async () => {
+      const state = productsApi([hammer]);
+      let release;
+      state.gate = new Promise((resolve) => {
+        release = resolve;
+      });
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      const hammerRow = await row('Claw Hammer');
+      const plus = within(hammerRow).getByRole('button', {
+        name: 'Increase quantity of Claw Hammer',
+      });
+
+      await user.click(plus);
+      await user.click(plus);
+      await user.click(plus);
+
+      expect(within(hammerRow).getByText('43')).toBeInTheDocument();
+      await waitFor(() => expect(stockWrites(state)).toHaveLength(1));
+      release();
+      await waitFor(() => expect(stockWrites(state)).toHaveLength(3));
+      await waitFor(() => expect(within(hammerRow).getByText('43')).toBeInTheDocument());
+    });
+
+    it('rolls back a refused change and shows the message', async () => {
+      const state = productsApi([hammer]);
+      state.failNext = {
+        status: 409,
+        body: {
+          message: 'Restore this product before changing its stock',
+          code: 'PRODUCT_ARCHIVED',
+        },
+      };
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      const hammerRow = await row('Claw Hammer');
+
+      await user.click(
+        within(hammerRow).getByRole('button', { name: 'Increase quantity of Claw Hammer' }),
+      );
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Restore this product before changing its stock',
+      );
+      await waitFor(() => expect(within(hammerRow).getByText('40')).toBeInTheDocument());
+    });
   });
 
   describe('Add and Edit form', () => {
