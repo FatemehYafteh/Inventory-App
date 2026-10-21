@@ -19,7 +19,7 @@ Branch `feat/i18n-server-codes`, one local commit per phase, **nothing pushed, n
 | 8.3 | `eb5bac1` | `GET /dashboard` (summary, 10 lowest-ratio products with out of stock first, last 10 movements) |
 | 8.4 | `2cf9391` | Dashboard page, Receive action (reuses `StockAdjustDialog`), admin-only Pending approvals card; stock changes invalidate the dashboard |
 | 8.5 | `a9e2b56` | `GET /movements/export`, `GET /products/export` (streamed, BOM, no row cap, formula-escaped text, raw numbers); Export CSV buttons use `apiDownload` |
-| 8.6 | `bfcd191` | Brevo notes in `server/.env.example`, `docs/launch-checklist.md`, README pointer, final test pass |
+| 8.6 | `584eafd` (docs commit) | Brevo notes in `server/.env.example`, `docs/launch-checklist.md`, README pointer, final test pass |
 
 **Verification run at the end of the session [checked now]:** `npm run lint` clean; `prettier --check` clean; server 490 of 490, client 502 of 502; `vite build` succeeds. No browser pass was done for the new pages (no screenshots at 360/768/1024/1280 px, no manual check of the Jalali calendar or of a real CSV in Excel).
 
