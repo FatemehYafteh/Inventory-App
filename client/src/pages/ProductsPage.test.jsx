@@ -107,7 +107,14 @@ function productsApi(items, { me = admin, failList = false } = {}) {
         return HttpResponse.json(state.failNext.body, { status: state.failNext.status });
       }
       const item = live.find((entry) => entry.id === params.id);
-      item.quantity += body.type === 'increment' ? 1 : -1;
+      const changes = {
+        increment: 1,
+        decrement: -1,
+        receive: body.quantity,
+        ship: -body.quantity,
+        adjust: body.quantity - item.quantity,
+      };
+      item.quantity += changes[body.type];
       return HttpResponse.json(
         { product: { id: item.id, quantity: item.quantity } },
         { status: 201 },
@@ -552,6 +559,117 @@ describe('Products page', () => {
         'Restore this product before changing its stock',
       );
       await waitFor(() => expect(within(hammerRow).getByText('40')).toBeInTheDocument());
+    });
+  });
+
+  describe('Adjust stock dialog', () => {
+    const dialog = () => within(screen.getByRole('dialog'));
+
+    async function openAdjust(user, title = 'Claw Hammer') {
+      await row(title);
+      await user.click(screen.getByRole('button', { name: `Adjust stock of ${title}` }));
+      await screen.findByRole('dialog', { name: 'Adjust stock' });
+    }
+
+    it('receives stock: previews the result, sends the amount and note, then updates the row', async () => {
+      const state = productsApi([hammer], { me: staff });
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdjust(user);
+
+      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('Current quantity: 40');
+      await user.type(dialog().getByLabelText('Quantity to add'), '12');
+      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('New quantity: 52');
+      await user.type(dialog().getByLabelText(/^Note/), 'Truck 7');
+      await user.click(dialog().getByRole('button', { name: 'Save' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(state.writes).toEqual([
+        {
+          method: 'POST',
+          id: 'p1',
+          action: 'stock',
+          body: { type: 'receive', quantity: 12, note: 'Truck 7' },
+        },
+      ]);
+      expect(within(await row('Claw Hammer')).getByText('52')).toBeInTheDocument();
+    });
+
+    it('ships and adjusts, and omits an empty note', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdjust(user);
+
+      await user.click(dialog().getByRole('tab', { name: 'Ship' }));
+      await user.type(dialog().getByLabelText('Quantity to remove'), '5');
+      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('New quantity: 35');
+      await user.click(dialog().getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+      await openAdjust(user);
+      await user.click(dialog().getByRole('tab', { name: 'Adjust' }));
+      await user.type(dialog().getByLabelText('New quantity'), '100');
+      await user.click(dialog().getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+      expect(state.writes.map((write) => write.body)).toEqual([
+        { type: 'ship', quantity: 5 },
+        { type: 'adjust', quantity: 100 },
+      ]);
+    });
+
+    it('refuses before sending: nothing entered, shipping too much, adjusting to the same number', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdjust(user);
+
+      await user.click(dialog().getByRole('button', { name: 'Save' }));
+      expect(await dialog().findByText('Enter a whole number')).toBeInTheDocument();
+
+      await user.click(dialog().getByRole('tab', { name: 'Ship' }));
+      await user.type(dialog().getByLabelText('Quantity to remove'), '41');
+      await user.click(dialog().getByRole('button', { name: 'Save' }));
+      expect(await dialog().findByText('Only 40 in stock')).toBeInTheDocument();
+
+      await user.click(dialog().getByRole('tab', { name: 'Adjust' }));
+      await user.type(dialog().getByLabelText('New quantity'), '40');
+      await user.click(dialog().getByRole('button', { name: 'Save' }));
+      expect(await dialog().findByText('The quantity is already 40')).toBeInTheDocument();
+
+      await user.click(dialog().getByRole('tab', { name: 'Receive' }));
+      await user.type(dialog().getByLabelText('Quantity to add'), '0');
+      await user.click(dialog().getByRole('button', { name: 'Save' }));
+      expect(await dialog().findByText('Quantity must be at least 1')).toBeInTheDocument();
+      expect(state.writes).toEqual([]);
+    });
+
+    it('shows a server refusal and keeps the dialog open', async () => {
+      const state = productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdjust(user);
+      state.failNext = {
+        status: 400,
+        body: { message: 'Not enough stock for this change', code: 'INSUFFICIENT_STOCK' },
+      };
+
+      await user.type(dialog().getByLabelText('Quantity to add'), '3');
+      await user.click(dialog().getByRole('button', { name: 'Save' }));
+
+      expect(await dialog().findByRole('alert')).toHaveTextContent(
+        'Not enough stock for this change',
+      );
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('is off for an archived product', async () => {
+      productsApi([oldLamp]);
+      renderApp({ route: '/products?archived=true' });
+
+      await row('Old Lamp');
+      expect(screen.getByRole('button', { name: 'Adjust stock of Old Lamp' })).toBeDisabled();
     });
   });
 

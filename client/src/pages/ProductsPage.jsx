@@ -7,6 +7,7 @@ import { ArchiveProductDialog } from '@/components/products/ArchiveProductDialog
 import { ProductFilters, STATUS_OPTIONS } from '@/components/products/ProductFilters';
 import { ProductForm } from '@/components/products/ProductForm';
 import { ProductTable } from '@/components/products/ProductTable';
+import { StockAdjustDialog } from '@/components/products/StockAdjustDialog';
 import { Button } from '@/components/ui/button';
 import { useReturnFocus } from '@/hooks/useReturnFocus';
 import { useMe } from '@/lib/auth';
@@ -14,6 +15,7 @@ import { useCategories } from '@/lib/categories';
 import { errorMessage } from '@/lib/errors';
 import {
   useArchiveProduct,
+  useChangeStock,
   useCreateProduct,
   useProducts,
   useRestoreProduct,
@@ -100,6 +102,7 @@ export function ProductsPage() {
   const { mutate: archiveProduct } = useArchiveProduct();
   const { mutate: restoreProduct } = useRestoreProduct();
   const stockStep = useStockStep();
+  const changeStock = useChangeStock();
 
   // `form` is null (closed), { product: null } (add) or { product } (edit).
   const [form, setForm] = useState(null);
@@ -113,6 +116,16 @@ export function ProductsPage() {
     [remember],
   );
 
+  // The id, not the row: the dialog reads the live product, so its current quantity stays right.
+  const [adjustingId, setAdjustingId] = useState(null);
+  const adjusting = products.data?.items.find((item) => item.id === adjustingId);
+  const openAdjust = useCallback(
+    (product) => {
+      remember();
+      setAdjustingId(product.id);
+    },
+    [remember],
+  );
   const [archiving, setArchiving] = useState(null);
   const [actionError, setActionError] = useState(null);
   const openArchive = useCallback(
@@ -178,6 +191,7 @@ export function ProductsPage() {
         }}
         onEdit={openForm}
         onStep={step}
+        onAdjust={openAdjust}
         canArchive={isAdmin}
         onArchive={openArchive}
         onRestore={restore}
@@ -216,6 +230,18 @@ export function ProductsPage() {
         onCloseAutoFocus={onCloseAutoFocus}
         onConfirm={confirmArchive}
       />
+      {adjusting && (
+        <StockAdjustDialog
+          key={adjusting.id}
+          product={adjusting}
+          onCancel={() => setAdjustingId(null)}
+          onCloseAutoFocus={onCloseAutoFocus}
+          onSubmit={async (values) => {
+            await changeStock.mutateAsync({ id: adjusting.id, ...values });
+            setAdjustingId(null);
+          }}
+        />
+      )}
       {form && (
         <ProductForm
           key={form.product?.id ?? 'new'}
