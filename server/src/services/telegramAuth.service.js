@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import { randomInt, timingSafeEqual } from 'node:crypto';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../models/AuthRequest.js';
@@ -57,7 +58,7 @@ function codeMessage(code, purpose, config, language) {
 }
 
 function invalidCode() {
-  return new AppError(400, 'INVALID_CODE', 'This code is invalid or has expired.');
+  return new AppError(400, 'INVALID_CODE', m.TELEGRAM_CODE_INVALID_OR_EXPIRED);
 }
 
 function wrongCode(left) {
@@ -69,7 +70,7 @@ function wrongCode(left) {
 }
 
 function tooManyWrongCodes() {
-  return new AppError(400, 'TOO_MANY_ATTEMPTS', 'Too many wrong codes.');
+  return new AppError(400, 'TOO_MANY_ATTEMPTS', m.TELEGRAM_TOO_MANY_WRONG_CODES);
 }
 
 /** Display name from Telegram: first + last name, at most 100 characters. */
@@ -123,7 +124,7 @@ function sameHash(a, b) {
 async function findVisibleRequest(filter, viewer) {
   const request = await AuthRequest.findOne(filter);
   if (!request || request.purpose === 'login') return request;
-  if (!viewer) throw new AppError(401, 'NOT_AUTHENTICATED', 'Please log in to continue.');
+  if (!viewer) throw new AppError(401, 'NOT_AUTHENTICATED', m.LOGIN_REQUIRED);
   return request.connectUser?.equals(viewer._id) ? request : null;
 }
 
@@ -164,7 +165,7 @@ async function carriedTries(telegramId, now) {
 }
 
 function telegramAlreadyConnected() {
-  return new AppError(409, 'TELEGRAM_ALREADY_CONNECTED', 'Your account already has Telegram.');
+  return new AppError(409, 'TELEGRAM_ALREADY_CONNECTED', m.TELEGRAM_ALREADY_CONNECTED);
 }
 
 /** Connect Telegram on the Profile page: the same deep link, for the signed-in user. */
@@ -181,7 +182,7 @@ async function startRequest(
   const bot = config.telegram.botUsername;
   // Never guess a bot: a made-up username could belong to someone else and receive the token.
   if (!bot) {
-    throw new AppError(503, 'TELEGRAM_UNAVAILABLE', 'Telegram sign-in is not available right now.');
+    throw new AppError(503, 'TELEGRAM_UNAVAILABLE', m.TELEGRAM_UNAVAILABLE);
   }
 
   const startToken = randomToken(32);
@@ -283,7 +284,7 @@ export async function resendCode({ requestId }, config, { messenger, viewer }) {
     viewer,
   );
   if (!request) {
-    throw new AppError(400, 'REQUEST_EXPIRED', 'This link has expired. Start again.');
+    throw new AppError(400, 'REQUEST_EXPIRED', m.TELEGRAM_REQUEST_EXPIRED);
   }
   const login = request.purpose === 'login';
   if (login && request.attempts >= MAX_OTP_ATTEMPTS) throw tooManyWrongCodes();
@@ -320,7 +321,7 @@ export async function resendCode({ requestId }, config, { messenger, viewer }) {
 }
 
 function resendTooSoon() {
-  return new AppError(429, 'RESEND_TOO_SOON', 'Please wait before asking for a new code.');
+  return new AppError(429, 'RESEND_TOO_SOON', m.TELEGRAM_RESEND_TOO_SOON);
 }
 
 /**
@@ -386,7 +387,7 @@ async function signInTelegramUser({ telegramId, telegramUsername, name, language
   }
 
   if (existing.status === 'rejected') {
-    throw new AppError(403, 'ACCOUNT_REJECTED', 'Access denied');
+    throw new AppError(403, 'ACCOUNT_REJECTED', m.ACCESS_DENIED);
   }
   // Follow the current Telegram username, including its removal; never touch the name.
   existing.telegramUsername = telegramUsername || undefined;
@@ -441,11 +442,7 @@ export async function verifyLogin({ requestId, otp }, meta, config) {
 }
 
 function telegramOwned() {
-  return new AppError(
-    409,
-    'TELEGRAM_OWNED',
-    'This Telegram account belongs to another user. Contact an admin.',
-  );
+  return new AppError(409, 'TELEGRAM_OWNED', m.TELEGRAM_OWNED_BY_OTHER);
 }
 
 /**
