@@ -80,6 +80,90 @@ describe('POST /api/products', () => {
     expect(asAdmin.body.product).toMatchObject({ supplier: null, reorderLevel: 0, quantity: 0 });
   });
 
+  describe('initial stock', () => {
+    const base = (cat, extra = {}) => ({
+      title: 'Stocked',
+      sku: 'stocked-1',
+      category: cat.id,
+      price: 2,
+      ...extra,
+    });
+
+    it('creates the product at that quantity with one "Initial stock" receive', async () => {
+      const app = buildApp();
+      const actor = await staff();
+      const cat = await category();
+      const supplier = await Supplier.create({ name: 'Acme' });
+
+      const res = await post(app, actor, base(cat, { initialQuantity: 12, supplier: supplier.id }));
+
+      expect(res.status).toBe(201);
+      expect(res.body.product).toMatchObject({ quantity: 12, stockStatus: 'in_stock' });
+      const movements = await StockMovement.find({ product: res.body.product.id });
+      expect(movements).toHaveLength(1);
+      expect(movements[0]).toMatchObject({
+        type: 'receive',
+        quantityChange: 12,
+        quantityBefore: 0,
+        quantityAfter: 12,
+        note: 'Initial stock',
+        performedByName: 'Sam Staff',
+      });
+      expect(String(movements[0].performedBy)).toBe(actor.id);
+      expect(String(movements[0].supplier)).toBe(supplier.id);
+    });
+
+    it('writes no movement for zero or an omitted quantity', async () => {
+      const app = buildApp();
+      const actor = await staff();
+      const cat = await category();
+
+      const zero = await post(app, actor, base(cat, { initialQuantity: 0 }));
+      const omitted = await post(app, actor, base(cat, { sku: 'stocked-2' }));
+
+      expect(zero.status).toBe(201);
+      expect(zero.body.product.quantity).toBe(0);
+      expect(omitted.body.product.quantity).toBe(0);
+      expect(await StockMovement.countDocuments()).toBe(0);
+    });
+
+    it('rejects a negative, fractional or non-numeric quantity', async () => {
+      const app = buildApp();
+      const actor = await staff();
+      const cat = await category();
+
+      for (const initialQuantity of [-1, 1.5, '5']) {
+        const res = await post(app, actor, base(cat, { initialQuantity }));
+        expect(res.status, String(initialQuantity)).toBe(400);
+        expect(res.body.errors.initialQuantity).toBeTruthy();
+      }
+      expect(await Product.countDocuments()).toBe(0);
+    });
+
+    it('leaves no product and no movement when the SKU is a duplicate', async () => {
+      const app = buildApp();
+      const actor = await staff();
+      const cat = await category();
+      await existing(cat, { sku: 'STOCKED-1' });
+
+      const res = await post(app, actor, base(cat, { initialQuantity: 5 }));
+
+      expect(res.status).toBe(409);
+      expect(await Product.countDocuments()).toBe(1);
+      expect(await StockMovement.countDocuments()).toBe(0);
+    });
+
+    it('is not accepted when editing a product', async () => {
+      const app = buildApp();
+      const item = await existing(await category(), { quantity: 3 });
+
+      const res = await patch(app, await staff(), item.id, { initialQuantity: 9 });
+
+      expect(res.status).toBe(400);
+      expect((await Product.findById(item.id)).quantity).toBe(3);
+    });
+  });
+
   it('treats an empty supplier or description as none', async () => {
     const app = buildApp();
     const cat = await category();
@@ -122,16 +206,11 @@ describe('POST /api/products', () => {
     expect(await Product.countDocuments()).toBe(0);
   });
 
-  it('does not accept quantity, initialQuantity, isArchived or other unknown fields', async () => {
+  it('does not accept quantity, isArchived or other unknown fields', async () => {
     const app = buildApp();
     const actor = await staff();
     const cat = await category();
-    for (const extra of [
-      { quantity: 5 },
-      { initialQuantity: 5 },
-      { isArchived: true },
-      { foo: 1 },
-    ]) {
+    for (const extra of [{ quantity: 5 }, { isArchived: true }, { foo: 1 }]) {
       const res = await post(app, actor, {
         title: 'T',
         sku: 'S-1',
