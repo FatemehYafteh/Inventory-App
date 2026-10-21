@@ -12,7 +12,7 @@ const dash = <span className="text-muted-foreground">—</span>;
  * and `pagination` is { pageIndex, pageSize }. Title, Quantity and Price sort. Archive and
  * Restore show only when `canArchive` (admins). The - and + beside the quantity call
  * `onStep(product, -1 or 1)`; they are off for archived products, and - is off at 0. Adjust stock
- * calls `onAdjust(product)` and is off for archived products too.
+ * calls `onAdjust(product)` and is off for archived products too. History calls `onHistory(product)`.
  */
 export function ProductTable({
   products,
@@ -28,6 +28,7 @@ export function ProductTable({
   onEdit,
   onStep,
   onAdjust,
+  onHistory,
   canArchive,
   onArchive,
   onRestore,
@@ -155,6 +156,14 @@ export function ProductTable({
             <Button
               variant="outline"
               size="sm"
+              aria-label={`Stock history of ${row.original.title}`}
+              onClick={() => onHistory(row.original)}
+            >
+              History
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               aria-label={`Edit ${row.original.title}`}
               onClick={() => onEdit(row.original)}
             >
@@ -176,7 +185,7 @@ export function ProductTable({
         ),
       },
     ],
-    [onEdit, onStep, onAdjust, canArchive, onArchive, onRestore],
+    [onEdit, onStep, onAdjust, onHistory, canArchive, onArchive, onRestore],
   );
 
   return (

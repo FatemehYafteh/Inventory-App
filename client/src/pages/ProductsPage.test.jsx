@@ -53,7 +53,14 @@ const oldLamp = product({
 
 /** A Products API that records every list request; the filtering itself is the server's job. */
 function productsApi(items, { me = admin, failList = false } = {}) {
-  const state = { lists: [], writes: [], failNext: null, gate: null };
+  const state = {
+    lists: [],
+    writes: [],
+    failNext: null,
+    gate: null,
+    movements: [],
+    movementQueries: [],
+  };
   // The list answers from this copy, which stock changes update, like the real server.
   const live = items.map((item) => ({ ...item }));
   server.use(
@@ -98,6 +105,19 @@ function productsApi(items, { me = admin, failList = false } = {}) {
         return HttpResponse.json(state.failNext.body, { status: state.failNext.status });
       }
       return HttpResponse.json({ product: product({ id: params.id }) });
+    }),
+    http.get('*/api/products/:id/movements', ({ request }) => {
+      const query = Object.fromEntries(new URL(request.url).searchParams);
+      state.movementQueries.push(query);
+      if (state.movementsFail) return HttpResponse.json({ message: 'boom' }, { status: 500 });
+      const page = Number(query.page);
+      const limit = Number(query.limit);
+      return HttpResponse.json({
+        items: state.movements.slice((page - 1) * limit, page * limit),
+        total: state.movements.length,
+        page,
+        limit,
+      });
     }),
     http.post('*/api/products/:id/stock', async ({ params, request }) => {
       const body = await request.json();
@@ -670,6 +690,98 @@ describe('Products page', () => {
 
       await row('Old Lamp');
       expect(screen.getByRole('button', { name: 'Adjust stock of Old Lamp' })).toBeDisabled();
+    });
+  });
+
+  describe('Stock history dialog', () => {
+    const dialog = () => within(screen.getByRole('dialog'));
+    const movement = (n, fields) => ({
+      id: `m${n}`,
+      type: 'receive',
+      quantityChange: 5,
+      quantityBefore: 0,
+      quantityAfter: 5,
+      supplier: null,
+      note: '',
+      performedBy: { id: 's1', name: 'Sam Staff' },
+      createdAt: '2026-10-14T10:30:00.000Z',
+      ...fields,
+    });
+
+    async function openHistory(user, title = 'Claw Hammer') {
+      await row(title);
+      await user.click(screen.getByRole('button', { name: `Stock history of ${title}` }));
+      await screen.findByRole('dialog', { name: 'Stock history' });
+    }
+
+    it('lists the movements with their change, before, after, supplier, note and performer', async () => {
+      const state = productsApi([hammer], { me: staff });
+      state.movements = [
+        movement(2, {
+          type: 'ship',
+          quantityChange: -2,
+          quantityBefore: 5,
+          quantityAfter: 3,
+          note: 'Order 7',
+          performedBy: { id: 'a1', name: 'Ana Admin' },
+        }),
+        movement(1, { supplier: { id: ACME_ID, name: 'Acme Tools' }, note: 'Initial stock' }),
+      ];
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openHistory(user);
+
+      const rows = await dialog().findAllByRole('row');
+      const [, newest, oldest] = rows.map((r) => within(r));
+      expect(newest.getByText('Ship')).toBeInTheDocument();
+      expect(newest.getByText('−2')).toBeInTheDocument();
+      expect(newest.getByText('Order 7')).toBeInTheDocument();
+      expect(newest.getByText('Ana Admin')).toBeInTheDocument();
+      expect(oldest.getByText('Receive')).toBeInTheDocument();
+      expect(oldest.getByText('+5')).toBeInTheDocument();
+      expect(oldest.getByText('Acme Tools')).toBeInTheDocument();
+      expect(oldest.getByText('Initial stock')).toBeInTheDocument();
+      expect(oldest.getByText('Sam Staff')).toBeInTheDocument();
+      expect(oldest.getByText(/Oct 14, 2026/)).toBeInTheDocument();
+      expect(state.movementQueries[0]).toEqual({ page: '1', limit: '10' });
+    });
+
+    it('pages through a long history', async () => {
+      const state = productsApi([hammer]);
+      state.movements = Array.from({ length: 12 }, (_, i) =>
+        movement(i, { note: `Entry ${i}`, type: 'increment', quantityChange: 1 }),
+      );
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openHistory(user);
+
+      expect(await dialog().findByText('Entry 0')).toBeInTheDocument();
+      await user.click(dialog().getByRole('button', { name: 'Next' }));
+
+      expect(await dialog().findByText('Entry 11')).toBeInTheDocument();
+      expect(dialog().queryByText('Entry 0')).not.toBeInTheDocument();
+      expect(state.movementQueries.at(-1)).toEqual({ page: '2', limit: '10' });
+    });
+
+    it('says so when there are no movements', async () => {
+      productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openHistory(user);
+
+      expect(await dialog().findByText('No stock changes yet.')).toBeInTheDocument();
+    });
+
+    it('shows an error when the history cannot be loaded, and closes', async () => {
+      const state = productsApi([hammer]);
+      state.movementsFail = true;
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openHistory(user);
+
+      expect(await dialog().findByRole('alert')).toBeInTheDocument();
+      await user.click(dialog().getByRole('button', { name: 'Close' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     });
   });
 
