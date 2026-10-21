@@ -134,7 +134,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | 8.3 | Dashboard API: summary, low-stock list, recent movements | ✅ Done |
 | 8.4 | Dashboard page, including the Pending approvals card for admins | ✅ Done |
 | 8.5 | CSV export for products and movements, with formula-injection escaping | ✅ Done |
-| 8.6 | SMTP (Brevo) configuration and the final test pass | ⬜ To do |
+| 8.6 | SMTP (Brevo) configuration and the final test pass | 🟡 Code, docs and test pass done; the real Brevo delivery and SPF/DKIM check is a manual step for the owner (`docs/launch-checklist.md`) |
 
 ## Phase L: Multilingual support (English and Persian). DEFERRED: plan and issues first; do NOT start without the owner's explicit approval
 

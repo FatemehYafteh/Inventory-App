@@ -1,4 +1,4 @@
-# Handoff: Design Foundation (D0 to D8) done; Products 6.4 planned, not started (2026-10-20)
+# Handoff: M8 built (movements, dashboard, CSV export), Brevo check pending (2026-10-21)
 
 This replaces the M5 handoff of 2026-10-17, which was never committed. It is kept word for word in the appendix at the end of this file.
 Written at the end of the session. Each claim carries a tag saying where it comes from:
@@ -7,6 +7,29 @@ Written at the end of the session. Each claim carries a tag saying where it come
 - **[reported earlier]**: observed earlier in this same session and not re-run for this file.
 - **[prior session]**: copied from an older handoff and not re-checked.
 - **(verify)**: not checked at all.
+
+## 000000. M8 built, 2026-10-21 (READ THIS FIRST; it overrides older sections where they differ)
+
+Branch `feat/i18n-server-codes`, one local commit per phase, **nothing pushed, no PR opened, nothing merged**. The plan is `docs/plans/m8-movements-dashboard-export.md` (approved by the owner, with the interview decisions D1 to D6 and the assumptions A1 to A12).
+
+| Phase | Commit | What |
+|---|---|---|
+| 8.1 | `5bc6c16` | `GET /movements` (product, type, supplier, user, from, to, page, limit); `performedBy { id, name, role }`; Option A dates (full ISO instants, `from` inclusive, `to` exclusive, date-only refused); 6 new catalogue codes in `shared/errorCodes.js` and both `errors.json` |
+| 8.2 | `26c36e9` | Movements page (filters in the URL, Jalali date range, server-searched product picker), nav item, Users drawer link enabled; **added `GET /movements/performers`** (not in the PRD) because staff cannot call `/users` |
+| 8.3 | `eb5bac1` | `GET /dashboard` (summary, 10 lowest-ratio products with out of stock first, last 10 movements) |
+| 8.4 | `2cf9391` | Dashboard page, Receive action (reuses `StockAdjustDialog`), admin-only Pending approvals card; stock changes invalidate the dashboard |
+| 8.5 | `a9e2b56` | `GET /movements/export`, `GET /products/export` (streamed, BOM, no row cap, formula-escaped text, raw numbers); Export CSV buttons use `apiDownload` |
+| 8.6 | `bfcd191` | Brevo notes in `server/.env.example`, `docs/launch-checklist.md`, README pointer, final test pass |
+
+**Verification run at the end of the session [checked now]:** `npm run lint` clean; `prettier --check` clean; server 490 of 490, client 502 of 502; `vite build` succeeds. No browser pass was done for the new pages (no screenshots at 360/768/1024/1280 px, no manual check of the Jalali calendar or of a real CSV in Excel).
+
+**Not done / needs the owner**
+- **Brevo delivery, SPF and DKIM check** (sub-PRD 08 acceptance, last bullet): manual, steps in `docs/launch-checklist.md`. Task 8.6 is marked partly done for that reason.
+- Browser pass of Movements and Dashboard at the four widths in English and Persian (as D5/L2 did for other pages).
+- `GET /movements/performers` is an addition: add it to the PRD API list if kept.
+- Seed data was not changed (no model changed); `server/tests/seed/seed.test.js` gained a test that the seed feeds the dashboard and the Movements page (archived products hidden from staff, both roles as performers).
+- Role on a movement row is the performer's **current** role (assumption A1); `performedByName` stays the stored name.
+- Phase T (theme) and UI polish stay deferred.
 
 ## 00000. Final shutdown state, 2026-10-20 (READ THIS FIRST; it overrides every section below where they differ)
 

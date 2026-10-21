@@ -1,6 +1,6 @@
 # M8 plan: movements, dashboard and CSV export
 
-Status: **awaiting owner approval** (2026-10-21). No application code is changed until approved.
+Status: **approved and built (2026-10-21)**, see HANDOFF.md. Addition during build: `GET /movements/performers` (feeds the user filter for staff, who cannot list users).
 Inputs: sub-PRD 08, PRD 5.5, 5.6, 5.10, 6, `docs/plans/m8-date-range-timezone.md` (Option A), `docs/plans/phase-l-multilingual.md`, `docs/design-system.md`.
 
 ## 1. Decisions confirmed by the owner (interview, 2026-10-21)

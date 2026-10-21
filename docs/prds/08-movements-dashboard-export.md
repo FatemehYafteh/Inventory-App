@@ -46,6 +46,7 @@ Give users an auditable view of every stock change, a dashboard that surfaces lo
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/movements?product=&type=&supplier=&user=&from=&to=&page=&limit=` | each row includes `performedBy { id, name, role }` |
+| GET | `/movements/performers` | people who made movements, `{ id, name }`, for the user filter (staff cannot list users) |
 | GET | `/movements/export` | same filters, CSV |
 | GET | `/products/export` | same filters as `/products`, CSV |
 | GET | `/dashboard` | summary, low-stock list, recent movements |
