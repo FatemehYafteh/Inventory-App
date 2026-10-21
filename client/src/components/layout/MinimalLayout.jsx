@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { Link, Outlet } from 'react-router-dom';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Button } from '@/components/ui/button';
 import { useLogout } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ export function MinimalLayout() {
           >
             Back to Awaiting approval
           </Link>
+          <LanguageSwitcher tone="sidebar" />
           <Button
             variant="outline"
             size="sm"

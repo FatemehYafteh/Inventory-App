@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -73,6 +74,9 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
         >
           {user?.name}
         </Link>
+        <div className="px-3">
+          <LanguageSwitcher tone="sidebar" />
+        </div>
         <Button
           variant="outline"
           size="sm"

@@ -28,6 +28,25 @@ describe('PATCH /api/auth/profile', () => {
     }
   });
 
+  it('changes the language alone, and returns it', async () => {
+    const user = await createUser({ name: 'Keep Name' });
+    expect((await patchProfile(buildApp(), user, {})).status).toBe(400);
+
+    const res = await patchProfile(buildApp(), user, { language: 'fa' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.user).toMatchObject({ name: 'Keep Name', language: 'fa' });
+    expect((await User.findById(user._id)).language).toBe('fa');
+  });
+
+  it('refuses an unsupported language', async () => {
+    const user = await createUser();
+    const res = await patchProfile(buildApp(), user, { language: 'de' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toEqual({ language: 'Choose a supported language' });
+  });
+
   it('validates the name with the shared schema', async () => {
     const user = await createUser();
     const res = await patchProfile(buildApp(), user, { name: '   ' });

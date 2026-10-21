@@ -81,6 +81,17 @@ describe('POST /api/auth/register', () => {
     expect(ttl).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
   });
 
+  it('saves the language chosen before signing up, and defaults to English', async () => {
+    const app = buildApp();
+
+    await register(app, { email: 'fa@example.com', language: 'fa' });
+    await register(app, { email: 'en@example.com' });
+
+    expect((await User.findOne({ email: 'fa@example.com' })).language).toBe('fa');
+    expect((await User.findOne({ email: 'en@example.com' })).language).toBe('en');
+    expect((await register(app, { email: 'de@example.com', language: 'de' })).status).toBe(400);
+  });
+
   it('gives the same response for an email that is already registered and verified', async () => {
     const app = buildApp();
     await createUser({ email: 'taken@example.com', name: 'Original' });

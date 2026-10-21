@@ -1,5 +1,7 @@
 import { updateProfileSchema } from '@inventory/shared/schemas';
+import { useTranslation } from 'react-i18next';
 import { ConnectTelegram } from '@/components/auth/TelegramSignIn';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -172,6 +174,7 @@ function IdentityCard({ user }) {
 
 /** Profile for pending and active users: name, sign-in methods and password reset. */
 export function ProfilePage() {
+  const { t } = useTranslation();
   const { data: user } = useMe();
   // The route guard only renders this page for a signed-in user with a complete profile.
   if (!user) return null;
@@ -190,6 +193,13 @@ export function ProfilePage() {
               region={false}
             >
               <NameForm user={user} />
+            </ProfileSection>
+            <ProfileSection
+              id="language-heading"
+              title={t('language.label')}
+              description={t('language.profileDescription')}
+            >
+              <LanguageSwitcher />
             </ProfileSection>
             <ProfileSection
               id="password-heading"

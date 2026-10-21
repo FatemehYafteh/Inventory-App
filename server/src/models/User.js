@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 export const ROLES = ['admin', 'staff'];
 export const STATUSES = ['pending', 'active', 'rejected'];
+export const LANGUAGES = ['en', 'fa'];
 
 const userSchema = new mongoose.Schema(
   {
@@ -12,6 +13,8 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, select: false },
     telegramId: { type: String, unique: true, sparse: true },
     telegramUsername: { type: String, trim: true },
+    // Language of the UI, emails and Telegram messages sent to this user.
+    language: { type: String, enum: LANGUAGES, default: 'en' },
     role: { type: String, enum: ROLES, default: 'staff' },
     status: { type: String, enum: STATUSES, default: 'pending', index: true },
     statusChangedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

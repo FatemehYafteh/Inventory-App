@@ -7,6 +7,7 @@ import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
 import { useZodForm } from '@/hooks/useZodForm';
+import i18n from '@/i18n';
 import { useRegister } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
@@ -36,9 +37,13 @@ export function RegisterPage() {
   });
 
   const onSubmit = (values) => {
-    registration.mutate(values, {
-      onError: (error) => applyFieldErrors(error, setError, FIELDS),
-    });
+    // The language chosen before signing up goes with the request, for the verification email.
+    registration.mutate(
+      { ...values, language: i18n.language },
+      {
+        onError: (error) => applyFieldErrors(error, setError, FIELDS),
+      },
+    );
   };
 
   if (registration.isSuccess) {

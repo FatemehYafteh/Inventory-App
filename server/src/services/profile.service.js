@@ -114,8 +114,9 @@ export async function completeProfile(user, { name, email }, deps) {
 }
 
 /** Profile page: renames a signed-in user with a complete profile. Returns the user. */
-export async function updateName(user, { name }) {
-  user.name = name;
+export async function updateName(user, { name, language }) {
+  if (name !== undefined) user.name = name;
+  if (language !== undefined) user.language = language;
   await user.save();
   return user;
 }

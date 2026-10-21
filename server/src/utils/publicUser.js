@@ -11,6 +11,7 @@ export function toPublicUser(user) {
     pendingEmail: user.pendingEmail ?? null,
     telegramConnected: Boolean(user.telegramId),
     telegramUsername: user.telegramUsername ?? null,
+    language: user.language ?? 'en',
     role: user.role,
     status: user.status,
     profileComplete: isProfileComplete(user),

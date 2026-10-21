@@ -18,6 +18,11 @@ export const passwordSchema = z
     message: 'This password is too common. Choose another one.',
   });
 
+/** The languages the app supports. */
+export const LANGUAGES = ['en', 'fa'];
+
+export const languageSchema = z.enum(LANGUAGES, { message: 'Choose a supported language' });
+
 export const nameSchema = z
   .string({ required_error: 'Name is required' })
   .trim()
@@ -45,6 +50,8 @@ export const registerSchema = z
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string({ required_error: 'Confirm your password' }),
+    // The language the visitor chose before signing up; the verification email uses it.
+    language: languageSchema.optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'],
@@ -110,5 +117,10 @@ export const accountLinkConfirmSchema = z.object({
     .max(128, 'Password must be at most 128 characters'),
 });
 
-/** Profile page: the name is the only field a user edits themselves. */
-export const updateProfileSchema = z.object({ name: nameSchema });
+/** Profile page: the fields a user edits themselves. At least one is required. */
+export const updateProfileSchema = z
+  .object({ name: nameSchema.optional(), language: languageSchema.optional() })
+  .refine((data) => data.name !== undefined || data.language !== undefined, {
+    message: 'Name is required',
+    path: ['name'],
+  });
