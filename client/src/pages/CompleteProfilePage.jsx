@@ -1,5 +1,6 @@
 import { completeProfileSchema } from '@inventory/shared/schemas';
 import { useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { RESEND_COOLDOWN_SECONDS, ResendEmailButton } from '@/components/auth/ResendEmailButton';
 import { FormAlert } from '@/components/form/FormAlert';
@@ -14,15 +15,17 @@ import { applyFieldErrors, errorMessage } from '@/lib/errors';
 const POLL_MS = 5000;
 
 function LogoutButton() {
+  const { t } = useTranslation();
   const logout = useLogout();
   return (
     <Button variant="ghost" onClick={() => logout.mutate()} disabled={logout.isPending}>
-      Log out
+      {t('auth.common.logOut')}
     </Button>
   );
 }
 
 function ProfileForm({ user, onSent, onCancel }) {
+  const { t } = useTranslation();
   const completeProfile = useCompleteProfile();
   const {
     register,
@@ -46,32 +49,34 @@ function ProfileForm({ user, onSent, onCancel }) {
 
   return (
     <AuthLayout
-      title="Complete your profile"
-      description="Add your name and email. After you verify the email, an admin can approve your account."
+      title={t('auth.completeProfile.title')}
+      description={t('auth.completeProfile.description')}
     >
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <FormAlert>{formError}</FormAlert>
         <TextField
           id="name"
-          label="Name"
+          label={t('auth.common.name')}
           autoComplete="name"
           error={errors.name}
           {...register('name')}
         />
         <TextField
           id="email"
-          label="Email"
+          label={t('auth.common.email')}
           type="email"
           autoComplete="email"
           error={errors.email}
           {...register('email')}
         />
         <Button type="submit" disabled={completeProfile.isPending}>
-          {completeProfile.isPending ? 'Sending…' : 'Send verification link'}
+          {completeProfile.isPending
+            ? t('auth.common.sending')
+            : t('auth.common.sendVerificationLink')}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
-            Back to {user.pendingEmail}
+            {t('auth.completeProfile.backTo', { email: user.pendingEmail })}
           </Button>
         )}
         <LogoutButton />
@@ -81,25 +86,27 @@ function ProfileForm({ user, onSent, onCancel }) {
 }
 
 function CheckEmail({ email, justSent, onChangeEmail }) {
+  const { t } = useTranslation();
   const resend = useResendProfileVerification();
 
   return (
-    <AuthLayout title="Check your email">
+    <AuthLayout title={t('auth.common.checkYourEmail')}>
       <div className="flex flex-col gap-4 text-sm">
         <p>
-          We sent a verification link to <strong>{email}</strong>. Open it to confirm your address;
-          this page moves on by itself.
+          <Trans
+            i18nKey="auth.completeProfile.sentLink"
+            values={{ email }}
+            components={{ strong: <strong /> }}
+          />
         </p>
-        <p className="text-muted-foreground">
-          Nothing arriving? Use a different email, or contact an admin.
-        </p>
+        <p className="text-muted-foreground">{t('auth.completeProfile.nothingArriving')}</p>
         <ResendEmailButton
           mutation={resend}
-          sentMessage="If this email can be used, a new link is on its way."
+          sentMessage={t('auth.completeProfile.resent')}
           initialCooldown={justSent ? RESEND_COOLDOWN_SECONDS : 0}
         />
         <Button type="button" variant="outline" onClick={onChangeEmail}>
-          Use a different email
+          {t('auth.completeProfile.useDifferentEmail')}
         </Button>
         <LogoutButton />
       </div>

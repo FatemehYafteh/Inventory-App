@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { PAGE_SIZE_OPTIONS } from '@/components/data-table/DataTablePagination';
 import { FormAlert } from '@/components/form/FormAlert';
@@ -29,6 +30,7 @@ const SEARCH_DEBOUNCE_MS = 250;
  * delete them. Search, sort and page live in the URL. A row opens Products filtered by supplier.
  */
 export function SuppliersPage() {
+  const { t } = useTranslation();
   const { data: me } = useMe();
   const canManage = me?.role === 'admin';
   const [params, setParams] = useSearchParams();
@@ -134,8 +136,8 @@ export function SuppliersPage() {
     <section className="flex flex-col gap-4">
       <PageHeader
         ref={headingRef}
-        title="Suppliers"
-        actions={canManage && <Button onClick={() => onEdit(null)}>Add supplier</Button>}
+        title={t('suppliers.title')}
+        actions={canManage && <Button onClick={() => onEdit(null)}>{t('suppliers.add')}</Button>}
       />
       <FormAlert>{actionError}</FormAlert>
 
@@ -159,12 +161,12 @@ export function SuppliersPage() {
         }}
         isLoading={suppliers.isPending}
         error={suppliers.error}
-        emptyMessage={search ? 'No suppliers match your search.' : 'No suppliers yet.'}
+        emptyMessage={search ? t('suppliers.emptySearch') : t('suppliers.empty')}
         toolbar={
           <Input
             type="search"
-            aria-label="Search suppliers"
-            placeholder="Search name, contact person, phone or email"
+            aria-label={t('suppliers.searchLabel')}
+            placeholder={t('suppliers.searchPlaceholder')}
             className="max-w-sm"
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}

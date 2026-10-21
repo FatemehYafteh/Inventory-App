@@ -1,16 +1,18 @@
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 const SORT_ICONS = { asc: '↑', desc: '↓' };
-const NEXT_SORT_LABELS = { asc: 'ascending', desc: 'descending' };
+const NEXT_SORT_KEYS = { asc: 'table.sortAscending', desc: 'table.sortDescending' };
 
 /** Header label that toggles server-side sorting when the column allows it. */
 export function DataTableColumnHeader({ header, children }) {
+  const { t } = useTranslation();
   const { column } = header;
   if (!column.getCanSort()) return children;
 
   const sorted = column.getIsSorted();
   const next = column.getNextSortingOrder();
-  const nextLabel = next ? `sort ${NEXT_SORT_LABELS[next]}` : 'clear sorting';
+  const nextLabel = next ? t(NEXT_SORT_KEYS[next]) : t('table.clearSorting');
 
   return (
     <button
@@ -25,7 +27,7 @@ export function DataTableColumnHeader({ header, children }) {
       <span aria-hidden="true" className={cn('text-xs', !sorted && 'text-muted-foreground')}>
         {sorted ? SORT_ICONS[sorted] : '↕'}
       </span>
-      <span className="sr-only">, {nextLabel}</span>
+      <span className="sr-only">{t('table.sortHint', { action: nextLabel })}</span>
     </button>
   );
 }

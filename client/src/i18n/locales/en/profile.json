@@ -1,0 +1,31 @@
+{
+  "title": "Profile",
+  "description": "Your name and the ways you sign in.",
+  "roles": { "admin": "Admin", "staff": "Staff" },
+  "name": {
+    "title": "Name",
+    "description": "How you appear in the app.",
+    "saved": "Name saved.",
+    "save": "Save name",
+    "saving": "Saving…"
+  },
+  "signIn": {
+    "title": "Sign-in methods",
+    "description": "How you log in to this account.",
+    "email": "Email",
+    "telegram": "Telegram",
+    "verified": "Verified",
+    "notVerified": "Not verified",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "connectedAs": "Connected as @{{username}}"
+  },
+  "password": {
+    "title": "Password",
+    "description": "To set or change your password, we email you a link.",
+    "send": "Send password reset email",
+    "sending": "Sending…",
+    "sendAgainIn": "Send again in {{n}}s",
+    "checkEmail": "Check {{email}} for a link to set a new password."
+  }
+}

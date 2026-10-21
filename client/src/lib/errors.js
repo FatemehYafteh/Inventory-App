@@ -1,8 +1,10 @@
+import i18n from '@/i18n';
+
 /** A user-facing message for an API error that is not tied to a form field. */
 export function errorMessage(error) {
   if (!error) return null;
-  if (error.status === 429) return 'Too many attempts. Please wait a few minutes and try again.';
-  if (error.status >= 500 || !error.status) return 'Something went wrong. Please try again.';
+  if (error.status === 429) return i18n.t('common.tooManyAttempts');
+  if (error.status >= 500 || !error.status) return i18n.t('common.somethingWrong');
   return error.message;
 }
 

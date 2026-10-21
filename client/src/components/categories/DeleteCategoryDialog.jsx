@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,20 +11,23 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export function DeleteCategoryDialog({ category, onConfirm, onCancel, onCloseAutoFocus }) {
+  const { t } = useTranslation();
   if (!category) return null;
 
   return (
     <AlertDialog open onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {category.title}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This removes the category. It cannot be undone.
-          </AlertDialogDescription>
+          <AlertDialogTitle>
+            {t('categories.delete.title', { title: category.title })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>{t('categories.delete.description')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => onConfirm(category)}>Delete</AlertDialogAction>
+          <AlertDialogCancel>{t('categories.delete.cancel')}</AlertDialogCancel>
+          <AlertDialogAction onClick={() => onConfirm(category)}>
+            {t('categories.delete.confirm')}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

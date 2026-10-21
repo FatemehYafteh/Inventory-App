@@ -1,10 +1,12 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import i18n from '@/i18n';
 import { formatNumber } from '@/lib/format';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 
 export function productCountLabel(count) {
-  return `${formatNumber(count)} ${count === 1 ? 'product' : 'products'}`;
+  return i18n.t('categories.productCount', { count, n: formatNumber(count) });
 }
 
 /**
@@ -12,9 +14,12 @@ export function productCountLabel(count) {
  * link. Delete is disabled while products (archived included) use the category.
  */
 export function CategoryCard({ category, canManage, onEdit, onDelete }) {
+  const { t } = useTranslation();
   const inUse = category.productCount > 0;
   const reasonId = `category-${category.id}-in-use`;
-  const reason = `Used by ${productCountLabel(category.productCount)}, so it cannot be deleted.`;
+  const reason = t('categories.card.inUseReason', {
+    products: productCountLabel(category.productCount),
+  });
 
   return (
     <Card
@@ -39,22 +44,22 @@ export function CategoryCard({ category, canManage, onEdit, onDelete }) {
             <Button
               variant="outline"
               size="sm"
-              aria-label={`Edit ${category.title}`}
+              aria-label={t('categories.card.editLabel', { title: category.title })}
               onClick={() => onEdit(category)}
             >
-              Edit
+              {t('categories.card.edit')}
             </Button>
             {/* A disabled button gets no hover events, so the span carries the tooltip. */}
             <span title={inUse ? reason : undefined}>
               <Button
                 variant="outline"
                 size="sm"
-                aria-label={`Delete ${category.title}`}
+                aria-label={t('categories.card.deleteLabel', { title: category.title })}
                 aria-describedby={inUse ? reasonId : undefined}
                 disabled={inUse}
                 onClick={() => onDelete(category)}
               >
-                Delete
+                {t('categories.card.delete')}
               </Button>
             </span>
             {inUse && (

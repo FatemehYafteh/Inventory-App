@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,7 @@ export const sidebarButtonClass =
 
 /** First focusable element: jumps past the navigation to the page content. */
 export function SkipLink({ targetRef }) {
+  const { t } = useTranslation();
   return (
     <a
       href="#main"
@@ -24,7 +26,7 @@ export function SkipLink({ targetRef }) {
       }}
       className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground focus:ring-[3px] focus:ring-ring focus:outline-none"
     >
-      Skip to main content
+      {t('layout.skipLink')}
     </a>
   );
 }
@@ -34,10 +36,11 @@ export function SkipLink({ targetRef }) {
  * it, so they cannot drift apart. `onNavigate` lets the mobile menu close itself.
  */
 export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending, onNavigate }) {
+  const { t } = useTranslation();
   return (
     <div className="flex h-full flex-1 flex-col gap-6 p-4">
       <span className="px-3 text-lg font-semibold">Inventory</span>
-      <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
+      <nav aria-label={t('layout.nav.main')} className="flex flex-1 flex-col gap-1">
         {items.map((item) => (
           <NavLink
             key={item.to}
@@ -54,11 +57,11 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
             }
           >
             <item.icon className="size-4 shrink-0" aria-hidden="true" />
-            {item.label}
+            {t(item.labelKey)}
             {item.badge && pendingCount > 0 && (
               <Badge className="ms-auto">
                 {formatNumber(pendingCount)}
-                <span className="sr-only"> waiting for approval</span>
+                <span className="sr-only">{t('layout.nav.waitingForApproval')}</span>
               </Badge>
             )}
           </NavLink>
@@ -85,7 +88,7 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
           onClick={onLogout}
           disabled={logoutPending}
         >
-          Log out
+          {t('layout.logOut')}
         </Button>
       </div>
     </div>

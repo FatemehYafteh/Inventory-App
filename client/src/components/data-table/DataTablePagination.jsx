@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { formatNumber } from '@/lib/format';
 
@@ -6,6 +7,7 @@ export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 /** Previous / next controls, page position, total and page size for a server-paginated table. */
 export function DataTablePagination({ table, pageSizeOptions = PAGE_SIZE_OPTIONS }) {
+  const { t } = useTranslation();
   const pageSizeId = useId();
   const { pageIndex, pageSize } = table.state.pagination;
   const rowCount = table.getRowCount();
@@ -14,12 +16,12 @@ export function DataTablePagination({ table, pageSizeOptions = PAGE_SIZE_OPTIONS
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
       <p className="text-muted-foreground">
-        {formatNumber(rowCount)} {rowCount === 1 ? 'result' : 'results'}
+        {t('table.results', { count: rowCount, n: formatNumber(rowCount) })}
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <label htmlFor={pageSizeId} className="text-muted-foreground">
-            Rows per page
+            {t('table.rowsPerPage')}
           </label>
           <select
             id={pageSizeId}
@@ -35,7 +37,10 @@ export function DataTablePagination({ table, pageSizeOptions = PAGE_SIZE_OPTIONS
           </select>
         </div>
         <p aria-live="polite">
-          Page {formatNumber(pageIndex + 1)} of {formatNumber(pageCount)}
+          {t('table.pageOf', {
+            page: formatNumber(pageIndex + 1),
+            total: formatNumber(pageCount),
+          })}
         </p>
         <div className="flex gap-2">
           <Button
@@ -44,7 +49,7 @@ export function DataTablePagination({ table, pageSizeOptions = PAGE_SIZE_OPTIONS
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            {t('table.previous')}
           </Button>
           <Button
             variant="outline"
@@ -52,7 +57,7 @@ export function DataTablePagination({ table, pageSizeOptions = PAGE_SIZE_OPTIONS
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            {t('table.next')}
           </Button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form/FormAlert';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,6 @@ import {
 import {
   EmailCell,
   SignInMethods,
-  capitalize,
   formatDate,
   formatDateTime,
 } from '@/components/users/userDisplay';
@@ -29,19 +29,26 @@ function Field({ label, children }) {
 }
 
 function StatusHistory({ history }) {
+  const { t } = useTranslation();
   if (!history.length) {
-    return <p className="text-sm text-muted-foreground">No status changes yet.</p>;
+    return <p className="text-sm text-muted-foreground">{t('users.drawer.historyEmpty')}</p>;
   }
   // The server sends the newest change first.
   return (
-    <ol aria-label="Status history" className="flex flex-col gap-3">
+    <ol aria-label={t('users.drawer.historyTitle')} className="flex flex-col gap-3">
       {history.map((change) => (
         <li key={change.id} className="rounded-md border p-3 text-sm">
           <p className="font-medium">
-            {capitalize(change.from)} to {capitalize(change.to)}
+            {t('users.drawer.historyChange', {
+              from: t(`users.statusTitle.${change.from}`),
+              to: t(`users.statusTitle.${change.to}`),
+            })}
           </p>
           <p className="text-muted-foreground">
-            by {change.changedByName} on {formatDateTime(change.at)}
+            {t('users.drawer.historyBy', {
+              name: change.changedByName,
+              date: formatDateTime(change.at),
+            })}
           </p>
           {change.reason && <p className="mt-1">{change.reason}</p>}
         </li>
@@ -51,31 +58,34 @@ function StatusHistory({ history }) {
 }
 
 function Details({ user, history }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-6 px-4 pb-4">
       <dl className="grid grid-cols-2 gap-4">
-        <Field label="Email">
+        <Field label={t('users.drawer.email')}>
           <EmailCell user={user} />
         </Field>
-        <Field label="Telegram">{user.telegramUsername ? `@${user.telegramUsername}` : '—'}</Field>
-        <Field label="Sign-in methods">
+        <Field label={t('users.drawer.telegram')}>
+          {user.telegramUsername ? `@${user.telegramUsername}` : '—'}
+        </Field>
+        <Field label={t('users.drawer.methods')}>
           <SignInMethods user={user} />
         </Field>
-        <Field label="Role">
-          <Badge variant="secondary">{user.role}</Badge>
+        <Field label={t('users.drawer.role')}>
+          <Badge variant="secondary">{t(`users.role.${user.role}`)}</Badge>
         </Field>
-        <Field label="Status">
-          <StatusBadge status={user.status} label={user.status} />
+        <Field label={t('users.drawer.status')}>
+          <StatusBadge status={user.status} label={t(`users.status.${user.status}`)} />
         </Field>
-        {user.statusReason && <Field label="Reason">{user.statusReason}</Field>}
-        <Field label="Signed up">{formatDate(user.createdAt)}</Field>
-        <Field label="Last login">
-          {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}
+        {user.statusReason && <Field label={t('users.drawer.reason')}>{user.statusReason}</Field>}
+        <Field label={t('users.drawer.createdAt')}>{formatDate(user.createdAt)}</Field>
+        <Field label={t('users.drawer.lastLoginAt')}>
+          {user.lastLoginAt ? formatDate(user.lastLoginAt) : t('users.drawer.never')}
         </Field>
       </dl>
 
       <section className="flex flex-col gap-2">
-        <h3 className="font-medium">Status history</h3>
+        <h3 className="font-medium">{t('users.drawer.historyTitle')}</h3>
         <StatusHistory history={history} />
       </section>
 
@@ -85,11 +95,11 @@ function Details({ user, history }) {
           variant="outline"
           disabled
           className="w-fit"
-          title="Available once Movements ships."
+          title={t('users.drawer.movementsLater')}
         >
-          View movements
+          {t('users.drawer.viewMovements')}
         </Button>
-        <p className="text-xs text-muted-foreground">Available once Movements ships.</p>
+        <p className="text-xs text-muted-foreground">{t('users.drawer.movementsLater')}</p>
       </section>
     </div>
   );
@@ -97,18 +107,19 @@ function Details({ user, history }) {
 
 /** Side panel with one user's profile and status history. Open while `userId` is set. */
 export function UserDrawer({ userId, onClose }) {
+  const { t } = useTranslation();
   const detail = useUser(userId);
 
   return (
     <Sheet open={Boolean(userId)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="overflow-y-auto sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>{detail.data?.user.name ?? 'User details'}</SheetTitle>
-          <SheetDescription>Profile and status history</SheetDescription>
+          <SheetTitle>{detail.data?.user.name ?? t('users.drawer.defaultTitle')}</SheetTitle>
+          <SheetDescription>{t('users.drawer.description')}</SheetDescription>
         </SheetHeader>
         {detail.isPending && !detail.error && (
           <p role="status" className="px-4 text-sm text-muted-foreground">
-            Loading…
+            {t('users.drawer.loading')}
           </p>
         )}
         {detail.error && (

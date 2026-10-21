@@ -7,6 +7,7 @@ import {
   UsersIcon,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,15 +23,16 @@ import { SidebarNav, SkipLink } from './SidebarNav';
 
 // Pages are added here as their milestones land. `adminOnly` items are hidden from staff.
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboardIcon, end: true },
-  { to: '/products', label: 'Products', icon: PackageIcon },
-  { to: '/categories', label: 'Categories', icon: TagsIcon },
-  { to: '/suppliers', label: 'Suppliers', icon: TruckIcon },
-  { to: '/users', label: 'Users', icon: UsersIcon, adminOnly: true, badge: true },
+  { to: '/', labelKey: 'layout.nav.dashboard', icon: LayoutDashboardIcon, end: true },
+  { to: '/products', labelKey: 'layout.nav.products', icon: PackageIcon },
+  { to: '/categories', labelKey: 'layout.nav.categories', icon: TagsIcon },
+  { to: '/suppliers', labelKey: 'layout.nav.suppliers', icon: TruckIcon },
+  { to: '/users', labelKey: 'layout.nav.users', icon: UsersIcon, adminOnly: true, badge: true },
 ];
 
 /** Navy sidebar from `lg` up; below that a navy top bar whose menu opens the same navigation. */
 export function AppLayout() {
+  const { t } = useTranslation();
   const { data: user } = useMe();
   const logout = useLogout();
   const isAdmin = user?.role === 'admin';
@@ -60,7 +62,7 @@ export function AppLayout() {
               <Button
                 variant="ghost"
                 size="sm"
-                aria-label="Open menu"
+                aria-label={t('layout.openMenu')}
                 className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring"
               >
                 <MenuIcon className="size-5" aria-hidden="true" />
@@ -70,8 +72,8 @@ export function AppLayout() {
               side="left"
               className="w-60 border-sidebar-accent bg-sidebar p-0 text-sidebar-foreground sm:max-w-60"
             >
-              <SheetTitle className="sr-only">Menu</SheetTitle>
-              <SheetDescription className="sr-only">Main navigation</SheetDescription>
+              <SheetTitle className="sr-only">{t('layout.menu')}</SheetTitle>
+              <SheetDescription className="sr-only">{t('layout.mainNavigation')}</SheetDescription>
               <SidebarNav {...navProps} onNavigate={() => setMenuOpen(false)} />
             </SheetContent>
           </Sheet>

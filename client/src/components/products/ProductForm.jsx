@@ -1,6 +1,7 @@
 import { createProductSchema } from '@inventory/shared/schemas';
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
@@ -69,6 +70,7 @@ export function ProductForm({
   onCancel,
   onCloseAutoFocus,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     control,
@@ -92,7 +94,10 @@ export function ProductForm({
   const current = product?.supplier;
   const supplierOptions =
     current && !suppliers.some((supplier) => supplier.id === current.id)
-      ? [...suppliers, { id: current.id, name: `${current.name} (inactive)` }]
+      ? [
+          ...suppliers,
+          { id: current.id, name: t('products.form.inactiveSupplier', { name: current.name }) },
+        ]
       : suppliers;
 
   async function submit(values) {
@@ -110,24 +115,32 @@ export function ProductForm({
       <SheetContent className="w-full sm:max-w-lg" onCloseAutoFocus={onCloseAutoFocus}>
         <form noValidate onSubmit={handleSubmit(submit)} className="flex min-h-0 flex-1 flex-col">
           <SheetHeader>
-            <SheetTitle>{product ? 'Edit product' : 'Add product'}</SheetTitle>
+            <SheetTitle>
+              {product ? t('products.form.editTitle') : t('products.form.addTitle')}
+            </SheetTitle>
             <SheetDescription>
-              SKUs are unique, ignoring letter case.{' '}
-              {product
-                ? 'Change stock with stock actions.'
-                : 'Set an initial quantity to record it as the first stock receipt.'}
+              {product ? t('products.form.descriptionEdit') : t('products.form.descriptionAdd')}
             </SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-4 px-4">
             <FormAlert>{formError}</FormAlert>
             <TextField
               id="product-title"
-              label="Title"
+              label={t('products.form.titleLabel')}
               error={errors.title}
               {...register('title')}
             />
-            <TextField id="product-sku" label="SKU" error={errors.sku} {...register('sku')} />
-            <Field id="product-description" label="Description" error={errors.description}>
+            <TextField
+              id="product-sku"
+              label={t('products.form.sku')}
+              error={errors.sku}
+              {...register('sku')}
+            />
+            <Field
+              id="product-description"
+              label={t('products.form.description')}
+              error={errors.description}
+            >
               {(describedBy) => (
                 <Textarea
                   id="product-description"
@@ -137,7 +150,11 @@ export function ProductForm({
                 />
               )}
             </Field>
-            <Field id="product-category" label="Category" error={errors.category}>
+            <Field
+              id="product-category"
+              label={t('products.form.category')}
+              error={errors.category}
+            >
               {(describedBy) => (
                 <Controller
                   name="category"
@@ -151,7 +168,7 @@ export function ProductForm({
                         aria-invalid={Boolean(errors.category)}
                         aria-describedby={describedBy}
                       >
-                        <SelectValue placeholder="Choose a category" />
+                        <SelectValue placeholder={t('products.form.categoryPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
@@ -165,7 +182,11 @@ export function ProductForm({
                 />
               )}
             </Field>
-            <Field id="product-supplier" label="Supplier" error={errors.supplier}>
+            <Field
+              id="product-supplier"
+              label={t('products.form.supplier')}
+              error={errors.supplier}
+            >
               {(describedBy) => (
                 <Controller
                   name="supplier"
@@ -185,7 +206,7 @@ export function ProductForm({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={NO_SUPPLIER}>No supplier</SelectItem>
+                        <SelectItem value={NO_SUPPLIER}>{t('products.form.noSupplier')}</SelectItem>
                         {supplierOptions.map((supplier) => (
                           <SelectItem key={supplier.id} value={supplier.id}>
                             {supplier.name}
@@ -200,7 +221,7 @@ export function ProductForm({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <TextField
                 id="product-price"
-                label="Price"
+                label={t('products.form.price')}
                 inputMode="decimal"
                 autoComplete="off"
                 error={errors.price}
@@ -208,7 +229,7 @@ export function ProductForm({
               />
               <TextField
                 id="product-reorder-level"
-                label="Reorder level"
+                label={t('products.form.reorderLevel')}
                 inputMode="numeric"
                 autoComplete="off"
                 error={errors.reorderLevel}
@@ -218,7 +239,7 @@ export function ProductForm({
             {!product && (
               <TextField
                 id="product-initial-quantity"
-                label="Initial quantity"
+                label={t('products.form.initialQuantity')}
                 inputMode="numeric"
                 autoComplete="off"
                 error={errors.initialQuantity}
@@ -228,10 +249,10 @@ export function ProductForm({
           </div>
           <SheetFooter className="flex-col-reverse sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              {t('products.form.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save'}
+              {isSubmitting ? t('products.form.saving') : t('products.form.save')}
             </Button>
           </SheetFooter>
         </form>

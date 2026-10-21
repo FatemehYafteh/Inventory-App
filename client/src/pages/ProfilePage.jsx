@@ -13,6 +13,7 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import { useForgotPassword, useMe, useUpdateProfile } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
+import { formatNumber } from '@/lib/format';
 
 const RESET_COOLDOWN_SECONDS = 60;
 
@@ -39,6 +40,7 @@ function ProfileSection({ id, title, description, region = true, children }) {
 }
 
 function NameForm({ user }) {
+  const { t } = useTranslation();
   const updateProfile = useUpdateProfile();
   const {
     register,
@@ -57,45 +59,52 @@ function NameForm({ user }) {
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      {updateProfile.isSuccess && <FormAlert tone="success">Name saved.</FormAlert>}
+      {updateProfile.isSuccess && <FormAlert tone="success">{t('profile.name.saved')}</FormAlert>}
       <FormAlert>{formError}</FormAlert>
       <TextField
         id="name"
-        label="Name"
+        label={t('profile.name.title')}
         autoComplete="name"
         error={errors.name}
         {...register('name')}
       />
       <Button type="submit" className="self-start" disabled={updateProfile.isPending}>
-        {updateProfile.isPending ? 'Saving…' : 'Save name'}
+        {updateProfile.isPending ? t('profile.name.saving') : t('profile.name.save')}
       </Button>
     </form>
   );
 }
 
 function SignInMethods({ user }) {
+  const { t } = useTranslation();
   return (
     <dl className="flex flex-col gap-4 text-sm">
       <div className="flex min-w-0 flex-col gap-1.5">
-        <dt className="text-muted-foreground">Email</dt>
+        <dt className="text-muted-foreground">{t('profile.signIn.email')}</dt>
         <dd className="flex min-w-0 flex-col items-start gap-1.5">
           <span className="font-medium [overflow-wrap:anywhere]">{user.email}</span>
           <StatusBadge
             status={user.emailVerified ? 'active' : 'pending'}
-            label={user.emailVerified ? 'Verified' : 'Not verified'}
+            label={
+              user.emailVerified ? t('profile.signIn.verified') : t('profile.signIn.notVerified')
+            }
           />
         </dd>
       </div>
       <div className="flex min-w-0 flex-col gap-1.5">
-        <dt className="text-muted-foreground">Telegram</dt>
+        <dt className="text-muted-foreground">{t('profile.signIn.telegram')}</dt>
         <dd className="flex min-w-0 flex-col items-start gap-1.5">
           <StatusBadge
             status={user.telegramConnected ? 'active' : 'inactive'}
-            label={user.telegramConnected ? 'Connected' : 'Not connected'}
+            label={
+              user.telegramConnected
+                ? t('profile.signIn.connected')
+                : t('profile.signIn.notConnected')
+            }
           />
           {user.telegramConnected && user.telegramUsername && (
             <span className="font-medium [overflow-wrap:anywhere]">
-              Connected as @{user.telegramUsername}
+              {t('profile.signIn.connectedAs', { username: user.telegramUsername })}
             </span>
           )}
         </dd>
@@ -107,6 +116,7 @@ function SignInMethods({ user }) {
 
 /** Password changes only go through the reset-by-email flow. */
 function PasswordReset({ email }) {
+  const { t } = useTranslation();
   const forgotPassword = useForgotPassword();
   const [secondsLeft, startCooldown] = useCountdown(0);
 
@@ -122,20 +132,18 @@ function PasswordReset({ email }) {
         disabled={secondsLeft > 0 || forgotPassword.isPending}
       >
         {forgotPassword.isPending
-          ? 'Sending…'
+          ? t('profile.password.sending')
           : secondsLeft > 0
-            ? `Send again in ${secondsLeft}s`
-            : 'Send password reset email'}
+            ? t('profile.password.sendAgainIn', { n: formatNumber(secondsLeft) })
+            : t('profile.password.send')}
       </Button>
       {forgotPassword.isSuccess && (
-        <FormAlert tone="success">Check {email} for a link to set a new password.</FormAlert>
+        <FormAlert tone="success">{t('profile.password.checkEmail', { email })}</FormAlert>
       )}
       <FormAlert>{errorMessage(forgotPassword.error)}</FormAlert>
     </div>
   );
 }
-
-const ROLE_LABELS = { admin: 'Admin', staff: 'Staff' };
 
 function initials(name, email) {
   const words = (name || email || '?').trim().split(/\s+/);
@@ -146,6 +154,7 @@ function initials(name, email) {
 
 /** Who is signed in, at a glance: avatar, name, email, role and account status. */
 function IdentityCard({ user }) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardContent className="flex min-w-0 items-center gap-4 p-6">
@@ -163,7 +172,9 @@ function IdentityCard({ user }) {
             <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">{user.email}</p>
           )}
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">{ROLE_LABELS[user.role] ?? user.role}</Badge>
+            <Badge variant="outline">
+              {t(`profile.roles.${user.role}`, { defaultValue: user.role })}
+            </Badge>
             <StatusBadge status={user.status} />
           </div>
         </div>
@@ -181,15 +192,15 @@ export function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Profile" description="Your name and the ways you sign in." />
+      <PageHeader title={t('profile.title')} description={t('profile.description')} />
       <div className="flex w-full max-w-5xl flex-col gap-6">
         <IdentityCard user={user} />
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
           <div className="flex min-w-0 flex-col gap-6">
             <ProfileSection
               id="name-heading"
-              title="Name"
-              description="How you appear in the app."
+              title={t('profile.name.title')}
+              description={t('profile.name.description')}
               region={false}
             >
               <NameForm user={user} />
@@ -203,16 +214,16 @@ export function ProfilePage() {
             </ProfileSection>
             <ProfileSection
               id="password-heading"
-              title="Password"
-              description="To set or change your password, we email you a link."
+              title={t('profile.password.title')}
+              description={t('profile.password.description')}
             >
               <PasswordReset email={user.email} />
             </ProfileSection>
           </div>
           <ProfileSection
             id="sign-in-methods-heading"
-            title="Sign-in methods"
-            description="How you log in to this account."
+            title={t('profile.signIn.title')}
+            description={t('profile.signIn.description')}
           >
             <SignInMethods user={user} />
           </ProfileSection>

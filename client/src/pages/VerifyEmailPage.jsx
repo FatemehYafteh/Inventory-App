@@ -1,4 +1,5 @@
 import { resendVerificationSchema } from '@inventory/shared/schemas';
+import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { RESEND_COOLDOWN_SECONDS } from '@/components/auth/ResendVerificationButton';
@@ -9,14 +10,19 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import { useResendVerification, useVerifyEmail } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
+import { formatNumber } from '@/lib/format';
 
-const backToLogin = (
-  <Link to="/login" className="underline">
-    Back to log in
-  </Link>
-);
+function BackToLogin() {
+  const { t } = useTranslation();
+  return (
+    <Link to="/login" className="underline">
+      {t('auth.common.backToLogin')}
+    </Link>
+  );
+}
 
 function ResendForm() {
+  const { t } = useTranslation();
   const resend = useResendVerification();
   const [secondsLeft, startCooldown] = useCountdown(0);
   const {
@@ -34,17 +40,13 @@ function ResendForm() {
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      {resend.isSuccess && (
-        <FormAlert tone="success">
-          If that account needs verifying, a new link is on its way. Check your inbox.
-        </FormAlert>
-      )}
+      {resend.isSuccess && <FormAlert tone="success">{t('auth.verify.resent')}</FormAlert>}
       <FormAlert>
         {resend.error && !resend.error.errors ? errorMessage(resend.error) : null}
       </FormAlert>
       <TextField
         id="email"
-        label="Email"
+        label={t('auth.common.email')}
         type="email"
         autoComplete="email"
         error={errors.email}
@@ -52,25 +54,26 @@ function ResendForm() {
       />
       <Button type="submit" disabled={resend.isPending || secondsLeft > 0}>
         {resend.isPending
-          ? 'Sending…'
+          ? t('auth.common.sending')
           : secondsLeft > 0
-            ? `Send again in ${secondsLeft}s`
-            : 'Send verification link'}
+            ? t('auth.verify.sendAgainIn', { n: formatNumber(secondsLeft) })
+            : t('auth.common.sendVerificationLink')}
       </Button>
     </form>
   );
 }
 
 export function VerifyEmailPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const verification = useVerifyEmail(token);
 
   if (token && verification.isPending) {
     return (
-      <AuthLayout title="Verifying your email">
+      <AuthLayout title={t('auth.verify.verifying')}>
         <p role="status" className="text-sm text-muted-foreground">
-          One moment…
+          {t('auth.verify.oneMoment')}
         </p>
       </AuthLayout>
     );
@@ -78,14 +81,12 @@ export function VerifyEmailPage() {
 
   if (token && verification.isSuccess) {
     return (
-      <AuthLayout title="Email verified">
+      <AuthLayout title={t('auth.verify.verified')}>
         <div className="flex flex-col gap-4 text-sm">
           <FormAlert tone="success">{verification.data.message}</FormAlert>
-          <p className="text-muted-foreground">
-            An admin will review your account. You can log in to check its status.
-          </p>
+          <p className="text-muted-foreground">{t('auth.verify.adminWillReview')}</p>
           <Button asChild>
-            <Link to="/login">Log in</Link>
+            <Link to="/login">{t('auth.common.logIn')}</Link>
           </Button>
         </div>
       </AuthLayout>
@@ -94,13 +95,9 @@ export function VerifyEmailPage() {
 
   return (
     <AuthLayout
-      title={token ? 'Link not valid' : 'Verify your email'}
-      description={
-        token
-          ? 'This verification link is invalid, expired or already used. Enter your email to get a new one.'
-          : 'Enter the email you signed up with and we will send a new verification link.'
-      }
-      footer={backToLogin}
+      title={token ? t('auth.common.linkNotValid') : t('auth.verify.title')}
+      description={token ? t('auth.verify.invalidDescription') : t('auth.verify.description')}
+      footer={<BackToLogin />}
     >
       {token && verification.error?.status >= 500 && (
         <div className="mb-4">

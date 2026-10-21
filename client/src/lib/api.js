@@ -1,4 +1,5 @@
 import axios from 'axios';
+import i18n from '@/i18n';
 
 // Auth calls whose 401 means "bad credentials" or "no session", not "access token expired".
 const NO_REFRESH_PATHS = new Set([
@@ -12,7 +13,6 @@ const NO_REFRESH_PATHS = new Set([
 const ACCESS_DENIED_CODES = new Set(['ACCOUNT_REJECTED', 'ACCOUNT_PENDING', 'PROFILE_INCOMPLETE']);
 // Sign-in calls show their own answer for a rejected account.
 const SIGN_IN_PATHS = new Set(['/auth/login', '/auth/telegram/verify']);
-const NETWORK_ERROR = 'Could not reach the server. Check your connection and try again.';
 
 export class ApiError extends Error {
   constructor(status, body) {
@@ -64,7 +64,7 @@ function refreshSession() {
 // carrying the server's { message, code, errors, details }.
 http.interceptors.response.use(undefined, async (error) => {
   const { config, response } = error;
-  if (!response) throw new ApiError(0, { message: NETWORK_ERROR });
+  if (!response) throw new ApiError(0, { message: i18n.t('common.networkError') });
 
   const canRefresh = response.status === 401 && !NO_REFRESH_PATHS.has(config.url);
   if (canRefresh && !config.retriedAfterRefresh) {

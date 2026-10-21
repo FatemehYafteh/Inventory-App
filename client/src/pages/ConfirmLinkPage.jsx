@@ -1,5 +1,6 @@
 import { accountLinkConfirmSchema } from '@inventory/shared/schemas';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { FormAlert } from '@/components/form/FormAlert';
@@ -11,18 +12,22 @@ import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
 const passwordSchema = accountLinkConfirmSchema.pick({ password: true });
 
-const backToLogin = (
-  <Link to="/login" className="underline">
-    Back to log in
-  </Link>
-);
+function BackToLogin() {
+  const { t } = useTranslation();
+  return (
+    <Link to="/login" className="underline">
+      {t('auth.common.backToLogin')}
+    </Link>
+  );
+}
 
 function InvalidLink() {
+  const { t } = useTranslation();
   return (
     <AuthLayout
-      title="Link not valid"
-      description="This link is invalid, expired or already used, or the request it was for has changed. Nothing was linked."
-      footer={backToLogin}
+      title={t('auth.common.linkNotValid')}
+      description={t('auth.confirmLink.invalidDescription')}
+      footer={<BackToLogin />}
     />
   );
 }
@@ -33,6 +38,7 @@ function InvalidLink() {
  * Signs no one in.
  */
 export function ConfirmLinkPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   // Kept in state so the token can be removed from the address bar (and browser history).
   const [token] = useState(() => searchParams.get('token'));
@@ -59,11 +65,11 @@ export function ConfirmLinkPage() {
 
   if (confirm.isSuccess) {
     return (
-      <AuthLayout title="Account linked">
+      <AuthLayout title={t('auth.confirmLink.linked')}>
         <div className="flex flex-col gap-4 text-sm">
           <FormAlert tone="success">{confirm.data.message}</FormAlert>
           <Button asChild>
-            <Link to="/login">Log in</Link>
+            <Link to="/login">{t('auth.common.logIn')}</Link>
           </Button>
         </div>
       </AuthLayout>
@@ -74,22 +80,22 @@ export function ConfirmLinkPage() {
 
   return (
     <AuthLayout
-      title="Confirm account link"
-      description="A Telegram account asked to sign in to your account. If it was you, enter your account password to confirm. If not, close this page and nothing will change."
-      footer={backToLogin}
+      title={t('auth.confirmLink.title')}
+      description={t('auth.confirmLink.description')}
+      footer={<BackToLogin />}
     >
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <FormAlert>{formError}</FormAlert>
         <TextField
           id="password"
-          label="Password"
+          label={t('auth.common.password')}
           type="password"
           autoComplete="current-password"
           error={errors.password}
           {...register('password')}
         />
         <Button type="submit" disabled={confirm.isPending}>
-          {confirm.isPending ? 'Confirming…' : 'Confirm link'}
+          {confirm.isPending ? t('auth.confirmLink.submitting') : t('auth.confirmLink.submit')}
         </Button>
       </form>
     </AuthLayout>
