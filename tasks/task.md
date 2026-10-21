@@ -123,7 +123,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | 7.3 | Initial stock when a product is created ("Initial stock" receive in the same transaction) | ✅ Done |
 | 7.4 | Inline +/- buttons: optimistic update, rollback on error, rapid clicks queued | ✅ Done |
 | 7.5 | Adjust stock modal (Receive, Ship, Adjust) | ✅ Done |
-| 7.6 | Stock history modal | ⬜ To do |
+| 7.6 | Stock history modal | ✅ Done |
 
 ## M8: Movements, dashboard and CSV export [sub-PRD 08](../docs/prds/08-movements-dashboard-export.md)
 

@@ -10,3 +10,10 @@ export function formatPrice(value) {
 export function formatDate(value) {
   return value ? date.format(new Date(value)) : '';
 }
+
+const dateTime = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+
+/** An ISO timestamp with the time, e.g. `Oct 14, 2026, 10:30 AM`. */
+export function formatDateTime(value) {
+  return value ? dateTime.format(new Date(value)) : '';
+}

@@ -8,6 +8,7 @@ import { ProductFilters, STATUS_OPTIONS } from '@/components/products/ProductFil
 import { ProductForm } from '@/components/products/ProductForm';
 import { ProductTable } from '@/components/products/ProductTable';
 import { StockAdjustDialog } from '@/components/products/StockAdjustDialog';
+import { StockHistoryDialog } from '@/components/products/StockHistoryDialog';
 import { Button } from '@/components/ui/button';
 import { useReturnFocus } from '@/hooks/useReturnFocus';
 import { useMe } from '@/lib/auth';
@@ -126,6 +127,14 @@ export function ProductsPage() {
     },
     [remember],
   );
+  const [historyOf, setHistoryOf] = useState(null);
+  const openHistory = useCallback(
+    (product) => {
+      remember();
+      setHistoryOf(product);
+    },
+    [remember],
+  );
   const [archiving, setArchiving] = useState(null);
   const [actionError, setActionError] = useState(null);
   const openArchive = useCallback(
@@ -192,6 +201,7 @@ export function ProductsPage() {
         onEdit={openForm}
         onStep={step}
         onAdjust={openAdjust}
+        onHistory={openHistory}
         canArchive={isAdmin}
         onArchive={openArchive}
         onRestore={restore}
@@ -240,6 +250,14 @@ export function ProductsPage() {
             await changeStock.mutateAsync({ id: adjusting.id, ...values });
             setAdjustingId(null);
           }}
+        />
+      )}
+      {historyOf && (
+        <StockHistoryDialog
+          key={historyOf.id}
+          product={historyOf}
+          onClose={() => setHistoryOf(null)}
+          onCloseAutoFocus={onCloseAutoFocus}
         />
       )}
       {form && (

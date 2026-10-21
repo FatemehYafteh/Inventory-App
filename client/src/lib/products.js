@@ -138,3 +138,17 @@ export function useChangeStock() {
     api(`/products/${id}/stock`, { method: 'POST', body }),
   );
 }
+
+/**
+ * One page of a product's movements, newest first: `{ items, total, page, limit }`. Each item has
+ * type, quantityChange, quantityBefore, quantityAfter, supplier (or null), note and
+ * `performedBy { id, name }`. Pass a null `id` to leave it idle.
+ */
+export function useMovements(id, { page, limit }) {
+  return useQuery({
+    queryKey: [...PRODUCTS_QUERY_KEY, 'movements', id, { page, limit }],
+    queryFn: () => api(`/products/${id}/movements?page=${page}&limit=${limit}`),
+    enabled: Boolean(id),
+    placeholderData: keepPreviousData,
+  });
+}
