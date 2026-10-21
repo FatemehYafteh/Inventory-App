@@ -1,18 +1,23 @@
+import { translate } from '../i18n/index.js';
 import { accountApprovedTemplate, accountRejectedTemplate } from './mail.templates.js';
 
 // What a user is told for the status they were moved to. Pending has no entry: moving a user
 // back to the queue is neither good nor bad news. The bot message never carries the reason.
+// Email and bot text follow the user's saved language (English when missing or unknown).
 const NOTICES = {
   active: {
     email: ({ user, config }) =>
-      accountApprovedTemplate({ name: user.name, loginLink: `${config.appUrl}/login` }),
-    bot: ({ config }) =>
-      `Your Inventory account was approved. You can now log in at ${config.appUrl}.`,
+      accountApprovedTemplate(
+        { name: user.name, loginLink: `${config.appUrl}/login` },
+        user.language,
+      ),
+    bot: ({ user, config }) =>
+      translate(user.language, 'bot.notify.approved', { appUrl: config.appUrl }),
   },
   rejected: {
-    email: ({ user, reason }) => accountRejectedTemplate({ name: user.name, reason }),
-    bot: () =>
-      'Your Inventory account was not approved. Contact an admin if you think this is a mistake.',
+    email: ({ user, reason }) =>
+      accountRejectedTemplate({ name: user.name, reason }, user.language),
+    bot: ({ user }) => translate(user.language, 'bot.notify.rejected'),
   },
 };
 

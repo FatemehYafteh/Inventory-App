@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { Category } from '../models/Category.js';
 import { Product } from '../models/Product.js';
@@ -6,12 +7,12 @@ import { AppError } from '../utils/AppError.js';
 const CASE_INSENSITIVE = { locale: 'en', strength: 2 };
 
 function notFound() {
-  return new AppError(404, 'NOT_FOUND', 'Category not found');
+  return new AppError(404, 'NOT_FOUND', m.CATEGORY_NOT_FOUND);
 }
 
 function duplicateTitle() {
-  return new AppError(409, 'DUPLICATE_NAME', 'A category with this title already exists', {
-    title: 'A category with this title already exists',
+  return new AppError(409, 'DUPLICATE_NAME', m.CATEGORY_TITLE_EXISTS, {
+    title: m.CATEGORY_TITLE_EXISTS,
   });
 }
 

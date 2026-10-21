@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import { isProfileComplete } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 
@@ -8,11 +9,11 @@ import { AppError } from '../utils/AppError.js';
  */
 export function requireProfile(req, _res, next) {
   if (isProfileComplete(req.user)) return next();
-  next(new AppError(403, 'PROFILE_INCOMPLETE', 'Complete your profile to continue.'));
+  next(new AppError(403, 'PROFILE_INCOMPLETE', m.PROFILE_INCOMPLETE));
 }
 
 /** The Complete profile endpoints: only for profiles that are not complete yet. */
 export function requireIncompleteProfile(req, _res, next) {
   if (!isProfileComplete(req.user)) return next();
-  next(new AppError(409, 'PROFILE_COMPLETE', 'Your profile is already complete.'));
+  next(new AppError(409, 'PROFILE_COMPLETE', m.PROFILE_ALREADY_COMPLETE));
 }

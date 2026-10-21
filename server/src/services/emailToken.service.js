@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import { EmailToken } from '../models/EmailToken.js';
 import { AppError } from '../utils/AppError.js';
 import { hashToken, randomToken } from '../utils/crypto.js';
@@ -12,7 +13,7 @@ export const EMAIL_TOKEN_TTL_MS = {
 export const RESEND_COOLDOWN_MS = 60 * 1000;
 
 function invalidToken() {
-  return new AppError(400, 'INVALID_TOKEN', 'This link is invalid or has expired.');
+  return new AppError(400, 'INVALID_TOKEN', m.LINK_INVALID_OR_EXPIRED);
 }
 
 /** True when a token of this type was issued to the user within the resend cooldown. */

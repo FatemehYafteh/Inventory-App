@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
@@ -21,7 +22,7 @@ export const MAX_FAILED_LOGINS = 5;
 export const LOCK_DURATION_MS = 15 * 60 * 1000;
 
 function invalidCredentials() {
-  return new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
+  return new AppError(401, 'INVALID_CREDENTIALS', m.CREDENTIALS_INVALID);
 }
 
 /**
@@ -81,7 +82,7 @@ export async function loginWithPassword({ email, password }, meta, config) {
   if (!user.emailVerified) throw invalidCredentials();
 
   if (user.status === 'rejected') {
-    throw new AppError(403, 'ACCOUNT_REJECTED', 'Access denied');
+    throw new AppError(403, 'ACCOUNT_REJECTED', m.ACCESS_DENIED);
   }
 
   user.failedLoginCount = 0;
@@ -118,7 +119,10 @@ export async function logout(refreshToken, config) {
 export async function sendVerificationLink(user, email, { config, mailer }) {
   const token = await issueEmailToken({ userId: user._id, type: 'verify_email', email }, config);
   const link = `${config.appUrl}/verify-email?token=${encodeURIComponent(token)}`;
-  mailer.sendInBackground({ to: email, ...verifyEmailTemplate({ name: user.name, link }) });
+  mailer.sendInBackground({
+    to: email,
+    ...verifyEmailTemplate({ name: user.name, link }, user.language),
+  });
 }
 
 /** Emails a verification link, unless one was sent within the cooldown. */
@@ -184,7 +188,7 @@ export async function verifyEmail({ token }, config) {
         before = null; // Another User holds the address now.
       }
       if (!before) {
-        throw new AppError(400, 'INVALID_TOKEN', 'This link is invalid or has expired.');
+        throw new AppError(400, 'INVALID_TOKEN', m.LINK_INVALID_OR_EXPIRED);
       }
       await applyAdminBootstrap(before._id, config, { session });
     });
@@ -211,7 +215,10 @@ export async function forgotPassword({ email }, { config, mailer }) {
   const link = `${config.appUrl}/reset-password?token=${encodeURIComponent(token)}`;
   mailer.sendInBackground({
     to: user.email,
-    ...resetPasswordTemplate({ name: user.name, link, hasPassword: Boolean(user.passwordHash) }),
+    ...resetPasswordTemplate(
+      { name: user.name, link, hasPassword: Boolean(user.passwordHash) },
+      user.language,
+    ),
   });
 }
 
@@ -238,7 +245,7 @@ export async function resetPassword({ token, password }, { config, mailer }) {
         { session, new: false },
       ).select('+passwordHash');
       if (!before) {
-        throw new AppError(400, 'INVALID_TOKEN', 'This link is invalid or has expired.');
+        throw new AppError(400, 'INVALID_TOKEN', m.LINK_INVALID_OR_EXPIRED);
       }
       await revokeAllForUser(before._id, { session });
     });
@@ -248,10 +255,13 @@ export async function resetPassword({ token, password }, { config, mailer }) {
 
   mailer.sendInBackground({
     to: before.email,
-    ...passwordChangedTemplate({
-      name: before.name,
-      forgotLink: `${config.appUrl}/forgot-password`,
-      firstPassword: !before.passwordHash,
-    }),
+    ...passwordChangedTemplate(
+      {
+        name: before.name,
+        forgotLink: `${config.appUrl}/forgot-password`,
+        firstPassword: !before.passwordHash,
+      },
+      before.language,
+    ),
   });
 }

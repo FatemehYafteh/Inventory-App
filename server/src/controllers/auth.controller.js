@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import { REFRESH_COOKIE, clearSessionCookies, setSessionCookies } from '../config/cookies.js';
 import { telegramStatusQuerySchema } from '@inventory/shared/schemas';
 import * as accountLink from '../services/accountLink.service.js';
@@ -119,7 +120,7 @@ export async function telegramStart(req, res) {
 
 export async function telegramStatus(req, res) {
   const parsed = telegramStatusQuerySchema.safeParse(req.query);
-  if (!parsed.success) throw new AppError(400, 'VALIDATION_ERROR', 'Validation failed');
+  if (!parsed.success) throw new AppError(400, 'VALIDATION_ERROR', m.VALIDATION_FAILED);
   res.json(await telegramAuth.getStatus(parsed.data.requestId, req.user));
 }
 

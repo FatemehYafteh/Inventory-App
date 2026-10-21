@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import { rateLimit } from 'express-rate-limit';
 import { AppError } from '../utils/AppError.js';
 
@@ -11,8 +12,7 @@ function limiter({ windowMs, limit, keyGenerator }) {
     keyGenerator,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
-    handler: (_req, _res, next) =>
-      next(new AppError(429, 'RATE_LIMITED', 'Too many attempts. Please try again later.')),
+    handler: (_req, _res, next) => next(new AppError(429, 'RATE_LIMITED', m.TOO_MANY_ATTEMPTS)),
   });
 }
 

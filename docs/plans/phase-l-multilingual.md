@@ -3,7 +3,7 @@
 Inputs: `tasks/task.md` (Phase L, L0 to L5), `shared/schemas`, `server/src/services/mail.service.js`, `mail.templates.js`, `server/src/bot/bot.js`, `userNotify.service.js`, `client/src/components/ui/calendar.jsx`, `client/src/lib/format.js`, `GLOSSARY.md`.
 Interview held on 2026-10-21 (questions Q1 to Q15, in three rounds). Q9 was deferred to L3 by the owner.
 
-**Status: plan only. Nothing is implemented, and no GitHub issues exist yet. Issues L1 to L5 are created after the owner approves this plan.**
+**Status (2026-10-21): approved and implemented as issues #34 to #38 (L1 to L5), one commit each on stacked local branches. Persian texts are drafts for the owner to proofread.**
 
 This plan has four separate parts: **1 Decisions** (settled with the owner), **2 Assumptions** (taken as true; what breaks if wrong), **3 Changes** (scope, behavior, data, tickets), **4 Unknowns** (open, with who resolves them).
 

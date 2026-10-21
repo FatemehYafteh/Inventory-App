@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { translateMessage } from '@/lib/errors';
 
 /** Label + input + error message, wired for accessibility. Spread `register(name)` into it. */
 export const TextField = forwardRef(function TextField({ id, label, error, ...props }, ref) {
@@ -17,7 +18,7 @@ export const TextField = forwardRef(function TextField({ id, label, error, ...pr
       />
       {error && (
         <p id={errorId} className="text-sm text-danger">
-          {error.message}
+          {translateMessage(error.message)}
         </p>
       )}
     </div>

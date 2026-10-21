@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { StatusChange } from '../models/StatusChange.js';
 import { User, isProfileComplete } from '../models/User.js';
@@ -11,14 +12,12 @@ export const TRANSITIONS = {
   rejected: ['active', 'pending'],
 };
 
-const notFound = () => new AppError(404, 'NOT_FOUND', 'User not found.');
+const notFound = () => new AppError(404, 'NOT_FOUND', m.USER_NOT_FOUND);
 const conflict = (code, message) => new AppError(409, code, message);
 
-const invalidTransition = () =>
-  conflict('INVALID_TRANSITION', 'This change is not allowed, or someone else already made it.');
-const cannotChangeSelf = () =>
-  conflict('CANNOT_CHANGE_SELF', 'You cannot reject or demote yourself.');
-const lastAdmin = () => conflict('LAST_ADMIN', 'There must always be at least one active admin.');
+const invalidTransition = () => conflict('INVALID_TRANSITION', m.STATUS_TRANSITION_NOT_ALLOWED);
+const cannotChangeSelf = () => conflict('CANNOT_CHANGE_SELF', m.CANNOT_CHANGE_SELF);
+const lastAdmin = () => conflict('LAST_ADMIN', m.LAST_ADMIN);
 
 async function inTransaction(work) {
   const session = await mongoose.startSession();
@@ -45,7 +44,7 @@ async function lockAdmin(actorId, session) {
     { $currentDate: { updatedAt: true } },
     { session, new: true },
   );
-  if (!admin) throw new AppError(403, 'FORBIDDEN', 'You do not have access to this.');
+  if (!admin) throw new AppError(403, 'FORBIDDEN', m.NO_ACCESS);
   return admin;
 }
 
@@ -80,7 +79,7 @@ export async function changeStatus({ actor, userId, to, reason }, deps) {
     if (!TRANSITIONS[from].includes(to)) throw invalidTransition();
     if (to === 'rejected' && target.id === admin.id) throw cannotChangeSelf();
     if (to === 'active' && !isProfileComplete(target)) {
-      throw conflict('PROFILE_INCOMPLETE', 'This user has not completed their profile yet.');
+      throw conflict('PROFILE_INCOMPLETE', m.USER_PROFILE_INCOMPLETE);
     }
     if (to === 'rejected' && target.role === 'admin' && from === 'active') {
       await assertAnotherActiveAdmin(target._id, session);
@@ -123,7 +122,7 @@ export async function changeRole({ actor, userId, role }) {
     const target = await loadTarget(userId, session);
 
     if (target.status !== 'active') {
-      throw conflict('USER_NOT_ACTIVE', 'Only active users can change role.');
+      throw conflict('USER_NOT_ACTIVE', m.USER_NOT_ACTIVE);
     }
     if (target.role === role) throw invalidTransition();
     if (target.id === admin.id) throw cannotChangeSelf();

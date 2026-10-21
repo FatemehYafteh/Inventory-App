@@ -2,6 +2,7 @@ import { randomInt, timingSafeEqual } from 'node:crypto';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../models/AuthRequest.js';
 import { User, isPlaceholder } from '../models/User.js';
+import { languageOf, translate } from '../i18n/index.js';
 import { AppError } from '../utils/AppError.js';
 import { hashToken, randomToken } from '../utils/crypto.js';
 import { startSession } from './auth.service.js';
@@ -26,15 +27,33 @@ export const START_REPLIES = {
   locked: 'Too many wrong codes. Try again later.',
 };
 
-function codeMessage(code, purpose, config) {
-  const intro =
-    purpose === 'connect'
-      ? `Your code to connect Telegram to your account is ${code}.`
-      : `Your sign-in code is ${code}.`;
-  return (
-    `${intro} It expires in 2 minutes. ` +
-    `Only enter it on ${config.appUrl}. Never share it with anyone.`
-  );
+/** A bot reply in `language` (English for an unknown language). `key` is a START_REPLIES key. */
+export function startReply(key, language) {
+  return translate(language, `bot.start.${key}`);
+}
+
+/** Telegram's `language_code` (an IETF tag such as `fa` or `fa-IR`) as a supported language. */
+export function languageFromTelegram(languageCode) {
+  return typeof languageCode === 'string' && /^fa(-|$)/i.test(languageCode) ? 'fa' : 'en';
+}
+
+/**
+ * The language a bot reply to this Telegram account uses: the linked User's saved language,
+ * else Telegram's `language_code`, else English.
+ */
+export async function replyLanguage(telegramId, languageCode) {
+  if (telegramId !== undefined && telegramId !== null) {
+    const linked = await User.findOne({ telegramId: String(telegramId) }).select('language');
+    if (linked) return languageOf(linked);
+  }
+  return languageFromTelegram(languageCode);
+}
+
+function codeMessage(code, purpose, config, language) {
+  const intro = translate(language, purpose === 'connect' ? 'bot.code.connect' : 'bot.code.login', {
+    code,
+  });
+  return `${intro} ${translate(language, 'bot.code.tail', { appUrl: config.appUrl })}`;
 }
 
 function invalidCode() {
@@ -188,11 +207,6 @@ async function startRequest(
   };
 }
 
-/** Telegram's `language_code` (an IETF tag such as `fa` or `fa-IR`) as a supported language. */
-export function languageFromTelegram(languageCode) {
-  return typeof languageCode === 'string' && /^fa(-|$)/i.test(languageCode) ? 'fa' : 'en';
-}
-
 /**
  * Pressing Start in Telegram. Claims the pending request for this Telegram account and
  * returns the reply the bot sends to the chat (the code, or a short help text).
@@ -202,13 +216,14 @@ export async function handleStart(
   { startToken, telegramId, firstName, lastName, username, languageCode },
   config,
 ) {
-  if (!startToken) return START_REPLIES.help;
+  const replyIn = await replyLanguage(telegramId, languageCode);
+  if (!startToken) return startReply('help', replyIn);
 
   const startTokenHash = hashToken(startToken, config.jwt.refreshSecret);
   const now = new Date();
   const pending = { startTokenHash, status: 'pending', expiresAt: { $gt: now } };
   const request = await AuthRequest.findOne(pending).select('purpose expiresAt');
-  if (!request) return START_REPLIES.expired;
+  if (!request) return startReply('expired', replyIn);
 
   const identity = {
     telegramId: String(telegramId),
@@ -228,14 +243,16 @@ export async function handleStart(
     const claimed = await AuthRequest.findOneAndUpdate(pending, {
       $set: { ...identity, status: refusal },
     });
-    return claimed ? START_REPLIES[refusal] : START_REPLIES.expired;
+    return startReply(claimed ? refusal : 'expired', replyIn);
   }
 
   const { code, update } = codeSend(startTokenHash, now, config);
   update.$set = { ...update.$set, ...identity, status: 'otp_sent' };
   // Atomic claim: only the first /start for a pending, unexpired request wins.
   const claimed = await AuthRequest.findOneAndUpdate(pending, update);
-  return claimed ? codeMessage(code, request.purpose, config) : START_REPLIES.expired;
+  return claimed
+    ? codeMessage(code, request.purpose, config, replyIn)
+    : startReply('expired', replyIn);
 }
 
 /** A new code for a request, and the update that stores it (old code out). */
@@ -297,7 +314,8 @@ export async function resendCode({ requestId }, config, { messenger, viewer }) {
   );
   if (!updated) throw resendTooSoon();
 
-  await messenger.send(updated.telegramId, codeMessage(code, updated.purpose, config));
+  const replyIn = await replyLanguage(updated.telegramId, updated.language);
+  await messenger.send(updated.telegramId, codeMessage(code, updated.purpose, config, replyIn));
   return statusOf(updated, now);
 }
 

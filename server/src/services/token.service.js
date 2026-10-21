@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import jwt from 'jsonwebtoken';
 import { RefreshToken } from '../models/RefreshToken.js';
 import { REFRESH_TOKEN_TTL_MS } from '../config/cookies.js';
@@ -7,7 +8,7 @@ import { hashToken, randomToken } from '../utils/crypto.js';
 const ACCESS_TOKEN_EXPIRES_IN = '15m';
 
 function invalidSession() {
-  return new AppError(401, 'INVALID_SESSION', 'Your session has expired. Please log in again.');
+  return new AppError(401, 'INVALID_SESSION', m.SESSION_EXPIRED);
 }
 
 export function signAccessToken(userId, config) {

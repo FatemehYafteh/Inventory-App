@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { Product } from '../models/Product.js';
 import { StockMovement } from '../models/StockMovement.js';
@@ -8,12 +9,12 @@ const CASE_INSENSITIVE = { locale: 'en', strength: 2 };
 const OPTIONAL_FIELDS = ['contactPerson', 'phone', 'email', 'address', 'notes'];
 
 function notFound() {
-  return new AppError(404, 'NOT_FOUND', 'Supplier not found');
+  return new AppError(404, 'NOT_FOUND', m.SUPPLIER_NOT_FOUND);
 }
 
 function duplicateName() {
-  return new AppError(409, 'DUPLICATE_NAME', 'A supplier with this name already exists', {
-    name: 'A supplier with this name already exists',
+  return new AppError(409, 'DUPLICATE_NAME', m.SUPPLIER_NAME_EXISTS, {
+    name: m.SUPPLIER_NAME_EXISTS,
   });
 }
 
