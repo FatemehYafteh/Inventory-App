@@ -6,6 +6,7 @@ import { csrf } from './middleware/csrf.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { categoriesRoutes } from './routes/categories.routes.js';
+import { movementsRoutes } from './routes/movements.routes.js';
 import { productsRoutes } from './routes/products.routes.js';
 import { suppliersRoutes } from './routes/suppliers.routes.js';
 import { usersRoutes } from './routes/users.routes.js';
@@ -51,6 +52,7 @@ export function createApp(
   api.use('/categories', categoriesRoutes(config));
   api.use('/suppliers', suppliersRoutes(config));
   api.use('/products', productsRoutes(config));
+  api.use('/movements', movementsRoutes(config));
 
   app.use('/api', api);
   app.use(notFound);
