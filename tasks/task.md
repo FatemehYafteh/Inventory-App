@@ -112,7 +112,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | D6 | `docs/design-system.md` and a tokens-only rule in `client/CLAUDE.md` | ✅ Done |
 | D7 | Profile page on the design system: `PageHeader`, one card per section (Name, Sign-in methods, Password), `max-w-3xl` column, long emails wrap | ✅ Done |
 | D8 | Profile page redesign: identity card with avatar, role and status badges; two-column layout from `lg`; sign-in methods with badges; long names and emails wrap | ✅ Done |
-| T | Theme switching and persisted user preference (applies the `.dark` class); planned separately, after D6 | ⬜ Not started |
+| T | Theme switching and persisted user preference (applies the `.dark` class); planned after M8 and before UI polish, on its own branch and PR (see "Planned order"). DEFERRED: do NOT start without the owner's explicit approval | ⬜ Not started |
 
 ## M7: Stock engine and history [sub-PRD 07](../docs/prds/07-stock-engine.md)
 
@@ -135,6 +135,32 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | 8.4 | Dashboard page, including the Pending approvals card for admins | ⬜ To do |
 | 8.5 | CSV export for products and movements, with formula-injection escaping | ⬜ To do |
 | 8.6 | SMTP (Brevo) configuration and the final test pass | ⬜ To do |
+
+## Phase L: Multilingual support (English and Persian). DEFERRED: plan and issues first; do NOT start without the owner's explicit approval
+
+Planned after M7 (7.3 to 7.6) and before M8, so M8 is built with translation keys from the start. Persian must support right-to-left (RTL) layout and Persian digits (۱۲۳); English stays left-to-right (LTR) with Latin digits. The plan and GitHub issues are written and approved before any implementation.
+
+| Phase | Task | Status |
+|---|---|---|
+| L0 | Write the plan (`docs/plans/`) and create the GitHub issues; settle the open points below | ⬜ Not started |
+| L1 | i18n setup in the client: library, translation files for `en` and `fa`, language switcher, preference saved per user | ⬜ Not started |
+| L2 | RTL layout: `dir` and `lang` follow the language; logical CSS properties (start/end) in the tokens, `ui/` components and shell; browser pass at about 360, 768, 1024 and 1280 px in both languages | ⬜ Not started |
+| L3 | Persian digits and locale formatting for quantities, prices, dates and pagination (stored values stay unchanged) | ⬜ Not started |
+| L4 | Move the existing client strings onto translation keys and fix the tests to run in a fixed language | ⬜ Not started |
+| L5 | Server and shared messages: stable error codes translated on the client (affects the Zod messages in `shared/schemas` and `AppError` responses) | ⬜ Not started |
+
+Open points for L0: whether emails (`mail.service`) and the Telegram bot are translated; the font for Persian; whether the language preference lives on the user record (needs the seed and its test to be updated) or only in the browser.
+
+## Planned order of the remaining work (agreed 2026-10-21)
+
+1. **7.3**: only after the owner's explicit approval.
+2. **7.4 to 7.6**: finish M7.
+3. **Phase L**: multilingual support, plan and issues first.
+4. **M8**: built with translation keys from the start.
+5. **Phase T**: theme switching and dark mode, after M8 and before UI polish, on its own branch and PR.
+6. **UI polish**.
+
+Nothing in this order changes an approval requirement: 7.3, Phase L and Phase T each stay deferred until the owner says to start them.
 
 ---
 
