@@ -2,10 +2,12 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { PAGE_SIZE_OPTIONS } from '@/components/data-table/DataTablePagination';
+import { ExportCsvButton } from '@/components/ExportCsvButton';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { MovementFilters, TYPE_OPTIONS } from '@/components/movements/MovementFilters';
 import { MovementTable } from '@/components/movements/MovementTable';
 import { useMe } from '@/lib/auth';
+import { exportQuery } from '@/lib/download';
 import { usePerformers, useStockMovements } from '@/lib/movements';
 import { useSuppliers } from '@/lib/suppliers';
 
@@ -60,6 +62,8 @@ export function MovementsPage() {
   const suppliers = useSuppliers({ sortBy: 'name', limit: SUPPLIER_FILTER_LIMIT });
   const performers = usePerformers();
 
+  // The same filters as the table, without the paging: the file holds every matching row.
+  const exportPath = `/movements/export?${exportQuery({ product, type, supplier, user, from, to })}`;
   const pagination = useMemo(() => ({ pageIndex: page - 1, pageSize: limit }), [page, limit]);
   const filtered = Boolean(product || type || supplier || user || from);
 
@@ -92,6 +96,7 @@ export function MovementsPage() {
             performers={performers.data?.items ?? []}
             includeArchived={isAdmin}
             onChange={update}
+            actions={<ExportCsvButton path={exportPath} />}
             canClear={filtered}
             onClear={() =>
               update({

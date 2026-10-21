@@ -133,7 +133,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | 8.2 | Movements page | ✅ Done |
 | 8.3 | Dashboard API: summary, low-stock list, recent movements | ✅ Done |
 | 8.4 | Dashboard page, including the Pending approvals card for admins | ✅ Done |
-| 8.5 | CSV export for products and movements, with formula-injection escaping | ⬜ To do |
+| 8.5 | CSV export for products and movements, with formula-injection escaping | ✅ Done |
 | 8.6 | SMTP (Brevo) configuration and the final test pass | ⬜ To do |
 
 ## Phase L: Multilingual support (English and Persian). DEFERRED: plan and issues first; do NOT start without the owner's explicit approval

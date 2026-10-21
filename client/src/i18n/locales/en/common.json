@@ -28,5 +28,9 @@
     "noneYet": "None yet",
     "email": "Email",
     "telegram": "Telegram"
+  },
+  "export": {
+    "csv": "Export CSV",
+    "exporting": "Exporting…"
   }
 }

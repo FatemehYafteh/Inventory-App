@@ -86,3 +86,36 @@ export async function listPerformers(user) {
   ]);
   return { items: rows.map((row) => ({ id: String(row._id), name: row.name })) };
 }
+
+export const MOVEMENT_CSV_HEADER = [
+  'Date',
+  'Product',
+  'SKU',
+  'Type',
+  'Change',
+  'Before',
+  'After',
+  'Supplier',
+  'Note',
+  'Performed by',
+  'Role',
+];
+
+/** The filtered movements as CSV cells, newest first. Dates are ISO (UTC) and numbers are plain. */
+export async function* movementCsvRows(user, query) {
+  for await (const row of streamMovements(user, query)) {
+    yield [
+      row.createdAt,
+      row.product?.title,
+      row.product?.sku,
+      row.type,
+      row.quantityChange,
+      row.quantityBefore,
+      row.quantityAfter,
+      row.supplier?.name,
+      row.note,
+      row.performedBy.name,
+      row.performedBy.role,
+    ];
+  }
+}
