@@ -1,3 +1,4 @@
+import { Minus, Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { DataTable } from '@/components/data-table/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -9,7 +10,8 @@ const dash = <span className="text-muted-foreground">—</span>;
 /**
  * The products table. The server searches, filters, sorts and pages; `sorting` is [{ id, desc }]
  * and `pagination` is { pageIndex, pageSize }. Title, Quantity and Price sort. Archive and
- * Restore show only when `canArchive` (admins); the stock actions arrive in a later phase.
+ * Restore show only when `canArchive` (admins). The - and + beside the quantity call
+ * `onStep(product, -1 or 1)`; they are off for archived products, and - is off at 0.
  */
 export function ProductTable({
   products,
@@ -23,6 +25,7 @@ export function ProductTable({
   emptyMessage,
   toolbar,
   onEdit,
+  onStep,
   canArchive,
   onArchive,
   onRestore,
@@ -89,7 +92,34 @@ export function ProductTable({
         accessorKey: 'quantity',
         sortDescFirst: false,
         header: 'Quantity',
-        cell: ({ row }) => <span className="tabular-nums">{row.original.quantity}</span>,
+        cell: ({ row }) => {
+          const { title, quantity, isArchived } = row.original;
+          return (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-8 px-0"
+                aria-label={`Decrease quantity of ${title}`}
+                disabled={isArchived || quantity <= 0}
+                onClick={() => onStep(row.original, -1)}
+              >
+                <Minus aria-hidden="true" />
+              </Button>
+              <span className="min-w-8 text-center tabular-nums">{quantity}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-8 px-0"
+                aria-label={`Increase quantity of ${title}`}
+                disabled={isArchived}
+                onClick={() => onStep(row.original, 1)}
+              >
+                <Plus aria-hidden="true" />
+              </Button>
+            </div>
+          );
+        },
       },
       {
         id: 'stockStatus',
@@ -135,7 +165,7 @@ export function ProductTable({
         ),
       },
     ],
-    [onEdit, canArchive, onArchive, onRestore],
+    [onEdit, onStep, canArchive, onArchive, onRestore],
   );
 
   return (

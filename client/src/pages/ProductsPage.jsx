@@ -17,6 +17,7 @@ import {
   useCreateProduct,
   useProducts,
   useRestoreProduct,
+  useStockStep,
   useUpdateProduct,
 } from '@/lib/products';
 import { useSuppliers } from '@/lib/suppliers';
@@ -98,6 +99,7 @@ export function ProductsPage() {
   const updateProduct = useUpdateProduct();
   const { mutate: archiveProduct } = useArchiveProduct();
   const { mutate: restoreProduct } = useRestoreProduct();
+  const stockStep = useStockStep();
 
   // `form` is null (closed), { product: null } (add) or { product } (edit).
   const [form, setForm] = useState(null);
@@ -133,6 +135,14 @@ export function ProductsPage() {
     archiveProduct(product.id, { onError: (error) => setActionError(errorMessage(error)) });
   }
 
+  const step = useCallback(
+    (product, delta) => {
+      setActionError(null);
+      stockStep(product, delta, { onError: (error) => setActionError(errorMessage(error)) });
+    },
+    [stockStep],
+  );
+
   const sorting = useMemo(() => [{ id: sortBy, desc: order === 'desc' }], [sortBy, order]);
   const pagination = useMemo(() => ({ pageIndex: page - 1, pageSize: limit }), [page, limit]);
   const filtered = Boolean(search || category || supplier || status || archived);
@@ -167,6 +177,7 @@ export function ProductsPage() {
           });
         }}
         onEdit={openForm}
+        onStep={step}
         canArchive={isAdmin}
         onArchive={openArchive}
         onRestore={restore}
