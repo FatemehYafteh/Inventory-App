@@ -21,7 +21,7 @@ export function SkipLink({ targetRef }) {
         event.preventDefault();
         targetRef.current?.focus();
       }}
-      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground focus:ring-[3px] focus:ring-ring focus:outline-none"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground focus:ring-[3px] focus:ring-ring focus:outline-none"
     >
       Skip to main content
     </a>
@@ -45,7 +45,7 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
             onClick={onNavigate}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                'flex items-center gap-3 rounded-md border-s-2 border-transparent px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                 focusRing,
                 isActive &&
                   'border-sidebar-ring bg-sidebar-accent font-medium text-sidebar-accent-foreground',
@@ -55,7 +55,7 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
             <item.icon className="size-4 shrink-0" aria-hidden="true" />
             {item.label}
             {item.badge && pendingCount > 0 && (
-              <Badge className="ml-auto">
+              <Badge className="ms-auto">
                 {pendingCount}
                 <span className="sr-only"> waiting for approval</span>
               </Badge>

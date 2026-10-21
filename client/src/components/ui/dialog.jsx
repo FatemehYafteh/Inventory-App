@@ -31,7 +31,7 @@ const DialogContent = forwardRef(function DialogContent({ className, children, .
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring">
+        <DialogPrimitive.Close className="absolute top-4 end-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring">
           <XIcon className="size-4" aria-hidden="true" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
@@ -42,7 +42,7 @@ const DialogContent = forwardRef(function DialogContent({ className, children, .
 
 function DialogHeader({ className, ...props }) {
   return (
-    <div className={cn('flex flex-col gap-2 text-center sm:text-left', className)} {...props} />
+    <div className={cn('flex flex-col gap-2 text-center sm:text-start', className)} {...props} />
   );
 }
 

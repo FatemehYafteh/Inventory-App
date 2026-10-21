@@ -13,8 +13,8 @@ const sheetVariants = cva(
   {
     variants: {
       side: {
-        right: 'inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-md',
-        left: 'inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-md',
+        right: 'inset-y-0 end-0 h-full w-3/4 border-s sm:max-w-md',
+        left: 'inset-y-0 start-0 h-full w-3/4 border-e sm:max-w-md',
         top: 'inset-x-0 top-0 h-auto border-b',
         bottom: 'inset-x-0 bottom-0 h-auto border-t',
       },
@@ -36,7 +36,7 @@ const SheetContent = forwardRef(function SheetContent(
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring">
+        <SheetPrimitive.Close className="absolute top-4 end-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring">
           <XIcon className="size-4" aria-hidden="true" />
           <span className="sr-only">Close</span>
         </SheetPrimitive.Close>

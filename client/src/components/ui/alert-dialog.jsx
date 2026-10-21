@@ -24,7 +24,7 @@ const AlertDialogContent = forwardRef(function AlertDialogContent({ className, .
 
 function AlertDialogHeader({ className, ...props }) {
   return (
-    <div className={cn('flex flex-col gap-2 text-center sm:text-left', className)} {...props} />
+    <div className={cn('flex flex-col gap-2 text-center sm:text-start', className)} {...props} />
   );
 }
 

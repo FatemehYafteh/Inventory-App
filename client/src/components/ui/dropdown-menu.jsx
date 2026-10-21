@@ -53,10 +53,10 @@ const DropdownMenuCheckboxItem = forwardRef(function DropdownMenuCheckboxItem(
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
-      className={cn(itemClasses, 'pl-8', className)}
+      className={cn(itemClasses, 'ps-8', className)}
       {...props}
     >
-      <span className="absolute left-2 flex size-3.5 items-center justify-center">
+      <span className="absolute start-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
           <CheckIcon className="size-4" aria-hidden="true" />
         </DropdownMenuPrimitive.ItemIndicator>
