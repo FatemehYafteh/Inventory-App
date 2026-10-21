@@ -131,3 +131,10 @@ export function useStockStep() {
     [queryClient],
   );
 }
+
+/** `{ id, type, quantity, note }` with `type` receive, ship or adjust; the lists reload after. */
+export function useChangeStock() {
+  return useProductMutation(({ id, ...body }) =>
+    api(`/products/${id}/stock`, { method: 'POST', body }),
+  );
+}
