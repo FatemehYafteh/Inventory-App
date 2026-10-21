@@ -25,7 +25,7 @@ This plan has four separate parts: **1 Decisions** (settled with the owner), **2
 | Q10 | The Telegram bot uses the language of the linked user. Before an account is linked it uses Telegram's `language_code` (`fa` gives Persian) and falls back to English. |
 | Q11 | One **shared error-code catalogue** in `shared/` lists every code (validation and `AppError`) with an English default. The client holds `en` and `fa` translations keyed by those codes. A test fails if a code lacks a translation. |
 | Q12 | Client library is **react-i18next**. |
-| Q13 | The owner's assistant drafts all Persian text, in one JSON file per area. The owner proofreads before each PR merges. A test makes sure every key exists in both languages. |
+| Q13 | The owner's assistant drafts all Persian text, in one JSON file per area. The owner proofreads before each PR merges (checks done and open choices: `docs/plans/phase-l-persian-review.md`). A test makes sure every key exists in both languages. |
 | Q14 | Number and search inputs accept Persian (۱۲۳) and Arabic-Indic (١٢٣) digits and normalise them to Latin digits before validation, so the API only ever sees Latin digits. |
 | Q15 | One branch and one PR per phase (L1 to L5), `feat/<area>-<short-name>`, into `sub-prds`. Each phase is **one GitHub issue and one commit** (`feat: <issue title> (#<issue>)`), so a phase PR contains one commit. See 3.6. |
 
@@ -108,6 +108,13 @@ Today a response is `{ message, code, errors?, details? }`: `code` is a coarse `
 - **Interpolation uses `details`.** Values such as counts (`productCount`, `movementCount`) come from `details`, not from parsing the message text.
 - **Non-API English strings.** Client-side text such as the network-error message in `client/src/lib/api.js` moves onto translation keys in L4.
 
+**Reliability and compatibility review (2026-10-21).** Findings after L5, and what was done:
+
+- **Contract kept.** Existing exact-body tests pass unmodified (441 server tests). A change that added a `messageCode` field to every AppError body broke 19 of them, so that field was dropped: the client derives the code from the message text with `codeForMessage`. A second attempt to add `errorCodes` to two more bodies (the account-link wrong password and the stock `NO_CHANGE` refusal) broke a test that asserts the exact body, so it was reverted. Those two carry a catalogued text in `errors` and the client translates them by the same text lookup.
+- **Single source.** The nine static messages in `telegramAuth.service.js` that still used string literals now come from the catalogue. A server scan test fails if any static message or code is missing from it.
+- **Unknown or changed text is safe.** If the server's wording changes, or a code has no translation, the client falls back to the translated generic code, then to the server's own message, then to the translated generic error. It never throws and never shows a raw key (covered by `client/src/lib/errors.test.js`).
+- **Known limits, accepted.** (1) A dynamic message (reference counts in `IN_USE`, "Wrong code. N tries left.") has no message code and shows the generic translated text for its code in Persian; English still shows the exact server text. (2) Success messages the server sends (`translateNotice`) are mapped by their exact English text; a changed text falls back to the server's English. (3) Lookup by message text needs every English text in the catalogue to be unique, which a test enforces.
+
 **Concrete design (decided now, built in L5).**
 
 1. **Catalogue.** `shared/errorCodes.js` exports a frozen map `{ CODE: 'English default text' }` and two helpers: `messageFor(code)` and `codeForMessage(text)` (reverse lookup). A test requires every English default to be unique, so the reverse lookup is unambiguous.
@@ -144,7 +151,7 @@ Until the owner decides, no code, schema or doc assumes a zone.
 |---|---|---|
 | U1 | **Resolved in L3 (2026-10-21):** the installed picker has an official add-on, `@daypicker/persian` 10.0.2 (same version as `@daypicker/react`), which renders the Jalali calendar right to left with Persian digits and returns ordinary `Date` values. `calendar.jsx` uses it when the language is Persian. Text formatting uses `Intl` (`fa-IR-u-ca-persian`). No extra date library of our own was needed. | Closed. |
 | U5 | Exact code names for each shared schema message and any extra `AppError` codes (the approach itself is decided in 3.7). | Assistant proposes the list in the L5 ticket; owner reviews it in the PR. |
-| U6 | Timezone for "start and end of day" in Movements date-range filters, and whether `to` is inclusive. Deferred to L3; evaluated by the procedure in 3.8, not assumed. | Assistant gathers the evidence in 3.8 at the start of L3; owner decides. |
+| U6 | Timezone for "start and end of day" in Movements date-range filters, and whether `to` is inclusive. Deferred to L3; evaluated by the procedure in 3.8, not assumed. Full write-up, options and recommendation: `docs/plans/m8-date-range-timezone.md`. | Assistant gathers the evidence in 3.8 at the start of L3; owner decides. |
 | U2 | Exact Persian wording for statuses, roles and stock terms (glossary-level terms such as "Receive", "Ship", "Adjust"). | Owner's review of the first `fa` drafts in L1/L4. |
 | U3 | Whether the header switcher is a toggle or a menu, and its position at 360 px width. | L1 design, checked in the L2 browser pass. |
 | U4 | Whether `GLOSSARY.md` gets Persian equivalents for domain terms. | Owner, during L4 review. |

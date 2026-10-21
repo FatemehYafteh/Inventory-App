@@ -129,7 +129,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 
 | Phase | Task | Status |
 |---|---|---|
-| 8.1 | Movements API with filters (product, type, supplier, user, date range) | ⬜ To do |
+| 8.1 | Movements API with filters (product, type, supplier, user, date range). Date-range meaning: see `docs/plans/m8-date-range-timezone.md` (Option A proposed; owner to confirm) | ⬜ To do |
 | 8.2 | Movements page | ⬜ To do |
 | 8.3 | Dashboard API: summary, low-stock list, recent movements | ⬜ To do |
 | 8.4 | Dashboard page, including the Pending approvals card for admins | ⬜ To do |
@@ -144,9 +144,9 @@ Planned after M7 (7.3 to 7.6) and before M8, so M8 is built with translation key
 |---|---|---|
 | L0 | Write the plan (`docs/plans/phase-l-multilingual.md`) and create the GitHub issues; settle the open points below | ✅ Done: plan committed, issues #34 to #38 created |
 | L1 | i18n setup in the client: library, translation files for `en` and `fa`, language switcher, preference saved per user | ✅ Done (#34) |
-| L2 | RTL layout: `dir` and `lang` follow the language; logical CSS properties (start/end) in the tokens, `ui/` components and shell; browser pass at about 360, 768, 1024 and 1280 px in both languages | ✅ Done (#35). The browser pass at 360, 768, 1024 and 1280 px could not be run in this session (no browser available); still to do by the owner |
+| L2 | RTL layout: `dir` and `lang` follow the language; logical CSS properties (start/end) in the tokens, `ui/` components and shell; browser pass at about 360, 768, 1024 and 1280 px in both languages | ✅ Done (#35). Browser pass done 2026-10-21 in headless Chrome at 360, 768, 1024 and 1280 px, English and Persian, on all signed-in and signed-out pages: no horizontal overflow, correct direction and font; one clipped Persian filter label fixed |
 | L3 | Persian digits and locale formatting for quantities, prices, dates and pagination (stored values stay unchanged) | ✅ Done (#36) |
-| L4 | Move the existing client strings onto translation keys and fix the tests to run in a fixed language | ✅ Done (#37). Persian texts are drafts for the owner to proofread |
+| L4 | Move the existing client strings onto translation keys and fix the tests to run in a fixed language | ✅ Done (#37). Persian texts are drafts for the owner to proofread; checks and open choices in `docs/plans/phase-l-persian-review.md` |
 | L5 | Server and shared messages: stable error codes translated on the client (affects the Zod messages in `shared/schemas` and `AppError` responses) | ✅ Done (#38) |
 
 Open points for L0, settled in the plan (2026-10-21): emails and the Telegram bot are translated; Persian font is Vazirmatn (self-hosted); the language preference lives on the user record (seed and its test updated) plus the browser for logged-out pages. The error-code approach is decided in section 3.7 of the plan (additive `errorCodes`, shared catalogue, safe fallbacks). Still open, with who resolves them: see section 4 of `docs/plans/phase-l-multilingual.md` (Jalali library at L3, date-range timezone at L3 by the procedure in 3.8, exact code names at L5).
