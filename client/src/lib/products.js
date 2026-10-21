@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { useCallback, useRef } from 'react';
 import { api } from './api';
 import { CATEGORIES_QUERY_KEY } from './categories';
+import { MOVEMENTS_QUERY_KEY } from './movements';
 import { SUPPLIERS_QUERY_KEY } from './suppliers';
 
 export const PRODUCTS_QUERY_KEY = ['products'];
@@ -27,6 +28,15 @@ export function useProducts(filters) {
   });
 }
 
+/** One product, for showing the name behind a product id in a link: `{ product }`. */
+export function useProduct(id) {
+  return useQuery({
+    queryKey: [...PRODUCTS_QUERY_KEY, 'detail', id],
+    queryFn: () => api(`/products/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
 function useProductMutation(mutationFn) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -34,8 +44,8 @@ function useProductMutation(mutationFn) {
     // Success or not, the list reloads; category and supplier product counts may have changed.
     onSettled: () =>
       Promise.all(
-        [PRODUCTS_QUERY_KEY, CATEGORIES_QUERY_KEY, SUPPLIERS_QUERY_KEY].map((queryKey) =>
-          queryClient.invalidateQueries({ queryKey }),
+        [PRODUCTS_QUERY_KEY, CATEGORIES_QUERY_KEY, SUPPLIERS_QUERY_KEY, MOVEMENTS_QUERY_KEY].map(
+          (queryKey) => queryClient.invalidateQueries({ queryKey }),
         ),
       ),
   });
@@ -122,9 +132,12 @@ export function useStockStep() {
           if (queue.inFlight > 0) return;
           queues.current.delete(id);
           return Promise.all(
-            [PRODUCTS_QUERY_KEY, CATEGORIES_QUERY_KEY, SUPPLIERS_QUERY_KEY].map((queryKey) =>
-              queryClient.invalidateQueries({ queryKey }),
-            ),
+            [
+              PRODUCTS_QUERY_KEY,
+              CATEGORIES_QUERY_KEY,
+              SUPPLIERS_QUERY_KEY,
+              MOVEMENTS_QUERY_KEY,
+            ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
           );
         });
     },

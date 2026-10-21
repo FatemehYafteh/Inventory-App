@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "products": "Products",
+    "movements": "Movements",
     "categories": "Categories",
     "suppliers": "Suppliers",
     "users": "Users",

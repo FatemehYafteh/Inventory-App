@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { FormAlert } from '@/components/form/FormAlert';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
@@ -90,16 +91,11 @@ function Details({ user, history }) {
       </section>
 
       <section className="flex flex-col gap-2">
-        {/* The Movements page arrives in a later milestone, which enables this link. */}
-        <Button
-          variant="outline"
-          disabled
-          className="w-fit"
-          title={t('users.drawer.movementsLater')}
-        >
-          {t('users.drawer.viewMovements')}
+        <Button asChild variant="outline" className="w-fit">
+          <Link to={`/movements?user=${encodeURIComponent(user.id)}`}>
+            {t('users.drawer.viewMovements')}
+          </Link>
         </Button>
-        <p className="text-xs text-muted-foreground">{t('users.drawer.movementsLater')}</p>
       </section>
     </div>
   );

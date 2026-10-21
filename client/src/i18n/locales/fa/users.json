@@ -73,8 +73,7 @@
     "historyEmpty": "هنوز تغییری در وضعیت ایجاد نشده است.",
     "historyChange": "{{from}} به {{to}}",
     "historyBy": "توسط {{name}} در {{date}}",
-    "viewMovements": "مشاهده حرکت‌ها",
-    "movementsLater": "پس از افزوده شدن صفحه حرکت‌ها در دسترس خواهد بود."
+    "viewMovements": "مشاهده حرکت‌ها"
   },
   "reject": {
     "thisUser": "این کاربر",

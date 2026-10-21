@@ -66,6 +66,23 @@ export async function listAllMovements(user, query) {
 /** Every movement matching the filters, newest first, as a database cursor of presented rows. */
 export async function* streamMovements(user, query) {
   const filter = await filterFor(user, query);
-  const cursor = withRelations(StockMovement.find(filter).sort({ createdAt: -1, _id: -1 })).cursor();
+  const cursor = withRelations(
+    StockMovement.find(filter).sort({ createdAt: -1, _id: -1 }),
+  ).cursor();
   for await (const movement of cursor) yield present(movement);
+}
+
+/**
+ * Everyone who has made a movement the caller may see, as `{ id, name }` by name, for the
+ * "performed by" filter. Staff cannot list users, so this comes from the movements themselves.
+ */
+export async function listPerformers(user) {
+  const filter = await filterFor(user, {});
+  const rows = await StockMovement.aggregate([
+    { $match: filter },
+    { $sort: { createdAt: -1, _id: -1 } },
+    { $group: { _id: '$performedBy', name: { $first: '$performedByName' } } },
+    { $sort: { name: 1, _id: 1 } },
+  ]);
+  return { items: rows.map((row) => ({ id: String(row._id), name: row.name })) };
 }

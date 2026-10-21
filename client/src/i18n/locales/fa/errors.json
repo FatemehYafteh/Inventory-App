@@ -49,7 +49,7 @@
     "QUANTITY_NOT_INTEGER": "یک عدد صحیح وارد کنید",
     "STOCK_TYPE_INVALID": "دریافت، ارسال، تعدیل، افزایش یا کاهش را انتخاب کنید",
     "MOVEMENT_TYPE_INVALID": "یک نوع حرکت انتخاب کنید",
-    "PRODUCT_FILTER_INVALID": "یک کالای معتبر انتخاب کنید",
+    "PRODUCT_FILTER_INVALID": "یک محصول معتبر انتخاب کنید",
     "USER_FILTER_INVALID": "یک کاربر معتبر انتخاب کنید",
     "DATE_TIME_INVALID": "تاریخ و ساعت کامل را وارد کنید، مثلاً 2026-10-14T20:30:00.000Z",
     "DATE_RANGE_START_REQUIRED": "ابتدای بازهٔ تاریخ را وارد کنید",

@@ -1,4 +1,5 @@
 import {
+  ArrowLeftRightIcon,
   LayoutDashboardIcon,
   MenuIcon,
   PackageIcon,
@@ -25,6 +26,7 @@ import { SidebarNav, SkipLink } from './SidebarNav';
 const NAV_ITEMS = [
   { to: '/', labelKey: 'layout.nav.dashboard', icon: LayoutDashboardIcon, end: true },
   { to: '/products', labelKey: 'layout.nav.products', icon: PackageIcon },
+  { to: '/movements', labelKey: 'layout.nav.movements', icon: ArrowLeftRightIcon },
   { to: '/categories', labelKey: 'layout.nav.categories', icon: TagsIcon },
   { to: '/suppliers', labelKey: 'layout.nav.suppliers', icon: TruckIcon },
   { to: '/users', labelKey: 'layout.nav.users', icon: UsersIcon, adminOnly: true, badge: true },

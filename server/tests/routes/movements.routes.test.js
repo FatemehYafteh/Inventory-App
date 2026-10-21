@@ -250,3 +250,30 @@ describe('GET /api/movements', () => {
     expect((await get(app, incomplete, '/api/movements')).status).toBe(403);
   });
 });
+
+describe('GET /api/movements/performers', () => {
+  it('lists each performer once by name, and leaves out archived products for staff', async () => {
+    const app = buildApp();
+    const ada = await admin();
+    const sam = await staff();
+    const live = await product();
+    const archived = await product({ isArchived: true, archivedAt: new Date() });
+    await movement(live, sam);
+    await movement(live, sam);
+    await movement(archived, ada);
+
+    const asAdmin = await get(app, ada, '/api/movements/performers');
+    const asStaff = await get(app, sam, '/api/movements/performers');
+
+    expect(asAdmin.body.items).toEqual([
+      { id: ada.id, name: 'Ada Admin' },
+      { id: sam.id, name: 'Sam Staff' },
+    ]);
+    expect(asStaff.body.items).toEqual([{ id: sam.id, name: 'Sam Staff' }]);
+  });
+
+  it('refuses a pending user', async () => {
+    const pending = await staff({ status: 'pending' });
+    expect((await get(buildApp(), pending, '/api/movements/performers')).status).toBe(403);
+  });
+});

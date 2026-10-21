@@ -509,14 +509,12 @@ describe('UsersPage detail drawer', () => {
     expect(await within(drawer).findByText('No status changes yet.')).toBeInTheDocument();
   });
 
-  it('links to the movements of the user once Movements ships, and is disabled until then', async () => {
+  it('links to the movements of the user', async () => {
     await open();
     const { drawer } = await openDrawer('Pat Pending');
 
-    const button = within(drawer).getByRole('button', { name: 'View movements' });
-    expect(button).toBeDisabled();
-    expect(button).toHaveAttribute('title', 'Available once Movements ships.');
-    expect(within(drawer).getByText('Available once Movements ships.')).toBeInTheDocument();
+    const link = within(drawer).getByRole('link', { name: 'View movements' });
+    expect(link.getAttribute('href')).toMatch(/^\/movements\?user=/);
   });
 
   it('keeps the open user in the URL, opens from a link, and closes', async () => {

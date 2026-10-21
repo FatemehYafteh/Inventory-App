@@ -19,7 +19,7 @@ export const STATUS_OPTIONS = [
 ];
 
 /** A single select whose "All" choice clears the filter. Radix needs a non-empty value for it. */
-function FilterSelect({ label, allLabel, value, options, onChange }) {
+export function FilterSelect({ label, allLabel, value, options, onChange }) {
   const { t } = useTranslation();
   return (
     <Select value={value || ALL} onValueChange={(next) => onChange(next === ALL ? '' : next)}>

@@ -7,6 +7,7 @@ import { validateQuery } from '../middleware/validate.js';
 /** Any active user (admin or staff) may read all movements. */
 export function movementsRoutes(config) {
   const router = Router();
+  router.get('/performers', ...protect(config), movements.performers);
   router.get('/', ...protect(config), validateQuery(movementsQuerySchema), movements.list);
   return router;
 }
