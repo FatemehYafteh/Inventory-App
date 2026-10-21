@@ -129,7 +129,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 
 | Phase | Task | Status |
 |---|---|---|
-| 8.1 | Movements API with filters (product, type, supplier, user, date range). Date-range meaning: see `docs/plans/m8-date-range-timezone.md` (Option A proposed; owner to confirm) | ⬜ To do |
+| 8.1 | Movements API with filters (product, type, supplier, user, date range). Date-range meaning: Option A decided 2026-10-21, see `docs/plans/m8-date-range-timezone.md` | ⬜ To do |
 | 8.2 | Movements page | ⬜ To do |
 | 8.3 | Dashboard API: summary, low-stock list, recent movements | ⬜ To do |
 | 8.4 | Dashboard page, including the Pending approvals card for admins | ⬜ To do |

@@ -1,6 +1,6 @@
 # M8.1 decision: what a date range means (timezone)
 
-Status: **needs the owner's decision before M8.1 starts.** A default is proposed so M8.1 is never blocked; it applies if no other answer is given.
+Status: **decided (2026-10-21): Option A.** The owner chose Option A, the browser's zone with `from` inclusive and `to` exclusive. M8.1 follows section 5 and the acceptance tests in section 7.
 Inputs: `docs/plans/phase-l-multilingual.md` (3.8, U6), sub-PRD 08 (3.1 Filters, `GET /movements`, 3.3 CSV export), `server/src/services/stock.service.js` (`listMovements`), `shared/schemas/stock.js`, `client/src/lib/format.js`.
 
 ## 1. The question
@@ -58,12 +58,12 @@ A "14 October" filter would include or exclude the 20:30 to 23:59 UTC movements 
 
 Why: the app already displays times in the browser's zone in both languages, so A is the only option that needs no new setting and keeps the table and the filter consistent. The API stays timezone-free and easy to test with fixed instants.
 
-## 6. What the owner needs to decide
+## 6. Decision (closed)
 
 1. **Is Option A acceptable?** The only real cost is that two people in different zones can see different day boundaries for the same filter. If your whole team is in one zone, there is no cost.
 2. **Does the team need identical day boundaries for everyone** (for example, a shared daily report in `Asia/Tehran`)? If yes, choose B and name the zone.
 
-If no answer is given, M8.1 follows Option A.
+Answer: **Option A.** The team does not need identical day boundaries for everyone. If that changes, Option B can be added without changing the API (section 5).
 
 ## 7. M8.1 acceptance tests (whichever option is chosen)
 
