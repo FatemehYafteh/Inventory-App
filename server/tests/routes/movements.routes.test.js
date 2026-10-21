@@ -150,7 +150,11 @@ describe('GET /api/movements', () => {
     for (const time of times) rows.push(await movement(item, actor, { createdAt: new Date(time) }));
 
     // One local day in Tehran (UTC+03:30): 15 October.
-    const day = await get(app, actor, range('2026-10-14T20:30:00.000Z', '2026-10-15T20:30:00.000Z'));
+    const day = await get(
+      app,
+      actor,
+      range('2026-10-14T20:30:00.000Z', '2026-10-15T20:30:00.000Z'),
+    );
     expect(ids(day)).toEqual([rows[2].id, rows[1].id]);
 
     const open = await get(app, actor, `/api/movements?from=${iso('2026-10-15T20:30:00.000Z')}`);
@@ -166,7 +170,11 @@ describe('GET /api/movements', () => {
     const late = await movement(item, actor, { createdAt: new Date('2026-11-02T04:59:00Z') });
     await movement(item, actor, { createdAt: new Date('2026-11-02T05:00:00Z') });
 
-    const res = await get(app, actor, range('2026-11-01T04:00:00.000Z', '2026-11-02T05:00:00.000Z'));
+    const res = await get(
+      app,
+      actor,
+      range('2026-11-01T04:00:00.000Z', '2026-11-02T05:00:00.000Z'),
+    );
 
     expect(ids(res)).toEqual([late.id, early.id]);
   });
@@ -181,9 +189,21 @@ describe('GET /api/movements', () => {
     const lastDay = await movement(item, actor, { createdAt: new Date('2026-12-31T23:59:59Z') });
     await movement(item, actor, { createdAt: new Date('2027-01-01T00:00:00Z') });
 
-    const month = await get(app, actor, range('2026-09-21T20:30:00.000Z', '2026-09-22T20:30:00.000Z'));
-    const twoDays = await get(app, actor, range('2026-09-21T20:30:00.000Z', '2026-09-23T20:30:00.000Z'));
-    const year = await get(app, actor, range('2026-12-31T00:00:00.000Z', '2027-01-01T00:00:00.000Z'));
+    const month = await get(
+      app,
+      actor,
+      range('2026-09-21T20:30:00.000Z', '2026-09-22T20:30:00.000Z'),
+    );
+    const twoDays = await get(
+      app,
+      actor,
+      range('2026-09-21T20:30:00.000Z', '2026-09-23T20:30:00.000Z'),
+    );
+    const year = await get(
+      app,
+      actor,
+      range('2026-12-31T00:00:00.000Z', '2027-01-01T00:00:00.000Z'),
+    );
 
     expect(ids(month)).toEqual([shahrivar.id]);
     expect(ids(twoDays)).toEqual([shahrivar.id]);

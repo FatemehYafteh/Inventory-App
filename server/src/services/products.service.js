@@ -40,7 +40,7 @@ function filterFor({ search, category, supplier, status, archived }) {
   return filter;
 }
 
-function present(product) {
+export function present(product) {
   return {
     id: product.id,
     title: product.title,
@@ -59,7 +59,7 @@ function present(product) {
   };
 }
 
-function withRelations(query) {
+export function withRelations(query) {
   return query.populate('category', 'title').populate('supplier', 'name');
 }
 
