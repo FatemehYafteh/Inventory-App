@@ -1,5 +1,7 @@
+import { DayPicker as PersianDayPicker } from '@daypicker/persian';
 import { DayPicker } from '@daypicker/react';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -11,8 +13,12 @@ function Chevron({ orientation, className }) {
 // Date picker for the Movements date-range filter (sub-PRD 08). Styled with Tailwind, so
 // DayPicker's own stylesheet is not imported.
 function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
+  const { i18n } = useTranslation();
+  // Persian shows the Jalali calendar (right to left, Persian digits); the dates it selects are
+  // ordinary Date values, so what the rest of the app stores and sends does not change.
+  const Picker = i18n.language === 'fa' ? PersianDayPicker : DayPicker;
   return (
-    <DayPicker
+    <Picker
       showOutsideDays={showOutsideDays}
       className={cn('p-3', className)}
       classNames={{

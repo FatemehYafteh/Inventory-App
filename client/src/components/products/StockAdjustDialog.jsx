@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
+import { formatNumber } from '@/lib/format';
+import { parseNumberInput } from '@/lib/numbers';
 import {
   Dialog,
   DialogContent,
@@ -80,11 +82,11 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
   async function submit(values) {
     setFormError(null);
     if (values.type === 'ship' && values.quantity > current) {
-      setError('quantity', { message: `Only ${current} in stock` });
+      setError('quantity', { message: `Only ${formatNumber(current)} in stock` });
       return;
     }
     if (values.type === 'adjust' && values.quantity === current) {
-      setError('quantity', { message: `The quantity is already ${current}` });
+      setError('quantity', { message: `The quantity is already ${formatNumber(current)}` });
       return;
     }
     try {
@@ -119,12 +121,10 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
           <TextField
             id="stock-quantity"
             label={MODES[mode].quantityLabel}
-            type="number"
             inputMode="numeric"
-            min="0"
-            step="1"
+            autoComplete="off"
             error={errors.quantity}
-            {...register('quantity', { valueAsNumber: true })}
+            {...register('quantity', { setValueAs: parseNumberInput })}
           />
           <div className="flex flex-col gap-2">
             <Label htmlFor="stock-note">Note (optional)</Label>
@@ -141,11 +141,11 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
             )}
           </div>
           <p className="text-sm tabular-nums" aria-live="polite">
-            Current quantity: <span className="font-medium">{current}</span>
+            Current quantity: <span className="font-medium">{formatNumber(current)}</span>
             {after !== null && (
               <>
                 {' '}
-                → New quantity: <span className="font-medium">{after}</span>
+                → New quantity: <span className="font-medium">{formatNumber(after)}</span>
               </>
             )}
           </p>

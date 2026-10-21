@@ -23,6 +23,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useZodForm } from '@/hooks/useZodForm';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
+import { parseNumberInput } from '@/lib/numbers';
 
 const FIELDS = [
   'title',
@@ -200,34 +201,28 @@ export function ProductForm({
               <TextField
                 id="product-price"
                 label="Price"
-                type="number"
                 inputMode="decimal"
-                min="0"
-                step="0.01"
+                autoComplete="off"
                 error={errors.price}
-                {...register('price', { valueAsNumber: true })}
+                {...register('price', { setValueAs: parseNumberInput })}
               />
               <TextField
                 id="product-reorder-level"
                 label="Reorder level"
-                type="number"
                 inputMode="numeric"
-                min="0"
-                step="1"
+                autoComplete="off"
                 error={errors.reorderLevel}
-                {...register('reorderLevel', { valueAsNumber: true })}
+                {...register('reorderLevel', { setValueAs: parseNumberInput })}
               />
             </div>
             {!product && (
               <TextField
                 id="product-initial-quantity"
                 label="Initial quantity"
-                type="number"
                 inputMode="numeric"
-                min="0"
-                step="1"
+                autoComplete="off"
                 error={errors.initialQuantity}
-                {...register('initialQuantity', { valueAsNumber: true })}
+                {...register('initialQuantity', { setValueAs: parseNumberInput })}
               />
             )}
           </div>

@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { formatNumber } from '@/lib/format';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 
 export function productCountLabel(count) {
-  return `${count} ${count === 1 ? 'product' : 'products'}`;
+  return `${formatNumber(count)} ${count === 1 ? 'product' : 'products'}`;
 }
 
 /**

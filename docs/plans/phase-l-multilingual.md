@@ -132,7 +132,9 @@ The timezone is **not chosen in this plan**. At the start of L3 the assistant co
 5. **Options compared.** (a) The client converts the chosen Jalali days to UTC instants in the browser's zone and sends full ISO instants, so the API stays timezone-agnostic and `to` is an exclusive end; (b) the client sends date-only values and the server applies one configured zone; (c) plain UTC days. Each is checked against the cases: a movement at 23:30 and at 00:30 local time on the boundary day, a range of one day, a range across a Jalali month end and across the Gregorian year end, and the CSV export of the same range.
 6. **Output.** The chosen option, the meaning of `from` and `to` (inclusive or exclusive), and the boundary test cases above recorded in the L3 ticket and used as tests in M8.1.
 
-Until then no code, schema or doc assumes a zone.
+**Findings at L3 (2026-10-21):** (1) the movements list still accepts only `page` and `limit`, so no `from`/`to` behaviour exists to preserve; (2) sub-PRD 08 names the filters but not their meaning; (3) `createdAt` is a UTC instant; (4) the client displays the browser's local time, in both languages. **Recommendation for M8.1 (owner decides):** option (a), the client turns the chosen days into UTC instants using the browser's zone and sends full ISO values, with `from` inclusive and `to` exclusive (the start of the day after the last chosen day). This keeps the API free of timezone settings and matches what the table displays. The boundary cases above become M8.1 tests. L3 builds no filter and sets no zone.
+
+Until the owner decides, no code, schema or doc assumes a zone.
 
 ---
 
@@ -140,7 +142,7 @@ Until then no code, schema or doc assumes a zone.
 
 | # | Unknown | Resolved by |
 |---|---|---|
-| U1 | Jalali library choice (Q9): whether `@daypicker/react` 10.0.2 can render a Jalali grid, or `date-fns-jalali` / a wrapper is needed. `Intl` covers text formatting either way. | Assistant checks at the start of L3 and proposes; owner decides. |
+| U1 | **Resolved in L3 (2026-10-21):** the installed picker has an official add-on, `@daypicker/persian` 10.0.2 (same version as `@daypicker/react`), which renders the Jalali calendar right to left with Persian digits and returns ordinary `Date` values. `calendar.jsx` uses it when the language is Persian. Text formatting uses `Intl` (`fa-IR-u-ca-persian`). No extra date library of our own was needed. | Closed. |
 | U5 | Exact code names for each shared schema message and any extra `AppError` codes (the approach itself is decided in 3.7). | Assistant proposes the list in the L5 ticket; owner reviews it in the PR. |
 | U6 | Timezone for "start and end of day" in Movements date-range filters, and whether `to` is inclusive. Deferred to L3; evaluated by the procedure in 3.8, not assumed. | Assistant gathers the evidence in 3.8 at the start of L3; owner decides. |
 | U2 | Exact Persian wording for statuses, roles and stock terms (glossary-level terms such as "Receive", "Ship", "Adjust"). | Owner's review of the first `fa` drafts in L1/L4. |
