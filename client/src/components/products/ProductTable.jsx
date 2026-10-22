@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { DataTable } from '@/components/data-table/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { formatDate, formatPrice } from '@/lib/format';
+import { formatDate, formatNumber, formatPrice } from '@/lib/format';
 
 const dash = <span className="text-muted-foreground">—</span>;
 
@@ -109,7 +109,7 @@ export function ProductTable({
               >
                 <Minus aria-hidden="true" />
               </Button>
-              <span className="min-w-8 text-center tabular-nums">{quantity}</span>
+              <span className="min-w-8 text-center tabular-nums">{formatNumber(quantity)}</span>
               <Button
                 variant="outline"
                 size="sm"

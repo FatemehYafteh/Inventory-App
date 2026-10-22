@@ -2,6 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
+import i18n from '@/i18n';
 import { renderApp } from '@/test/render';
 import { activeUser, server } from '@/test/server';
 
@@ -615,6 +616,20 @@ describe('Products page', () => {
       expect(within(await row('Claw Hammer')).getByText('52')).toBeInTheDocument();
     });
 
+    it('accepts Persian digits and sends them as Latin ones', async () => {
+      const state = productsApi([hammer], { me: staff });
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdjust(user);
+
+      await user.type(dialog().getByLabelText('Quantity to add'), '۱۲');
+
+      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('New quantity: 52');
+      await user.click(dialog().getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(state.writes[0].body).toEqual({ type: 'receive', quantity: 12 });
+    });
+
     it('ships and adjusts, and omits an empty note', async () => {
       const state = productsApi([hammer]);
       const user = userEvent.setup();
@@ -820,7 +835,7 @@ describe('Products page', () => {
       }
       expect(sheet().getByRole('combobox', { name: 'Category' })).toBeInTheDocument();
       expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('No supplier');
-      expect(sheet().getByLabelText('Initial quantity')).toHaveValue(0);
+      expect(sheet().getByLabelText('Initial quantity')).toHaveValue('0');
     });
 
     it('validates before sending anything', async () => {
@@ -966,7 +981,7 @@ describe('Products page', () => {
       await screen.findByRole('dialog', { name: 'Edit product' });
       expect(sheet().getByLabelText('Title')).toHaveValue('Claw Hammer');
       expect(sheet().getByLabelText('SKU')).toHaveValue('HAM-001');
-      expect(sheet().getByLabelText('Price')).toHaveValue(12.5);
+      expect(sheet().getByLabelText('Price')).toHaveValue('12.5');
       expect(sheet().queryByLabelText('Initial quantity')).not.toBeInTheDocument();
       expect(sheet().getByRole('combobox', { name: 'Category' })).toHaveTextContent('Tools');
       expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('Acme Tools');
@@ -1026,5 +1041,18 @@ describe('Products page', () => {
       expect(state.writes).toEqual([]);
       expect(screen.getByRole('button', { name: 'Edit Claw Hammer' })).toBeInTheDocument();
     });
+  });
+});
+
+describe('Products page in Persian', () => {
+  it('shows quantities, prices, dates and page numbers with Persian digits', async () => {
+    productsApi([hammer]);
+    await i18n.changeLanguage('fa');
+    renderApp({ route: '/products' });
+
+    const hammerRow = within(await row('Claw Hammer'));
+    expect(hammerRow.getByText('۴۰')).toBeInTheDocument();
+    expect(hammerRow.getByText(/۱۲٫۵۰/)).toBeInTheDocument();
+    expect(screen.getByText(/Page ۱ of ۱/)).toBeInTheDocument();
   });
 });

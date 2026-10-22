@@ -4,9 +4,10 @@ import { productCountLabel } from '@/components/categories/CategoryCard';
 import { DataTable } from '@/components/data-table/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
+import { formatNumber } from '@/lib/format';
 
 function movementCountLabel(count) {
-  return `${count} stock ${count === 1 ? 'movement' : 'movements'}`;
+  return `${formatNumber(count)} stock ${count === 1 ? 'movement' : 'movements'}`;
 }
 
 /** Why Delete is disabled: the same wording as the server's IN_USE message. */

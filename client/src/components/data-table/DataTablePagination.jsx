@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { Button } from '@/components/ui/button';
+import { formatNumber } from '@/lib/format';
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
@@ -13,7 +14,7 @@ export function DataTablePagination({ table, pageSizeOptions = PAGE_SIZE_OPTIONS
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
       <p className="text-muted-foreground">
-        {rowCount} {rowCount === 1 ? 'result' : 'results'}
+        {formatNumber(rowCount)} {rowCount === 1 ? 'result' : 'results'}
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
@@ -28,13 +29,13 @@ export function DataTablePagination({ table, pageSizeOptions = PAGE_SIZE_OPTIONS
           >
             {pageSizeOptions.map((size) => (
               <option key={size} value={size}>
-                {size}
+                {formatNumber(size)}
               </option>
             ))}
           </select>
         </div>
         <p aria-live="polite">
-          Page {pageIndex + 1} of {pageCount}
+          Page {formatNumber(pageIndex + 1)} of {formatNumber(pageCount)}
         </p>
         <div className="flex gap-2">
           <Button

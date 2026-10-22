@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 // On the navy surface the page's blue ring is too faint, so focus uses the sidebar ring token.
@@ -56,7 +57,7 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
             {item.label}
             {item.badge && pendingCount > 0 && (
               <Badge className="ms-auto">
-                {pendingCount}
+                {formatNumber(pendingCount)}
                 <span className="sr-only"> waiting for approval</span>
               </Badge>
             )}

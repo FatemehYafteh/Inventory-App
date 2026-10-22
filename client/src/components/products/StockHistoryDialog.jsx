@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { formatDateTime } from '@/lib/format';
+import { formatDateTime, formatNumber } from '@/lib/format';
 import { useMovements } from '@/lib/products';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -25,7 +25,7 @@ const dash = <span className="text-muted-foreground">—</span>;
 
 /** A signed change as text, so the direction never depends on colour: +5, −2. */
 function signed(change) {
-  return change > 0 ? `+${change}` : `−${Math.abs(change)}`;
+  return change > 0 ? `+${formatNumber(change)}` : `−${formatNumber(Math.abs(change))}`;
 }
 
 const columns = [
@@ -53,13 +53,17 @@ const columns = [
     id: 'quantityBefore',
     header: 'Before',
     enableSorting: false,
-    cell: ({ row }) => <span className="tabular-nums">{row.original.quantityBefore}</span>,
+    cell: ({ row }) => (
+      <span className="tabular-nums">{formatNumber(row.original.quantityBefore)}</span>
+    ),
   },
   {
     id: 'quantityAfter',
     header: 'After',
     enableSorting: false,
-    cell: ({ row }) => <span className="tabular-nums">{row.original.quantityAfter}</span>,
+    cell: ({ row }) => (
+      <span className="tabular-nums">{formatNumber(row.original.quantityAfter)}</span>
+    ),
   },
   {
     id: 'supplier',

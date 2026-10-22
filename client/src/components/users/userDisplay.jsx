@@ -1,13 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
-const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
-
-export const formatDate = (value) => dateFormat.format(new Date(value));
-export const formatDateTime = (value) => dateTimeFormat.format(new Date(value));
+export { formatDate, formatDateTime } from '@/lib/format';
 
 /** "rejected" becomes "Rejected" (statuses are stored in lower case). */
 export const capitalize = (value) => value.charAt(0).toUpperCase() + value.slice(1);

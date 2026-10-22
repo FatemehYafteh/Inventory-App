@@ -145,7 +145,7 @@ Planned after M7 (7.3 to 7.6) and before M8, so M8 is built with translation key
 | L0 | Write the plan (`docs/plans/phase-l-multilingual.md`) and create the GitHub issues; settle the open points below | 🟡 Plan written, awaiting owner approval; issues not created |
 | L1 | i18n setup in the client: library, translation files for `en` and `fa`, language switcher, preference saved per user | ✅ Done (#34) |
 | L2 | RTL layout: `dir` and `lang` follow the language; logical CSS properties (start/end) in the tokens, `ui/` components and shell; browser pass at about 360, 768, 1024 and 1280 px in both languages | ✅ Done (#35). The browser pass at 360, 768, 1024 and 1280 px could not be run in this session (no browser available); still to do by the owner |
-| L3 | Persian digits and locale formatting for quantities, prices, dates and pagination (stored values stay unchanged) | ⬜ Not started |
+| L3 | Persian digits and locale formatting for quantities, prices, dates and pagination (stored values stay unchanged) | ✅ Done (#36) |
 | L4 | Move the existing client strings onto translation keys and fix the tests to run in a fixed language | ⬜ Not started |
 | L5 | Server and shared messages: stable error codes translated on the client (affects the Zod messages in `shared/schemas` and `AppError` responses) | ⬜ Not started |
 
