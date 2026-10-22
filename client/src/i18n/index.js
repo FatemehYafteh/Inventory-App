@@ -40,6 +40,20 @@ export function initialLanguage() {
   return storedLanguage() ?? browserLanguage() ?? 'en';
 }
 
+/** Persian reads right to left, English left to right. */
+export const DIRECTIONS = { en: 'ltr', fa: 'rtl' };
+
+export function directionOf(language) {
+  return DIRECTIONS[language] ?? 'ltr';
+}
+
+/** Puts `lang` and `dir` on <html> so the browser lays the page out for the language. */
+function applyDocumentLanguage(language) {
+  if (typeof document === 'undefined') return;
+  document.documentElement.lang = language;
+  document.documentElement.dir = directionOf(language);
+}
+
 i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, fa: { translation: fa } },
   lng: initialLanguage(),
@@ -47,5 +61,8 @@ i18n.use(initReactI18next).init({
   supportedLngs: LANGUAGES,
   interpolation: { escapeValue: false },
 });
+
+i18n.on('languageChanged', applyDocumentLanguage);
+applyDocumentLanguage(i18n.language);
 
 export default i18n;

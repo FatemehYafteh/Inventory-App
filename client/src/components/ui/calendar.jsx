@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 function Chevron({ orientation, className }) {
   const Icon = orientation === 'left' ? ChevronLeftIcon : ChevronRightIcon;
-  return <Icon className={cn('size-4', className)} aria-hidden="true" />;
+  return <Icon className={cn('size-4 rtl:rotate-180', className)} aria-hidden="true" />;
 }
 
 // Date picker for the Movements date-range filter (sub-PRD 08). Styled with Tailwind, so
@@ -34,10 +34,10 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
         ),
         selected:
           '[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary',
-        range_start: 'rounded-l-md bg-accent',
+        range_start: 'rounded-s-md bg-accent',
         range_middle:
           'bg-accent [&>button]:bg-transparent [&>button]:text-accent-foreground [&>button]:hover:bg-transparent',
-        range_end: 'rounded-r-md bg-accent',
+        range_end: 'rounded-e-md bg-accent',
         today: '[&>button]:font-semibold [&>button]:underline',
         outside: 'text-muted-foreground opacity-50',
         disabled: 'text-muted-foreground opacity-50',

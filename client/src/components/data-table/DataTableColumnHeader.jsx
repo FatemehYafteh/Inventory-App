@@ -17,7 +17,7 @@ export function DataTableColumnHeader({ header, children }) {
       type="button"
       onClick={column.getToggleSortingHandler()}
       className={cn(
-        '-ml-2 inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-accent',
+        '-ms-2 inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-accent',
         'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
       )}
     >

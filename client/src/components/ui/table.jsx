@@ -41,7 +41,7 @@ function TableHead({ className, ...props }) {
   return (
     <th
       className={cn(
-        'h-10 whitespace-nowrap px-2 text-left align-middle font-medium text-foreground',
+        'h-10 whitespace-nowrap px-2 text-start align-middle font-medium text-foreground',
         className,
       )}
       {...props}
