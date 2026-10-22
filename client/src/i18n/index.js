@@ -1,8 +1,20 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { LANGUAGES } from '@inventory/shared/schemas';
-import en from './locales/en.json';
-import fa from './locales/fa.json';
+
+// One JSON file per area in locales/<language>/. A file's name is the top-level key of its
+// texts, so locales/en/products.json is read as t('products.<key>').
+const files = import.meta.glob('./locales/*/*.json', { eager: true, import: 'default' });
+
+/** All texts of a language: { <area>: { ... } } built from its files. */
+function textsOf(language) {
+  const texts = {};
+  for (const [path, content] of Object.entries(files)) {
+    const [, fileLanguage, area] = path.match(/\.\/locales\/([^/]+)\/([^/]+)\.json$/);
+    if (fileLanguage === language) texts[area] = content;
+  }
+  return texts;
+}
 
 export const LANGUAGE_STORAGE_KEY = 'language';
 
@@ -55,7 +67,7 @@ function applyDocumentLanguage(language) {
 }
 
 i18n.use(initReactI18next).init({
-  resources: { en: { translation: en }, fa: { translation: fa } },
+  resources: { en: { translation: textsOf('en') }, fa: { translation: textsOf('fa') } },
   lng: initialLanguage(),
   fallbackLng: 'en',
   supportedLngs: LANGUAGES,

@@ -1,5 +1,6 @@
 import { createSupplierSchema } from '@inventory/shared/schemas';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ const FIELDS = ['name', 'contactPerson', 'phone', 'email', 'address', 'notes'];
  * validation or duplicate-name error lands on its field, anything else shows above the fields.
  */
 export function SupplierForm({ supplier, onSubmit, onCancel, onCloseAutoFocus }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -46,50 +48,55 @@ export function SupplierForm({ supplier, onSubmit, onCancel, onCloseAutoFocus })
       <DialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <form noValidate onSubmit={handleSubmit(submit)} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>{supplier ? 'Edit supplier' : 'Add supplier'}</DialogTitle>
-            <DialogDescription>
-              Names are unique, ignoring letter case. Only the name is required.
-            </DialogDescription>
+            <DialogTitle>
+              {supplier ? t('suppliers.form.editTitle') : t('suppliers.form.addTitle')}
+            </DialogTitle>
+            <DialogDescription>{t('suppliers.form.description')}</DialogDescription>
           </DialogHeader>
           <FormAlert>{formError}</FormAlert>
-          <TextField id="supplier-name" label="Name" error={errors.name} {...register('name')} />
+          <TextField
+            id="supplier-name"
+            label={t('suppliers.form.name')}
+            error={errors.name}
+            {...register('name')}
+          />
           <TextField
             id="supplier-contact"
-            label="Contact person"
+            label={t('suppliers.form.contactPerson')}
             error={errors.contactPerson}
             {...register('contactPerson')}
           />
           <TextField
             id="supplier-phone"
-            label="Phone"
+            label={t('suppliers.form.phone')}
             error={errors.phone}
             {...register('phone')}
           />
           <TextField
             id="supplier-email"
-            label="Email"
+            label={t('suppliers.form.email')}
             type="email"
             error={errors.email}
             {...register('email')}
           />
           <TextField
             id="supplier-address"
-            label="Address"
+            label={t('suppliers.form.address')}
             error={errors.address}
             {...register('address')}
           />
           <TextField
             id="supplier-notes"
-            label="Notes"
+            label={t('suppliers.form.notes')}
             error={errors.notes}
             {...register('notes')}
           />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              {t('suppliers.form.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              Save
+              {t('suppliers.form.save')}
             </Button>
           </DialogFooter>
         </form>

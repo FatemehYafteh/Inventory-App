@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,28 +12,34 @@ import {
 
 /** Confirms a promotion or demotion; the change takes effect on the user's next request. */
 export function ChangeRoleDialog({ user, onConfirm, onCancel }) {
+  const { t } = useTranslation();
   if (!user) return null;
   const role = user.role === 'admin' ? 'staff' : 'admin';
-  const name = user.name ?? 'this user';
+  const name = user.name ?? t('users.changeRole.thisUser');
 
   return (
     <AlertDialog open onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Make {name} {role === 'admin' ? 'an admin' : 'staff'}?
+            {t(role === 'admin' ? 'users.changeRole.titleAdmin' : 'users.changeRole.titleStaff', {
+              name,
+            })}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {role === 'admin'
-              ? 'Admins manage users, categories and suppliers, and can archive products.'
-              : 'Staff can work with products and stock, but cannot manage users.'}{' '}
-            The change applies on their next request.
+            {t(
+              role === 'admin'
+                ? 'users.changeRole.descriptionAdmin'
+                : 'users.changeRole.descriptionStaff',
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t('users.changeRole.cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={() => onConfirm(user, role)}>
-            {role === 'admin' ? 'Make admin' : 'Make staff'}
+            {role === 'admin'
+              ? t('users.changeRole.confirmAdmin')
+              : t('users.changeRole.confirmStaff')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

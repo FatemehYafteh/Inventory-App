@@ -1,7 +1,0 @@
-{
-  "language": {
-    "label": "Language",
-    "profileDescription": "Used for the app, emails and Telegram messages.",
-    "saveFailed": "Could not save your language. It is changed on this device only."
-  }
-}

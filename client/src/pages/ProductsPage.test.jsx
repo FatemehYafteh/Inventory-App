@@ -1053,6 +1053,6 @@ describe('Products page in Persian', () => {
     const hammerRow = within(await row('Claw Hammer'));
     expect(hammerRow.getByText('۴۰')).toBeInTheDocument();
     expect(hammerRow.getByText(/۱۲٫۵۰/)).toBeInTheDocument();
-    expect(screen.getByText(/Page ۱ of ۱/)).toBeInTheDocument();
+    expect(screen.getByText(/صفحه ۱ از ۱/)).toBeInTheDocument();
   });
 });

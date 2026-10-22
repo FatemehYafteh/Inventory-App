@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { ME_QUERY_KEY, useLogout, useMe } from '@/lib/auth';
 const APPROVAL_POLL_MS = 10_000;
 
 export function AwaitingApprovalPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: user, isFetching } = useMe({
     refetchInterval: (query) => (query.state.data?.status === 'pending' ? APPROVAL_POLL_MS : false),
@@ -18,24 +20,24 @@ export function AwaitingApprovalPage() {
     <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Awaiting approval</CardTitle>
+          <CardTitle>{t('auth.awaiting.title')}</CardTitle>
           <CardDescription>
-            Thanks, {user?.name}. An admin needs to approve your account before you can use the app.
+            {t('auth.awaiting.description', { name: user?.name ?? '' })}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button asChild variant="link" className="w-full justify-start px-0">
-            <Link to="/profile">Edit profile / connect Telegram</Link>
+            <Link to="/profile">{t('auth.awaiting.editProfile')}</Link>
           </Button>
           <Button
             variant="outline"
             disabled={isFetching}
             onClick={() => queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY })}
           >
-            {isFetching ? 'Checking…' : 'Refresh'}
+            {isFetching ? t('auth.awaiting.checking') : t('auth.awaiting.refresh')}
           </Button>
           <Button variant="ghost" onClick={() => logout.mutate()} disabled={logout.isPending}>
-            Log out
+            {t('auth.common.logOut')}
           </Button>
         </CardContent>
       </Card>

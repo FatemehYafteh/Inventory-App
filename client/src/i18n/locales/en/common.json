@@ -1,0 +1,32 @@
+{
+  "save": "Save",
+  "cancel": "Cancel",
+  "close": "Close",
+  "loading": "Loading…",
+  "somethingWrong": "Something went wrong. Please try again.",
+  "tooManyAttempts": "Too many attempts. Please wait a few minutes and try again.",
+  "networkError": "Could not reach the server. Check your connection and try again.",
+  "serverUnreachable": "Could not reach the server. Try again shortly.",
+  "status": {
+    "active": "Active",
+    "inStock": "In stock",
+    "pending": "Pending",
+    "lowStock": "Low stock",
+    "rejected": "Rejected",
+    "outOfStock": "Out of stock",
+    "inactive": "Inactive",
+    "archived": "Archived"
+  },
+  "role": {
+    "admin": "Admin",
+    "staff": "Staff"
+  },
+  "user": {
+    "noEmail": "No email",
+    "verified": "Verified",
+    "notVerified": "Not verified",
+    "noneYet": "None yet",
+    "email": "Email",
+    "telegram": "Telegram"
+  }
+}

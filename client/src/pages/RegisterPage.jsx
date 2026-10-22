@@ -1,4 +1,5 @@
 import { emailSchema, registerSchema } from '@inventory/shared/schemas';
+import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthMethodTabs } from '@/components/auth/AuthMethodTabs';
@@ -13,16 +14,20 @@ import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
 const FIELDS = ['name', 'email', 'password', 'confirmPassword'];
 
-const loginLink = (
-  <span>
-    Already have an account?{' '}
-    <Link to="/login" className="font-medium text-foreground underline">
-      Log in
-    </Link>
-  </span>
-);
+function LoginLink() {
+  const { t } = useTranslation();
+  return (
+    <span>
+      {t('auth.register.haveAccount')}{' '}
+      <Link to="/login" className="font-medium text-foreground underline">
+        {t('auth.common.logIn')}
+      </Link>
+    </span>
+  );
+}
 
 export function RegisterPage() {
+  const { t } = useTranslation();
   const registration = useRegister();
 
   const {
@@ -50,16 +55,16 @@ export function RegisterPage() {
     // The parsed (trimmed, lowercased) email is what the server used.
     const email = emailSchema.parse(getValues('email'));
     return (
-      <AuthLayout title="Check your email" footer={loginLink}>
+      <AuthLayout title={t('auth.common.checkYourEmail')} footer={<LoginLink />}>
         <div className="flex flex-col gap-4 text-sm">
           <p>
-            We sent a verification link to <strong>{email}</strong>. Open it to confirm your
-            address, then log in.
+            <Trans
+              i18nKey="auth.register.sentLink"
+              values={{ email }}
+              components={{ strong: <strong /> }}
+            />
           </p>
-          <p className="text-muted-foreground">
-            The link expires in 24 hours. After you verify, an admin still needs to approve your
-            account before you can use the app.
-          </p>
+          <p className="text-muted-foreground">{t('auth.register.linkExpires')}</p>
           <ResendVerificationButton email={email} />
         </div>
       </AuthLayout>
@@ -71,9 +76,9 @@ export function RegisterPage() {
 
   return (
     <AuthLayout
-      title="Create an account"
-      description="Choose how you want to sign up."
-      footer={loginLink}
+      title={t('auth.register.title')}
+      description={t('auth.register.description')}
+      footer={<LoginLink />}
     >
       <AuthMethodTabs
         email={
@@ -81,14 +86,14 @@ export function RegisterPage() {
             <FormAlert>{formError}</FormAlert>
             <TextField
               id="name"
-              label="Name"
+              label={t('auth.common.name')}
               autoComplete="name"
               error={errors.name}
               {...register('name')}
             />
             <TextField
               id="email"
-              label="Email"
+              label={t('auth.common.email')}
               type="email"
               autoComplete="email"
               error={errors.email}
@@ -96,7 +101,7 @@ export function RegisterPage() {
             />
             <TextField
               id="password"
-              label="Password"
+              label={t('auth.common.password')}
               type="password"
               autoComplete="new-password"
               error={errors.password}
@@ -105,19 +110,17 @@ export function RegisterPage() {
                 onChange: () => getValues('confirmPassword') && trigger('confirmPassword'),
               })}
             />
-            <p className="-mt-2 text-xs text-muted-foreground">
-              At least 10 characters. Avoid common passwords.
-            </p>
+            <p className="-mt-2 text-xs text-muted-foreground">{t('auth.common.passwordHint')}</p>
             <TextField
               id="confirmPassword"
-              label="Confirm password"
+              label={t('auth.register.confirmPassword')}
               type="password"
               autoComplete="new-password"
               error={errors.confirmPassword}
               {...register('confirmPassword')}
             />
             <Button type="submit" disabled={registration.isPending}>
-              {registration.isPending ? 'Creating account…' : 'Create account'}
+              {registration.isPending ? t('auth.register.submitting') : t('auth.register.submit')}
             </Button>
           </form>
         }

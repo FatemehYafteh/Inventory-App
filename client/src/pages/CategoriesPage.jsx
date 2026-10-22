@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CategoryCard } from '@/components/categories/CategoryCard';
 import { CategoryForm } from '@/components/categories/CategoryForm';
 import { DeleteCategoryDialog } from '@/components/categories/DeleteCategoryDialog';
@@ -20,6 +21,7 @@ import { errorMessage } from '@/lib/errors';
  * Products page filtered by that category.
  */
 export function CategoriesPage() {
+  const { t } = useTranslation();
   const { data: me } = useMe();
   const canManage = me?.role === 'admin';
   const categories = useCategories();
@@ -58,19 +60,19 @@ export function CategoriesPage() {
     <section className="@container flex flex-col gap-4">
       <PageHeader
         ref={headingRef}
-        title="Categories"
-        actions={canManage && <Button onClick={() => openForm(null)}>Add category</Button>}
+        title={t('categories.title')}
+        actions={canManage && <Button onClick={() => openForm(null)}>{t('categories.add')}</Button>}
       />
       <FormAlert>{actionError}</FormAlert>
 
       {categories.isPending && (
         <p role="status" className="text-sm text-muted-foreground">
-          Loading categories…
+          {t('categories.loading')}
         </p>
       )}
       <FormAlert>{categories.error && errorMessage(categories.error)}</FormAlert>
       {categories.isSuccess && items.length === 0 && (
-        <p className="text-sm text-muted-foreground">No categories yet.</p>
+        <p className="text-sm text-muted-foreground">{t('categories.empty')}</p>
       )}
       <div className="grid gap-4 @lg:grid-cols-2 @3xl:grid-cols-3">
         {items.map((category) => (

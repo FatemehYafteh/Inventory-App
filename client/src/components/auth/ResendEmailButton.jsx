@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { FormAlert } from '@/components/form/FormAlert';
 import { useCountdown } from '@/hooks/useCountdown';
 import { errorMessage } from '@/lib/errors';
+import { formatNumber } from '@/lib/format';
 
 export const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -15,6 +17,7 @@ export function ResendEmailButton({
   sentMessage,
   initialCooldown = RESEND_COOLDOWN_SECONDS,
 }) {
+  const { t } = useTranslation();
   const [secondsLeft, startCooldown] = useCountdown(initialCooldown);
 
   const onClick = () =>
@@ -29,10 +32,10 @@ export function ResendEmailButton({
         disabled={secondsLeft > 0 || mutation.isPending}
       >
         {mutation.isPending
-          ? 'Sending…'
+          ? t('auth.common.sending')
           : secondsLeft > 0
-            ? `Resend email in ${secondsLeft}s`
-            : 'Resend email'}
+            ? t('auth.resend.resendEmailIn', { n: formatNumber(secondsLeft) })
+            : t('auth.resend.resendEmail')}
       </Button>
       {mutation.isSuccess && secondsLeft > 0 && <FormAlert tone="success">{sentMessage}</FormAlert>}
       <FormAlert>{errorMessage(mutation.error)}</FormAlert>

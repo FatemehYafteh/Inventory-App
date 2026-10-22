@@ -1,4 +1,5 @@
 import { changeStatusSchema } from '@inventory/shared/schemas';
+import { useTranslation } from 'react-i18next';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +17,7 @@ const rejectSchema = changeStatusSchema.pick({ reason: true });
 
 /** Rejecting asks for an optional reason, which the user gets in the rejection email. */
 export function RejectUserDialog({ user, busy, onConfirm, onCancel }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -32,29 +34,26 @@ export function RejectUserDialog({ user, busy, onConfirm, onCancel }) {
           className="flex flex-col gap-4"
         >
           <DialogHeader>
-            <DialogTitle>Reject {user.name ?? 'this user'}?</DialogTitle>
-            <DialogDescription>
-              They are signed out at once and cannot log in. They get an email, and a Telegram
-              message if they use the bot.
-            </DialogDescription>
+            <DialogTitle>
+              {t('users.reject.title', { name: user.name ?? t('users.reject.thisUser') })}
+            </DialogTitle>
+            <DialogDescription>{t('users.reject.description')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
             <TextField
               id="reject-reason"
-              label="Reason (optional)"
+              label={t('users.reject.reasonLabel')}
               error={errors.reason}
               {...register('reason')}
             />
-            <p className="text-xs text-muted-foreground">
-              The reason is included in the email, not in the Telegram message.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('users.reject.reasonHelp')}</p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              {t('users.reject.cancel')}
             </Button>
             <Button type="submit" disabled={busy}>
-              Reject user
+              {t('users.reject.confirm')}
             </Button>
           </DialogFooter>
         </form>

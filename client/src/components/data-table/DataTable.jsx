@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   rowPaginationFeature,
   rowSortingFeature,
@@ -38,10 +39,11 @@ export function DataTable({
   onPaginationChange,
   isLoading = false,
   error = null,
-  emptyMessage = 'No results.',
+  emptyMessage,
   toolbar = null,
   pageSizeOptions,
 }) {
+  const { t } = useTranslation();
   const table = useTable({
     features,
     columns,
@@ -58,13 +60,13 @@ export function DataTable({
   const columnCount = table.getAllLeafColumns().length;
 
   let status = null;
-  if (isLoading) status = <span role="status">Loading…</span>;
-  else if (!rows.length) status = emptyMessage;
+  if (isLoading) status = <span role="status">{t('common.loading')}</span>;
+  else if (!rows.length) status = emptyMessage ?? t('table.empty');
 
   return (
     <div className="flex flex-col gap-3">
       {toolbar}
-      {error && <FormAlert>{error.message ?? 'Something went wrong. Please try again.'}</FormAlert>}
+      {error && <FormAlert>{error.message ?? t('common.somethingWrong')}</FormAlert>}
       <div className="rounded-md border">
         <Table aria-busy={isLoading}>
           <TableHeader>

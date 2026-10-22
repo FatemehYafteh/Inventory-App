@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "dashboard": "داشبورد",
+    "products": "محصولات",
+    "categories": "دسته‌بندی‌ها",
+    "suppliers": "تأمین‌کنندگان",
+    "users": "کاربران",
+    "main": "اصلی",
+    "waitingForApproval": " در انتظار تأیید"
+  },
+  "skipLink": "پرش به محتوای اصلی",
+  "openMenu": "باز کردن منو",
+  "menu": "منو",
+  "mainNavigation": "ناوبری اصلی",
+  "logOut": "خروج",
+  "backToAwaitingApproval": "بازگشت به در انتظار تأیید",
+  "dashboard": {
+    "title": "داشبورد",
+    "description": "{{name}}، خوش آمدید. آمار موجودی در یکی از مراحل بعدی اینجا نمایش داده می‌شود."
+  },
+  "notFound": {
+    "title": "صفحه پیدا نشد",
+    "goHome": "رفتن به صفحه اصلی"
+  }
+}

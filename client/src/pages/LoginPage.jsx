@@ -1,4 +1,5 @@
 import { loginSchema } from '@inventory/shared/schemas';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthMethodTabs } from '@/components/auth/AuthMethodTabs';
@@ -10,6 +11,7 @@ import { useAccessDenied, useLogin } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const login = useLogin();
   const accessDenied = useAccessDenied();
   // Set by pages that send the user here, e.g. after a password reset.
@@ -34,18 +36,18 @@ export function LoginPage() {
 
   return (
     <AuthLayout
-      title="Log in"
-      description="Choose how you want to sign in."
+      title={t('auth.login.title')}
+      description={t('auth.login.description')}
       footer={
         <div className="flex flex-col gap-1">
           <span>
-            New here?{' '}
+            {t('auth.login.newHere')}{' '}
             <Link to="/register" className="font-medium text-foreground underline">
-              Create an account
+              {t('auth.login.createAccount')}
             </Link>
           </span>
           <Link to="/verify-email" className="underline">
-            Didn’t get the verification email?
+            {t('auth.login.noVerificationEmail')}
           </Link>
         </div>
       }
@@ -54,10 +56,12 @@ export function LoginPage() {
         email={
           <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             {!login.error && <FormAlert tone="success">{notice}</FormAlert>}
-            <FormAlert>{formError ?? (accessDenied ? 'Access denied.' : undefined)}</FormAlert>
+            <FormAlert>
+              {formError ?? (accessDenied ? t('auth.login.accessDenied') : undefined)}
+            </FormAlert>
             <TextField
               id="email"
-              label="Email"
+              label={t('auth.common.email')}
               type="email"
               autoComplete="email"
               error={errors.email}
@@ -65,7 +69,7 @@ export function LoginPage() {
             />
             <TextField
               id="password"
-              label="Password"
+              label={t('auth.common.password')}
               type="password"
               autoComplete="current-password"
               error={errors.password}
@@ -76,10 +80,10 @@ export function LoginPage() {
               state={{ email: watch('email').trim() }}
               className="-mt-2 self-end text-sm underline"
             >
-              Forgot password?
+              {t('auth.login.forgotPassword')}
             </Link>
             <Button type="submit" disabled={login.isPending}>
-              {login.isPending ? 'Logging in…' : 'Log in'}
+              {login.isPending ? t('auth.login.submitting') : t('auth.common.logIn')}
             </Button>
           </form>
         }

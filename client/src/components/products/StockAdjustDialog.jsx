@@ -1,5 +1,6 @@
 import { stockChangeSchema } from '@inventory/shared/schemas';
 import { useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
@@ -21,23 +22,7 @@ import { applyFieldErrors, errorMessage } from '@/lib/errors';
 
 const FIELDS = ['quantity', 'note'];
 
-const MODES = {
-  receive: {
-    label: 'Receive',
-    quantityLabel: 'Quantity to add',
-    hint: 'Stock that arrived. Recorded against the product’s supplier.',
-  },
-  ship: {
-    label: 'Ship',
-    quantityLabel: 'Quantity to remove',
-    hint: 'Stock that left. You cannot remove more than is in stock.',
-  },
-  adjust: {
-    label: 'Adjust',
-    quantityLabel: 'New quantity',
-    hint: 'Set the quantity to a counted total.',
-  },
-};
+const MODES = ['receive', 'ship', 'adjust'];
 
 /** The quantity after the change, or null while the amount is not a usable number. */
 function resultingQuantity(mode, current, amount) {
@@ -54,6 +39,7 @@ function resultingQuantity(mode, current, amount) {
  * (not enough stock, same quantity) lands on the quantity field, anything else above the fields.
  */
 export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocus }) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState('receive');
   const [formError, setFormError] = useState(null);
   const {
@@ -82,11 +68,15 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
   async function submit(values) {
     setFormError(null);
     if (values.type === 'ship' && values.quantity > current) {
-      setError('quantity', { message: `Only ${formatNumber(current)} in stock` });
+      setError('quantity', {
+        message: t('products.adjust.onlyInStock', { n: formatNumber(current) }),
+      });
       return;
     }
     if (values.type === 'adjust' && values.quantity === current) {
-      setError('quantity', { message: `The quantity is already ${formatNumber(current)}` });
+      setError('quantity', {
+        message: t('products.adjust.alreadyQuantity', { n: formatNumber(current) }),
+      });
       return;
     }
     try {
@@ -102,32 +92,34 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
       <DialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <form noValidate onSubmit={handleSubmit(submit)} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle className="[overflow-wrap:anywhere]">Adjust stock</DialogTitle>
+            <DialogTitle className="[overflow-wrap:anywhere]">
+              {t('products.adjust.title')}
+            </DialogTitle>
             <DialogDescription className="[overflow-wrap:anywhere]">
               {product.title} ({product.sku})
             </DialogDescription>
           </DialogHeader>
           <FormAlert>{formError}</FormAlert>
           <Tabs value={mode} onValueChange={chooseMode}>
-            <TabsList aria-label="Kind of stock change" className="w-full">
-              {Object.entries(MODES).map(([value, { label }]) => (
+            <TabsList aria-label={t('products.adjust.kindLabel')} className="w-full">
+              {MODES.map((value) => (
                 <TabsTrigger key={value} value={value} className="flex-1">
-                  {label}
+                  {t(`products.adjust.${value}`)}
                 </TabsTrigger>
               ))}
             </TabsList>
           </Tabs>
-          <p className="text-sm text-muted-foreground">{MODES[mode].hint}</p>
+          <p className="text-sm text-muted-foreground">{t(`products.adjust.${mode}Hint`)}</p>
           <TextField
             id="stock-quantity"
-            label={MODES[mode].quantityLabel}
+            label={t(`products.adjust.${mode}Quantity`)}
             inputMode="numeric"
             autoComplete="off"
             error={errors.quantity}
             {...register('quantity', { setValueAs: parseNumberInput })}
           />
           <div className="flex flex-col gap-2">
-            <Label htmlFor="stock-note">Note (optional)</Label>
+            <Label htmlFor="stock-note">{t('products.adjust.note')}</Label>
             <Textarea
               id="stock-note"
               aria-invalid={Boolean(errors.note)}
@@ -141,20 +133,28 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
             )}
           </div>
           <p className="text-sm tabular-nums" aria-live="polite">
-            Current quantity: <span className="font-medium">{formatNumber(current)}</span>
+            <Trans
+              i18nKey="products.adjust.currentQuantity"
+              values={{ n: formatNumber(current) }}
+              components={{ value: <span className="font-medium" /> }}
+            />
             {after !== null && (
               <>
                 {' '}
-                → New quantity: <span className="font-medium">{formatNumber(after)}</span>
+                <Trans
+                  i18nKey="products.adjust.newQuantity"
+                  values={{ n: formatNumber(after) }}
+                  components={{ value: <span className="font-medium" /> }}
+                />
               </>
             )}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              {t('products.adjust.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save'}
+              {isSubmitting ? t('products.adjust.saving') : t('products.adjust.save')}
             </Button>
           </DialogFooter>
         </form>

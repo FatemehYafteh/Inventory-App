@@ -1,0 +1,30 @@
+{
+  "title": "Categories",
+  "add": "Add category",
+  "loading": "Loading categories…",
+  "empty": "No categories yet.",
+  "productCount_one": "{{n}} product",
+  "productCount_other": "{{n}} products",
+  "card": {
+    "inUseReason": "Used by {{products}}, so it cannot be deleted.",
+    "editLabel": "Edit {{title}}",
+    "deleteLabel": "Delete {{title}}",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "form": {
+    "editTitle": "Edit category",
+    "addTitle": "Add category",
+    "description": "Every product belongs to one category. Titles are unique, ignoring letter case.",
+    "titleLabel": "Title",
+    "descriptionLabel": "Description",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "delete": {
+    "title": "Delete {{title}}?",
+    "description": "This removes the category. It cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete"
+  }
+}

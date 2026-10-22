@@ -2,6 +2,7 @@ import * as SheetPrimitive from '@radix-ui/react-dialog';
 import { cva } from 'class-variance-authority';
 import { XIcon } from 'lucide-react';
 import { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 const Sheet = SheetPrimitive.Root;
@@ -27,6 +28,7 @@ const SheetContent = forwardRef(function SheetContent(
   { className, side, children, ...props },
   ref,
 ) {
+  const { t } = useTranslation();
   return (
     <SheetPrimitive.Portal>
       <SheetPrimitive.Overlay className="fixed inset-0 z-50 bg-overlay" />
@@ -38,7 +40,7 @@ const SheetContent = forwardRef(function SheetContent(
         {children}
         <SheetPrimitive.Close className="absolute top-4 end-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring">
           <XIcon className="size-4" aria-hidden="true" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{t('common.close')}</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPrimitive.Portal>

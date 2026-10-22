@@ -1,0 +1,13 @@
+{
+  "empty": "No results.",
+  "results_one": "{{n}} result",
+  "results_other": "{{n}} results",
+  "rowsPerPage": "Rows per page",
+  "pageOf": "Page {{page}} of {{total}}",
+  "previous": "Previous",
+  "next": "Next",
+  "sortHint": ", {{action}}",
+  "sortAscending": "sort ascending",
+  "sortDescending": "sort descending",
+  "clearSorting": "clear sorting"
+}

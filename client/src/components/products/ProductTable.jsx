@@ -1,5 +1,6 @@
 import { Minus, Plus } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/data-table/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -33,11 +34,12 @@ export function ProductTable({
   onArchive,
   onRestore,
 }) {
+  const { t } = useTranslation();
   const columns = useMemo(
     () => [
       {
         accessorKey: 'title',
-        header: 'Title',
+        header: t('products.table.title'),
         cell: ({ row }) => (
           <div className="flex min-w-48 flex-col gap-0.5">
             <span className="font-medium [overflow-wrap:anywhere]">{row.original.title}</span>
@@ -53,7 +55,7 @@ export function ProductTable({
         ? [
             {
               id: 'archived',
-              header: 'Archived',
+              header: t('products.table.archived'),
               enableSorting: false,
               cell: ({ row }) => (
                 <div className="w-[4.5rem]">
@@ -65,7 +67,7 @@ export function ProductTable({
         : []),
       {
         id: 'category',
-        header: 'Category',
+        header: t('products.table.category'),
         enableSorting: false,
         cell: ({ row }) =>
           row.original.category ? (
@@ -76,7 +78,7 @@ export function ProductTable({
       },
       {
         id: 'supplier',
-        header: 'Supplier',
+        header: t('products.table.supplier'),
         enableSorting: false,
         cell: ({ row }) =>
           row.original.supplier ? (
@@ -88,13 +90,13 @@ export function ProductTable({
       {
         accessorKey: 'price',
         sortDescFirst: false,
-        header: 'Price',
+        header: t('products.table.price'),
         cell: ({ row }) => <span className="tabular-nums">{formatPrice(row.original.price)}</span>,
       },
       {
         accessorKey: 'quantity',
         sortDescFirst: false,
-        header: 'Quantity',
+        header: t('products.table.quantity'),
         cell: ({ row }) => {
           const { title, quantity, isArchived } = row.original;
           return (
@@ -103,7 +105,7 @@ export function ProductTable({
                 variant="outline"
                 size="sm"
                 className="w-8 px-0"
-                aria-label={`Decrease quantity of ${title}`}
+                aria-label={t('products.table.decreaseQuantity', { title })}
                 disabled={isArchived || quantity <= 0}
                 onClick={() => onStep(row.original, -1)}
               >
@@ -114,7 +116,7 @@ export function ProductTable({
                 variant="outline"
                 size="sm"
                 className="w-8 px-0"
-                aria-label={`Increase quantity of ${title}`}
+                aria-label={t('products.table.increaseQuantity', { title })}
                 disabled={isArchived}
                 onClick={() => onStep(row.original, 1)}
               >
@@ -126,13 +128,13 @@ export function ProductTable({
       },
       {
         id: 'stockStatus',
-        header: 'Stock status',
+        header: t('products.table.stockStatus'),
         enableSorting: false,
         cell: ({ row }) => <StatusBadge status={row.original.stockStatus} />,
       },
       {
         id: 'createdAt',
-        header: 'Created',
+        header: t('products.table.created'),
         enableSorting: false,
         cell: ({ row }) => (
           <span className="whitespace-nowrap">{formatDate(row.original.createdAt)}</span>
@@ -140,52 +142,57 @@ export function ProductTable({
       },
       {
         id: 'actions',
-        header: 'Actions',
+        header: t('products.table.actions'),
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              aria-label={`Adjust stock of ${row.original.title}`}
+              aria-label={t('products.table.adjustStockOf', { title: row.original.title })}
               disabled={row.original.isArchived}
               onClick={() => onAdjust(row.original)}
             >
-              Adjust stock
+              {t('products.table.adjustStock')}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              aria-label={`Stock history of ${row.original.title}`}
+              aria-label={t('products.table.historyOf', { title: row.original.title })}
               onClick={() => onHistory(row.original)}
             >
-              History
+              {t('products.table.history')}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              aria-label={`Edit ${row.original.title}`}
+              aria-label={t('products.table.editOf', { title: row.original.title })}
               onClick={() => onEdit(row.original)}
             >
-              Edit
+              {t('products.table.edit')}
             </Button>
             {canArchive && (
               <Button
                 variant="outline"
                 size="sm"
-                aria-label={`${row.original.isArchived ? 'Restore' : 'Archive'} ${row.original.title}`}
+                aria-label={t(
+                  row.original.isArchived ? 'products.table.restoreOf' : 'products.table.archiveOf',
+                  { title: row.original.title },
+                )}
                 onClick={() =>
                   row.original.isArchived ? onRestore(row.original) : onArchive(row.original)
                 }
               >
-                {row.original.isArchived ? 'Restore' : 'Archive'}
+                {row.original.isArchived
+                  ? t('products.table.restore')
+                  : t('products.table.archive')}
               </Button>
             )}
           </div>
         ),
       },
     ],
-    [onEdit, onStep, onAdjust, onHistory, canArchive, onArchive, onRestore],
+    [t, onEdit, onStep, onAdjust, onHistory, canArchive, onArchive, onRestore],
   );
 
   return (

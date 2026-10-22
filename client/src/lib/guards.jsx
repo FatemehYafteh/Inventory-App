@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MinimalLayout } from '@/components/layout/MinimalLayout';
@@ -12,11 +13,12 @@ function FullPageMessage({ children }) {
 }
 
 function useSessionState() {
+  const { t } = useTranslation();
   const { data: user, isPending, isError } = useMe();
-  if (isPending) return { view: <FullPageMessage>Loading…</FullPageMessage> };
+  if (isPending) return { view: <FullPageMessage>{t('common.loading')}</FullPageMessage> };
   if (isError) {
     return {
-      view: <FullPageMessage>Could not reach the server. Try again shortly.</FullPageMessage>,
+      view: <FullPageMessage>{t('common.serverUnreachable')}</FullPageMessage>,
     };
   }
   return { user };

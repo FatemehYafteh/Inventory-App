@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/data-table/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
@@ -15,15 +16,14 @@ function NoWrapOnRejected({ user, children }) {
 }
 
 function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChangeRole }) {
+  const { t } = useTranslation();
   const buttons = [];
   // Why the buttons the rules disable are disabled: a tooltip on them, and a note under them.
   const note =
     {
-      pending:
-        !user.profileComplete && 'They must finish their profile before they can be approved.',
-      active: isYou && 'You cannot reject or demote yourself.',
-      rejected:
-        !user.profileComplete && 'They must finish their profile before they can be reactivated.',
+      pending: !user.profileComplete && t('users.actions.pendingIncompleteNote'),
+      active: isYou && t('users.actions.selfNote'),
+      rejected: !user.profileComplete && t('users.actions.rejectedIncompleteNote'),
     }[user.status] || null;
   const title = note || undefined;
 
@@ -36,7 +36,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         title={title}
         onClick={() => onApprove(user)}
       >
-        Approve
+        {t('users.actions.approve')}
       </Button>,
       <Button
         key="reject"
@@ -45,7 +45,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         disabled={busy}
         onClick={() => onReject(user)}
       >
-        Reject
+        {t('users.actions.reject')}
       </Button>,
     );
   } else if (user.status === 'active') {
@@ -58,7 +58,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         title={title}
         onClick={() => onReject(user)}
       >
-        Reject
+        {t('users.actions.reject')}
       </Button>,
       <Button
         key="role"
@@ -68,7 +68,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         title={title}
         onClick={() => onChangeRole(user)}
       >
-        {user.role === 'admin' ? 'Make staff' : 'Make admin'}
+        {user.role === 'admin' ? t('users.actions.makeStaff') : t('users.actions.makeAdmin')}
       </Button>,
     );
   } else {
@@ -80,7 +80,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         title={title}
         onClick={() => onReactivate(user, 'active')}
       >
-        Reactivate
+        {t('users.actions.reactivate')}
       </Button>,
       <Button
         key="pending"
@@ -89,7 +89,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         disabled={busy}
         onClick={() => onReactivate(user, 'pending')}
       >
-        Move to pending
+        {t('users.actions.moveToPending')}
       </Button>,
     );
   }
@@ -127,11 +127,12 @@ export function UsersTable({
   onChangeRole,
   onOpen,
 }) {
+  const { t } = useTranslation();
   const columns = useMemo(
     () => [
       {
         id: 'name',
-        header: 'Name',
+        header: t('users.table.name'),
         enableSorting: false,
         cell: ({ row }) => (
           <span className="font-medium">
@@ -140,21 +141,23 @@ export function UsersTable({
               onClick={() => onOpen(row.original)}
               className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
-              {row.original.name ?? 'No name yet'}
+              {row.original.name ?? t('users.table.noName')}
             </button>
-            {row.original.id === meId && <span className="text-muted-foreground"> (you)</span>}
+            {row.original.id === meId && (
+              <span className="text-muted-foreground">{t('users.table.you')}</span>
+            )}
           </span>
         ),
       },
       {
         id: 'email',
-        header: 'Email',
+        header: t('users.table.email'),
         enableSorting: false,
         cell: ({ row }) => <EmailCell user={row.original} />,
       },
       {
         id: 'telegram',
-        header: 'Telegram',
+        header: t('users.table.telegram'),
         enableSorting: false,
         cell: ({ row }) =>
           row.original.telegramUsername ? (
@@ -165,24 +168,29 @@ export function UsersTable({
       },
       {
         id: 'methods',
-        header: 'Sign-in methods',
+        header: t('users.table.methods'),
         enableSorting: false,
         cell: ({ row }) => <SignInMethods user={row.original} />,
       },
       {
         id: 'role',
-        header: 'Role',
+        header: t('users.table.role'),
         enableSorting: false,
-        cell: ({ row }) => <Badge variant="secondary">{row.original.role}</Badge>,
+        cell: ({ row }) => (
+          <Badge variant="secondary">{t(`users.role.${row.original.role}`)}</Badge>
+        ),
       },
       {
         id: 'status',
-        header: 'Status',
+        header: t('users.table.status'),
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex flex-col gap-0.5">
             {/* label keeps the stored lower-case text; only the colour comes from the status. */}
-            <StatusBadge status={row.original.status} label={row.original.status} />
+            <StatusBadge
+              status={row.original.status}
+              label={t(`users.status.${row.original.status}`)}
+            />
             {row.original.status === 'rejected' && row.original.statusReason && (
               <span className="text-xs text-muted-foreground">{row.original.statusReason}</span>
             )}
@@ -191,7 +199,7 @@ export function UsersTable({
       },
       {
         id: 'createdAt',
-        header: 'Signed up',
+        header: t('users.table.createdAt'),
         enableSorting: false,
         cell: ({ row }) => (
           <NoWrapOnRejected user={row.original}>
@@ -201,7 +209,7 @@ export function UsersTable({
       },
       {
         id: 'lastLoginAt',
-        header: 'Last login',
+        header: t('users.table.lastLoginAt'),
         enableSorting: false,
         cell: ({ row }) =>
           row.original.lastLoginAt ? (
@@ -209,12 +217,12 @@ export function UsersTable({
               {formatDate(row.original.lastLoginAt)}
             </NoWrapOnRejected>
           ) : (
-            <span className="text-muted-foreground">Never</span>
+            <span className="text-muted-foreground">{t('users.table.never')}</span>
           ),
       },
       {
         id: 'actions',
-        header: 'Actions',
+        header: t('users.table.actions'),
         enableSorting: false,
         cell: ({ row }) => (
           <Actions
@@ -229,7 +237,7 @@ export function UsersTable({
         ),
       },
     ],
-    [meId, busy, onApprove, onReject, onReactivate, onChangeRole, onOpen],
+    [t, meId, busy, onApprove, onReject, onReactivate, onChangeRole, onOpen],
   );
 
   return (

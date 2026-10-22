@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TelegramSignIn } from '@/components/auth/TelegramSignIn';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -8,12 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
  * request in progress.
  */
 export function AuthMethodTabs({ email }) {
+  const { t } = useTranslation();
   const [method, setMethod] = useState('email');
   return (
     <Tabs value={method} onValueChange={setMethod} className="gap-4">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="email">Email</TabsTrigger>
-        <TabsTrigger value="telegram">Telegram</TabsTrigger>
+        <TabsTrigger value="email">{t('auth.methods.email')}</TabsTrigger>
+        <TabsTrigger value="telegram">{t('auth.methods.telegram')}</TabsTrigger>
       </TabsList>
       {/* Named apart from their tabs, so the panel is not a second "Email" label. */}
       <TabsContent
@@ -21,7 +23,7 @@ export function AuthMethodTabs({ email }) {
         forceMount
         hidden={method !== 'email'}
         aria-labelledby={undefined}
-        aria-label="Use email"
+        aria-label={t('auth.methods.useEmail')}
       >
         {email}
       </TabsContent>
@@ -30,7 +32,7 @@ export function AuthMethodTabs({ email }) {
         forceMount
         hidden={method !== 'telegram'}
         aria-labelledby={undefined}
-        aria-label="Use Telegram"
+        aria-label={t('auth.methods.useTelegram')}
       >
         <TelegramSignIn />
       </TabsContent>

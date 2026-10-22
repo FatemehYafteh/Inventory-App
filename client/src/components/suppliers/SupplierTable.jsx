@@ -1,13 +1,15 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { productCountLabel } from '@/components/categories/CategoryCard';
 import { DataTable } from '@/components/data-table/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
+import i18n from '@/i18n';
 import { formatNumber } from '@/lib/format';
 
 function movementCountLabel(count) {
-  return `${formatNumber(count)} stock ${count === 1 ? 'movement' : 'movements'}`;
+  return i18n.t('suppliers.movementCount', { count, n: formatNumber(count) });
 }
 
 /** Why Delete is disabled: the same wording as the server's IN_USE message. */
@@ -15,12 +17,17 @@ export function inUseReason({ productCount, movementCount }) {
   const parts = [];
   if (productCount > 0) parts.push(productCountLabel(productCount));
   if (movementCount > 0) parts.push(movementCountLabel(movementCount));
-  return `Used by ${parts.join(' and ')}. Deactivate it instead.`;
+  const usage =
+    parts.length > 1
+      ? i18n.t('suppliers.usageJoin', { first: parts[0], second: parts[1] })
+      : parts.join('');
+  return i18n.t('suppliers.inUseReason', { usage });
 }
 
 const dash = <span className="text-muted-foreground">—</span>;
 
 function Actions({ supplier, busy, onEdit, onToggleActive, onDelete }) {
+  const { t } = useTranslation();
   const inUse = supplier.productCount > 0 || supplier.movementCount > 0;
   const reasonId = `supplier-${supplier.id}-in-use`;
   const reason = inUse ? inUseReason(supplier) : undefined;
@@ -30,32 +37,35 @@ function Actions({ supplier, busy, onEdit, onToggleActive, onDelete }) {
       <Button
         variant="outline"
         size="sm"
-        aria-label={`Edit ${supplier.name}`}
+        aria-label={t('suppliers.table.editLabel', { name: supplier.name })}
         disabled={busy}
         onClick={() => onEdit(supplier)}
       >
-        Edit
+        {t('suppliers.table.edit')}
       </Button>
       <Button
         variant="outline"
         size="sm"
-        aria-label={`${supplier.isActive ? 'Deactivate' : 'Reactivate'} ${supplier.name}`}
+        aria-label={t(
+          supplier.isActive ? 'suppliers.table.deactivateLabel' : 'suppliers.table.reactivateLabel',
+          { name: supplier.name },
+        )}
         disabled={busy}
         onClick={() => onToggleActive(supplier)}
       >
-        {supplier.isActive ? 'Deactivate' : 'Reactivate'}
+        {supplier.isActive ? t('suppliers.table.deactivate') : t('suppliers.table.reactivate')}
       </Button>
       {/* A disabled button gets no hover events, so the span carries the tooltip. */}
       <span title={reason}>
         <Button
           variant="outline"
           size="sm"
-          aria-label={`Delete ${supplier.name}`}
+          aria-label={t('suppliers.table.deleteLabel', { name: supplier.name })}
           aria-describedby={inUse ? reasonId : undefined}
           disabled={busy || inUse}
           onClick={() => onDelete(supplier)}
         >
-          Delete
+          {t('suppliers.table.delete')}
         </Button>
       </span>
       {inUse && (
@@ -88,11 +98,12 @@ export function SupplierTable({
   onToggleActive,
   onDelete,
 }) {
+  const { t } = useTranslation();
   const columns = useMemo(
     () => [
       {
         accessorKey: 'name',
-        header: 'Name',
+        header: t('suppliers.table.name'),
         cell: ({ row }) => (
           <span className="flex flex-wrap items-center gap-2 font-medium">
             <Link
@@ -107,25 +118,25 @@ export function SupplierTable({
       },
       {
         id: 'contactPerson',
-        header: 'Contact person',
+        header: t('suppliers.table.contactPerson'),
         enableSorting: false,
         cell: ({ row }) => row.original.contactPerson || dash,
       },
       {
         id: 'phone',
-        header: 'Phone',
+        header: t('suppliers.table.phone'),
         enableSorting: false,
         cell: ({ row }) => row.original.phone || dash,
       },
       {
         id: 'email',
-        header: 'Email',
+        header: t('suppliers.table.email'),
         enableSorting: false,
         cell: ({ row }) => row.original.email || dash,
       },
       {
         id: 'productCount',
-        header: 'Product count',
+        header: t('suppliers.table.productCount'),
         enableSorting: false,
         cell: ({ row }) => row.original.productCount,
       },
@@ -133,7 +144,7 @@ export function SupplierTable({
         ? [
             {
               id: 'actions',
-              header: 'Actions',
+              header: t('suppliers.table.actions'),
               enableSorting: false,
               cell: ({ row }) => (
                 <Actions
@@ -148,7 +159,7 @@ export function SupplierTable({
           ]
         : []),
     ],
-    [canManage, busy, onEdit, onToggleActive, onDelete],
+    [t, canManage, busy, onEdit, onToggleActive, onDelete],
   );
 
   return (

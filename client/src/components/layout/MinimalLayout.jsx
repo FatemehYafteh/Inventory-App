@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, Outlet } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { SkipLink, sidebarButtonClass } from './SidebarNav';
 
 /** For pending users: no app navigation, only a way back to Awaiting approval. */
 export function MinimalLayout() {
+  const { t } = useTranslation();
   const logout = useLogout();
   const mainRef = useRef(null);
 
@@ -21,7 +23,7 @@ export function MinimalLayout() {
             to="/awaiting-approval"
             className="flex-1 rounded-sm text-sm underline focus-visible:ring-[3px] focus-visible:ring-sidebar-ring focus-visible:outline-none"
           >
-            Back to Awaiting approval
+            {t('layout.backToAwaitingApproval')}
           </Link>
           <LanguageSwitcher tone="sidebar" />
           <Button
@@ -31,7 +33,7 @@ export function MinimalLayout() {
             onClick={() => logout.mutate()}
             disabled={logout.isPending}
           >
-            Log out
+            {t('layout.logOut')}
           </Button>
         </div>
       </header>

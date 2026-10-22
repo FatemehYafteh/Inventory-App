@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { PAGE_SIZE_OPTIONS } from '@/components/data-table/DataTablePagination';
 import { FormAlert } from '@/components/form/FormAlert';
@@ -13,20 +14,14 @@ import { useMe } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 import { useChangeRole, useChangeStatus, useUsers } from '@/lib/users';
 
-const TABS = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'active', label: 'Active' },
-  { value: 'rejected', label: 'Rejected' },
-];
+const TABS = ['pending', 'active', 'rejected'];
 const DEFAULT_PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 250;
 
-function emptyMessage({ status, search, incomplete }) {
-  if (search) return 'No users match your search.';
-  if (status === 'pending') {
-    return incomplete ? 'No unfinished signups.' : 'No one is waiting for approval.';
-  }
-  return status === 'active' ? 'No active users.' : 'No rejected users.';
+function emptyMessage(t, { status, search, incomplete }) {
+  if (search) return t('users.empty.search');
+  if (status === 'pending' && incomplete) return t('users.empty.incomplete');
+  return t(`users.empty.${status}`);
 }
 
 /**
@@ -34,12 +29,11 @@ function emptyMessage({ status, search, incomplete }) {
  * "Incomplete profile" filter and page live in the URL.
  */
 export function UsersPage() {
+  const { t } = useTranslation();
   const { data: me } = useMe();
   const [params, setParams] = useSearchParams();
 
-  const status = TABS.some((tab) => tab.value === params.get('status'))
-    ? params.get('status')
-    : 'pending';
+  const status = TABS.includes(params.get('status')) ? params.get('status') : 'pending';
   const search = params.get('search') ?? '';
   const incomplete = status === 'pending' && params.get('incomplete') === 'true';
   const limit = PAGE_SIZE_OPTIONS.includes(Number(params.get('limit')))
@@ -102,14 +96,14 @@ export function UsersPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title="Users" />
+      <PageHeader title={t('users.title')} />
       <FormAlert>{actionError}</FormAlert>
 
       <Tabs value={status} onValueChange={(value) => update({ status: value, incomplete: false })}>
         <TabsList>
           {TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
-              {tab.label}
+            <TabsTrigger key={tab} value={tab}>
+              {t(`users.tabs.${tab}`)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -129,13 +123,13 @@ export function UsersPage() {
             }}
             isLoading={users.isPending}
             error={users.error}
-            emptyMessage={emptyMessage({ status, search, incomplete })}
+            emptyMessage={emptyMessage(t, { status, search, incomplete })}
             toolbar={
               <div className="flex flex-wrap items-center gap-4">
                 <Input
                   type="search"
-                  aria-label="Search users"
-                  placeholder="Search name, email or Telegram"
+                  aria-label={t('users.toolbar.searchLabel')}
+                  placeholder={t('users.toolbar.searchPlaceholder')}
                   className="max-w-xs"
                   value={searchText}
                   onChange={(event) => setSearchText(event.target.value)}
@@ -147,7 +141,7 @@ export function UsersPage() {
                       checked={incomplete}
                       onChange={(event) => update({ incomplete: event.target.checked })}
                     />
-                    Incomplete profile
+                    {t('users.toolbar.incomplete')}
                   </label>
                 )}
               </div>

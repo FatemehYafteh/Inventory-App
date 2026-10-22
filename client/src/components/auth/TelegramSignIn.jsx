@@ -2,12 +2,15 @@ import { telegramVerifySchema } from '@inventory/shared/schemas';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form/FormAlert';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useSecondsUntil } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
+import i18n from '@/i18n';
 import { errorMessage } from '@/lib/errors';
+import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import {
   useTelegramConnectStart,
@@ -24,9 +27,9 @@ const codeSchema = telegramVerifySchema.pick({ otp: true });
 const CODE_ERRORS = new Set(['INVALID_CODE', 'TOO_MANY_ATTEMPTS', 'VALIDATION_ERROR']);
 // Final statuses the page explains instead of offering a code form.
 const REFUSALS = {
-  refused: 'Access denied, contact an admin.',
-  rate_limited: 'Too many codes requested. Try again in an hour.',
-  locked: 'Too many wrong codes. Try again later.',
+  refused: 'auth.telegram.refused',
+  rate_limited: 'auth.telegram.rateLimited',
+  locked: 'auth.telegram.locked',
 };
 // How long a wrong code stays on screen before sign-in starts again with a new link.
 const RESTART_DELAY_MS = 1000;
@@ -38,8 +41,8 @@ const FLOWS = {
   login: {
     useStart: useTelegramStart,
     useVerify: useTelegramVerify,
-    startLabel: 'Continue with Telegram',
-    expired: 'This sign-in link has expired.',
+    startLabel: 'auth.telegram.continueWith',
+    expired: 'auth.telegram.loginExpired',
     restartOnWrongCode: true,
     // Sign-in explains the way in; Connect Telegram is one step in a settings page.
     guided: true,
@@ -47,20 +50,21 @@ const FLOWS = {
   connect: {
     useStart: useTelegramConnectStart,
     useVerify: useTelegramConnectVerify,
-    startLabel: 'Connect Telegram',
-    expired: 'This link has expired.',
+    startLabel: 'auth.telegram.connect',
+    expired: 'auth.telegram.connectExpired',
     restartOnWrongCode: false,
     guided: false,
   },
 };
 
-const STEPS = ['Open the chat and press Start', 'Enter the 6-digit code we send you'];
+const STEPS = ['auth.telegram.stepOpenChat', 'auth.telegram.stepEnterCode'];
 
 /**
  * The way in, as a short list. `active` is the step the person is on (1 or 2); 0 means they
  * have not started, and steps before the active one show as done.
  */
 function Steps({ active }) {
+  const { t } = useTranslation();
   return (
     <ol className="flex flex-col gap-2 text-sm">
       {STEPS.map((label, index) => {
@@ -80,12 +84,12 @@ function Steps({ active }) {
                 (done || current) && 'border-primary bg-primary text-primary-foreground',
               )}
             >
-              {done ? '✓' : number}
+              {done ? '✓' : formatNumber(number)}
             </span>
             <span
               className={cn(!current && !done && 'text-muted-foreground', current && 'font-medium')}
             >
-              {label}
+              {t(label)}
             </span>
           </li>
         );
@@ -96,10 +100,11 @@ function Steps({ active }) {
 
 /** "@username", or the display name when the Telegram account has no username. */
 function telegramHandle({ telegramUsername, name }) {
-  return telegramUsername ? `@${telegramUsername}` : name || 'you';
+  return telegramUsername ? `@${telegramUsername}` : name || i18n.t('auth.telegram.you');
 }
 
 function CodeForm({ requestId, useVerify, onWrongCode }) {
+  const { t } = useTranslation();
   const verify = useVerify();
   const {
     control,
@@ -144,7 +149,7 @@ function CodeForm({ requestId, useVerify, onWrongCode }) {
             inputMode="numeric"
             pattern="^[0-9]*$"
             autoComplete="one-time-code"
-            aria-label="Code from Telegram"
+            aria-label={t('auth.telegram.codeLabel')}
             aria-invalid={Boolean(errors.otp)}
             aria-describedby={errors.otp ? 'otp-error' : undefined}
           >
@@ -162,18 +167,20 @@ function CodeForm({ requestId, useVerify, onWrongCode }) {
         </p>
       )}
       <Button type="submit" disabled={verify.isPending}>
-        {verify.isPending ? 'Verifying…' : 'Verify'}
+        {verify.isPending ? t('auth.telegram.verifying') : t('auth.telegram.verify')}
       </Button>
     </form>
   );
 }
-/** "1:58" */
+/** "1:58" (digits follow the language) */
 function minutesAndSeconds(seconds) {
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  const rest = seconds % 60;
+  return `${formatNumber(Math.floor(seconds / 60))}:${formatNumber(Math.floor(rest / 10))}${formatNumber(rest % 10)}`;
 }
 
 /** Asks Telegram for a new code, after the cooldown the server enforces. */
 function ResendButton({ requestId, resendAt }) {
+  const { t } = useTranslation();
   const resend = useTelegramResend(requestId);
   const secondsLeft = useSecondsUntil(resendAt);
 
@@ -186,10 +193,10 @@ function ResendButton({ requestId, resendAt }) {
         disabled={secondsLeft > 0 || resend.isPending}
       >
         {resend.isPending
-          ? 'Sending…'
+          ? t('auth.common.sending')
           : secondsLeft > 0
-            ? `Send a new code in ${secondsLeft}s`
-            : 'Send a new code'}
+            ? t('auth.telegram.sendNewCodeIn', { n: formatNumber(secondsLeft) })
+            : t('auth.telegram.sendNewCode')}
       </Button>
       <FormAlert>{errorMessage(resend.error)}</FormAlert>
     </div>
@@ -201,24 +208,25 @@ function ResendButton({ requestId, resendAt }) {
  * (sign-in), 3 wrong tries end the flow: no new code is offered.
  */
 function CodeStep({ requestId, status, useVerify, onWrongCode }) {
+  const { t } = useTranslation();
   const codeSecondsLeft = useSecondsUntil(status.codeExpiresAt);
   const tooManyWrong = status.attemptsLeft === 0;
 
   if (tooManyWrong && onWrongCode) {
-    return <FormAlert>{REFUSALS.locked}</FormAlert>;
+    return <FormAlert>{t(REFUSALS.locked)}</FormAlert>;
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm">We sent a code to {telegramHandle(status)} in Telegram</p>
+      <p className="text-sm">{t('auth.telegram.sentCodeTo', { handle: telegramHandle(status) })}</p>
       {tooManyWrong ? (
-        <FormAlert>Too many wrong codes.</FormAlert>
+        <FormAlert>{t('auth.telegram.tooManyWrong')}</FormAlert>
       ) : codeSecondsLeft === 0 ? (
-        <FormAlert>This code has expired.</FormAlert>
+        <FormAlert>{t('auth.telegram.codeExpired')}</FormAlert>
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
-            Code expires in {minutesAndSeconds(codeSecondsLeft)}
+            {t('auth.telegram.codeExpiresIn', { time: minutesAndSeconds(codeSecondsLeft) })}
           </p>
           <CodeForm requestId={requestId} useVerify={useVerify} onWrongCode={onWrongCode} />
         </>
@@ -239,6 +247,7 @@ export function ConnectTelegram() {
 }
 
 function TelegramFlow({ flow }) {
+  const { t } = useTranslation();
   const start = flow.useStart();
   const requestId = start.data?.requestId;
   const status = useTelegramStatus(requestId);
@@ -282,13 +291,11 @@ function TelegramFlow({ flow }) {
       0,
       <div className="flex flex-col gap-2">
         {flow.guided && (
-          <p className="text-sm text-muted-foreground">
-            Sign in or create an account with Telegram. No password needed.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('auth.telegram.signInHint')}</p>
         )}
         <FormAlert>{start.error ? errorMessage(start.error) : notice}</FormAlert>
         <Button type="button" onClick={startOver} disabled={start.isPending}>
-          {start.isPending ? 'Starting…' : flow.startLabel}
+          {start.isPending ? t('auth.telegram.starting') : t(flow.startLabel)}
         </Button>
       </div>,
     );
@@ -297,16 +304,16 @@ function TelegramFlow({ flow }) {
   if (current === 'expired') {
     return (
       <div className="flex flex-col gap-2">
-        <p className="text-sm">{flow.expired}</p>
+        <p className="text-sm">{t(flow.expired)}</p>
         <Button type="button" variant="outline" onClick={startOver}>
-          Start again
+          {t('auth.telegram.startAgain')}
         </Button>
       </div>
     );
   }
 
   if (REFUSALS[current]) {
-    return <FormAlert>{REFUSALS[current]}</FormAlert>;
+    return <FormAlert>{t(REFUSALS[current])}</FormAlert>;
   }
 
   if (current === 'otp_sent') {
@@ -329,18 +336,16 @@ function TelegramFlow({ flow }) {
       <FormAlert>{notice}</FormAlert>
       <Button asChild>
         <a href={start.data.deepLink} target="_blank" rel="noreferrer">
-          Open Telegram
+          {t('auth.telegram.openTelegram')}
         </a>
       </Button>
       {flow.guided ? (
         <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
           <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-primary" />
-          Waiting for you to press Start in Telegram…
+          {t('auth.telegram.waiting')}
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Press Start in Telegram, then come back here for your code.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('auth.telegram.pressStart')}</p>
       )}
       {/* For people with Telegram only on their phone. */}
       <div data-qr className="hidden flex-col items-center gap-2 pt-2 md:flex">
@@ -348,9 +353,9 @@ function TelegramFlow({ flow }) {
           value={start.data.deepLink}
           size={160}
           role="img"
-          aria-label="QR code to open Telegram on your phone"
+          aria-label={t('auth.telegram.qrLabel')}
         />
-        <p className="text-xs text-muted-foreground">Or scan with your phone camera.</p>
+        <p className="text-xs text-muted-foreground">{t('auth.telegram.orScan')}</p>
       </div>
     </div>,
   );

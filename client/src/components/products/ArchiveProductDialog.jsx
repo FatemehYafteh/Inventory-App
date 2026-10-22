@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export function ArchiveProductDialog({ product, onConfirm, onCancel, onCloseAutoFocus }) {
+  const { t } = useTranslation();
   if (!product) return null;
 
   return (
@@ -17,16 +19,15 @@ export function ArchiveProductDialog({ product, onConfirm, onCancel, onCloseAuto
       <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle className="[overflow-wrap:anywhere]">
-            Archive {product.title}?
+            {t('products.archive.title', { title: product.title })}
           </AlertDialogTitle>
-          <AlertDialogDescription>
-            It leaves the product list and can no longer have its stock changed. Its history is
-            kept, and you can restore it any time with Show archived.
-          </AlertDialogDescription>
+          <AlertDialogDescription>{t('products.archive.description')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => onConfirm(product)}>Archive</AlertDialogAction>
+          <AlertDialogCancel>{t('products.archive.cancel')}</AlertDialogCancel>
+          <AlertDialogAction onClick={() => onConfirm(product)}>
+            {t('products.archive.confirm')}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

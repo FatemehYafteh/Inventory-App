@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { PAGE_SIZE_OPTIONS } from '@/components/data-table/DataTablePagination';
 import { FormAlert } from '@/components/form/FormAlert';
@@ -39,6 +40,7 @@ const SUPPLIER_FILTER_LIMIT = 100;
  * admins can include archived products (the API refuses it for staff).
  */
 export function ProductsPage() {
+  const { t } = useTranslation();
   const { data: me } = useMe();
   const isAdmin = me?.role === 'admin';
   const [params, setParams] = useSearchParams();
@@ -173,9 +175,9 @@ export function ProductsPage() {
     <section className="flex flex-col gap-4">
       <PageHeader
         ref={headingRef}
-        title="Products"
-        description="Find products and check their stock."
-        actions={<Button onClick={() => openForm(null)}>Add Product</Button>}
+        title={t('products.page.title')}
+        description={t('products.page.description')}
+        actions={<Button onClick={() => openForm(null)}>{t('products.page.add')}</Button>}
       />
       <FormAlert>{actionError}</FormAlert>
       <ProductTable
@@ -207,7 +209,7 @@ export function ProductsPage() {
         onRestore={restore}
         isLoading={products.isPending}
         error={products.error}
-        emptyMessage={filtered ? 'No products match your filters.' : 'No products yet.'}
+        emptyMessage={filtered ? t('products.page.emptyFiltered') : t('products.page.empty')}
         toolbar={
           <ProductFilters
             searchText={searchText}

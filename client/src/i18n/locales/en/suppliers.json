@@ -1,0 +1,50 @@
+{
+  "title": "Suppliers",
+  "add": "Add supplier",
+  "emptySearch": "No suppliers match your search.",
+  "empty": "No suppliers yet.",
+  "searchLabel": "Search suppliers",
+  "searchPlaceholder": "Search name, contact person, phone or email",
+  "movementCount_one": "{{n}} stock movement",
+  "movementCount_other": "{{n}} stock movements",
+  "inUseReason": "Used by {{usage}}. Deactivate it instead.",
+  "usageJoin": "{{first}} and {{second}}",
+  "table": {
+    "name": "Name",
+    "contactPerson": "Contact person",
+    "phone": "Phone",
+    "email": "Email",
+    "productCount": "Product count",
+    "actions": "Actions",
+    "editLabel": "Edit {{name}}",
+    "deactivateLabel": "Deactivate {{name}}",
+    "reactivateLabel": "Reactivate {{name}}",
+    "deleteLabel": "Delete {{name}}",
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "delete": "Delete"
+  },
+  "form": {
+    "editTitle": "Edit supplier",
+    "addTitle": "Add supplier",
+    "description": "Names are unique, ignoring letter case. Only the name is required.",
+    "name": "Name",
+    "contactPerson": "Contact person",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "notes": "Notes",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "dialogs": {
+    "cancel": "Cancel",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteDescription": "This removes the supplier. It cannot be undone.",
+    "delete": "Delete",
+    "deactivateTitle": "Deactivate {{name}}?",
+    "deactivateDescription": "It still has {{products}}. Reactivate it at any time.",
+    "deactivate": "Deactivate"
+  }
+}

@@ -1,5 +1,6 @@
 import { createCategorySchema } from '@inventory/shared/schemas';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form/FormAlert';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ const FIELDS = ['title', 'description'];
  * validation or duplicate-title error lands on its field, anything else shows above the fields.
  */
 export function CategoryForm({ category, onSubmit, onCancel, onCloseAutoFocus }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -46,30 +48,30 @@ export function CategoryForm({ category, onSubmit, onCancel, onCloseAutoFocus })
       <DialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <form noValidate onSubmit={handleSubmit(submit)} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>{category ? 'Edit category' : 'Add category'}</DialogTitle>
-            <DialogDescription>
-              Every product belongs to one category. Titles are unique, ignoring letter case.
-            </DialogDescription>
+            <DialogTitle>
+              {category ? t('categories.form.editTitle') : t('categories.form.addTitle')}
+            </DialogTitle>
+            <DialogDescription>{t('categories.form.description')}</DialogDescription>
           </DialogHeader>
           <FormAlert>{formError}</FormAlert>
           <TextField
             id="category-title"
-            label="Title"
+            label={t('categories.form.titleLabel')}
             error={errors.title}
             {...register('title')}
           />
           <TextField
             id="category-description"
-            label="Description"
+            label={t('categories.form.descriptionLabel')}
             error={errors.description}
             {...register('description')}
           />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              {t('categories.form.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              Save
+              {t('categories.form.save')}
             </Button>
           </DialogFooter>
         </form>
