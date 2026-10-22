@@ -11,36 +11,37 @@ Written at the end of the session. Each claim carries a tag saying where it come
 ## 0000000. Real state, 2026-10-22 (READ THIS FIRST; it overrides every section below where they differ)
 
 **Branch layout [checked now, with `git log`]**
-- `feat/m8-movements` (local only, not pushed, checked out) is at `29b1740`: the 7 M8 commits (`5bc6c16`, `26c36e9`, `eb5bac1`, `2cf9391`, `a9e2b56`, `584eafd`, `29b1740`) on top of the L5 tip, plus the docs commit that adds this section. L5 is its ancestor.
-- `feat/i18n-server-codes` (L5) was moved with `git branch -f` to `origin/feat/i18n-server-codes` = `924141e`. It has none of the M8 commits and is in sync with its remote. Older sections that say M8 is on `feat/i18n-server-codes` are out of date.
+- `feat/m8-movements` (local only, **not pushed**, checked out) holds the 7 M8 commits (`5bc6c16`, `26c36e9`, `eb5bac1`, `2cf9391`, `a9e2b56`, `584eafd`, `29b1740`), the first HANDOFF update `a6ebf08`, and the merge commit `9633b8c` of `origin/sub-prds` (clean, no conflicts). It is 9 commits ahead of `origin/sub-prds` and 0 behind.
+- `feat/i18n-server-codes` (L5) was moved with `git branch -f` to `origin/feat/i18n-server-codes` = `924141e`. It has none of the M8 commits. Older sections that say M8 is on `feat/i18n-server-codes` are out of date.
 - The untracked `client/.vite/` is not part of any commit.
 
-**Open PR chain [checked now with `gh`; all MERGEABLE, CI not checked]**
+**PR chain: all merged into `sub-prds` as merge commits [checked now]**
 
-| PR | Head | Base |
+| PR | Head | Merge commit |
 |---|---|---|
-| #39 | `docs/plan-phase-l` | `sub-prds` |
-| #40 | `feat/i18n-setup` | `docs/plan-phase-l` |
-| #41 | `feat/i18n-rtl` | `feat/i18n-setup` |
-| #42 | `feat/i18n-formatting` | `feat/i18n-rtl` |
-| #43 | `feat/i18n-client-strings` | `feat/i18n-formatting` |
-| #44 | `feat/i18n-server-codes` | `feat/i18n-client-strings` |
+| #39 | `docs/plan-phase-l` | `082e2c4` |
+| #40 | `feat/i18n-setup` | `f507abd` |
+| #41 | `feat/i18n-rtl` | `0726b0c` |
+| #42 | `feat/i18n-formatting` | `0b70360` |
+| #43 | `feat/i18n-client-strings` | `f38a3f3` |
+| #44 | `feat/i18n-server-codes` | `362bded` |
 
-Issues #34 to #38 (L1 to L5) are open and close when their PRs merge. No PR exists for M8.
+`origin/sub-prds` = `362bded`. No PRs and no issues are open (#34 to #38 closed). Merged branches were left on the remote. No PR exists for M8.
 
-**Fresh test results [checked now, on `29b1740`]:** `npm run lint` clean; server 490 of 490 (40 files); client 502 of 502 (42 files). `vite build` and `prettier --check` were not re-run.
+**Test results [checked now]**
+- On the merged `sub-prds` (`362bded`, detached checkout): lint clean; server 441 of 441 (36 files); client 458 of 458 (36 files).
+- On `feat/m8-movements` after the merge (`9633b8c`): lint clean; server 490 of 490 (40 files); client 502 of 502 (42 files); `vite build` succeeds; `prettier --check` clean on the files changed against `sub-prds`.
 
 **API checks over HTTP [checked now]** on a throwaway database (Telegram and mail off), as admin and staff: `/dashboard`, `/movements`, `/movements/performers`, `/movements/export` and `/products/export` all work; a date-only `from` is refused with `DATE_TIME_INVALID`; staff see fewer movement rows than admin (archived products hidden).
 
 **Still manual, not done by an agent:** the browser pass of Dashboard and Movements at 360, 768, 1024 and 1280 px in English and Persian, a CSV opened in Excel, and the Brevo SPF/DKIM check (`docs/launch-checklist.md`).
 
-**Recommended order, each step needs the owner's approval:**
-1. Merge #39 to #44 in order with merge commits, retargeting each next PR to `sub-prds` first (the method used for #19 to #21).
-2. Re-run lint and both suites on the updated `sub-prds`.
-3. Push `feat/m8-movements`, retarget it to `sub-prds`, open the M8 PR. It can only go in after #44.
-4. Add `GET /movements/performers` to the PRD API list if it is kept.
+**Next, each step needs the owner's approval:**
+1. Push `feat/m8-movements` and open the M8 PR against `sub-prds` (use the `mattpocock-skills:pr` template).
+2. Add `GET /movements/performers` to the PRD API list if it is kept.
+3. The owner does the manual items above; the Brevo check is a launch gate.
 
-Nothing is pushed or merged.
+The stack used for the HTTP checks has been stopped. M8 is not pushed.
 
 ## 000000. M8 built, 2026-10-21 (older than the section above)
 
