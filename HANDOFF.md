@@ -11,7 +11,7 @@ Written at the end of the session. Each claim carries a tag saying where it come
 ## 0000000. Real state, 2026-10-22 (READ THIS FIRST; it overrides every section below where they differ)
 
 **Branch layout [checked now, with `git log`]**
-- `feat/m8-movements` (local only, **not pushed**, checked out) holds the 7 M8 commits (`5bc6c16`, `26c36e9`, `eb5bac1`, `2cf9391`, `a9e2b56`, `584eafd`, `29b1740`), the first HANDOFF update `a6ebf08`, and the merge commit `9633b8c` of `origin/sub-prds` (clean, no conflicts). It is 9 commits ahead of `origin/sub-prds` and 0 behind.
+- `feat/m8-movements` (pushed to `origin/feat/m8-movements` at `d0ef5b4`, checked out; the HANDOFF commit that records PR #45 is newer) holds the 7 M8 commits (`5bc6c16`, `26c36e9`, `eb5bac1`, `2cf9391`, `a9e2b56`, `584eafd`, `29b1740`), the first HANDOFF update `a6ebf08`, and the merge commit `9633b8c` of `origin/sub-prds` (clean, no conflicts). It is 9 commits ahead of `origin/sub-prds` and 0 behind.
 - `feat/i18n-server-codes` (L5) was moved with `git branch -f` to `origin/feat/i18n-server-codes` = `924141e`. It has none of the M8 commits. Older sections that say M8 is on `feat/i18n-server-codes` are out of date.
 - The untracked `client/.vite/` is not part of any commit.
 
@@ -26,7 +26,9 @@ Written at the end of the session. Each claim carries a tag saying where it come
 | #43 | `feat/i18n-client-strings` | `f38a3f3` |
 | #44 | `feat/i18n-server-codes` | `362bded` |
 
-`origin/sub-prds` = `362bded`. No PRs and no issues are open (#34 to #38 closed). Merged branches were left on the remote. No PR exists for M8.
+`origin/sub-prds` = `362bded`. No PRs and no issues are open (#34 to #38 closed). Merged branches were left on the remote.
+
+**M8 PR [checked now with `gh`]:** #45 `feat: M8: Movements, Dashboard and CSV export`, head `feat/m8-movements`, **base `feat/i18n-server-codes`** (the owner's choice, so the file diff shows only M8: 67 files). OPEN and MERGEABLE, not merged. That base branch is already merged into `sub-prds` (PR #44), so the commit list also shows the Phase L merge commits; **retarget #45 to `sub-prds` (`gh pr edit 45 --base sub-prds`) before merging**, and do not delete `feat/i18n-server-codes` on the remote before that. The body lists the visual pass, the CSV in Excel and the Brevo check as not done. Fresh results on `d0ef5b4` used in the body: lint clean, server 490 of 490, client 502 of 502, `vite build` succeeds.
 
 **Test results [checked now]**
 - On the merged `sub-prds` (`362bded`, detached checkout): lint clean; server 441 of 441 (36 files); client 458 of 458 (36 files).
@@ -37,11 +39,11 @@ Written at the end of the session. Each claim carries a tag saying where it come
 **Still manual, not done by an agent:** the browser pass of Dashboard and Movements at 360, 768, 1024 and 1280 px in English and Persian, a CSV opened in Excel, and the Brevo SPF/DKIM check (`docs/launch-checklist.md`).
 
 **Next, each step needs the owner's approval:**
-1. Push `feat/m8-movements` and open the M8 PR against `sub-prds` (use the `mattpocock-skills:pr` template).
-2. Add `GET /movements/performers` to the PRD API list if it is kept.
-3. The owner does the manual items above; the Brevo check is a launch gate.
+1. The owner does the manual items above (browser pass, CSV in Excel); the Brevo check is a launch gate.
+2. Retarget #45 to `sub-prds`, then merge it (merge commit) once approved.
+3. Add `GET /movements/performers` to the PRD API list if it is kept.
 
-The stack used for the HTTP checks has been stopped. M8 is not pushed.
+The stack used for the HTTP checks has been stopped. M8 is pushed and in PR #45; nothing of M8 is merged.
 
 ## 000000. M8 built, 2026-10-21 (older than the section above)
 
