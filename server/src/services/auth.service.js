@@ -132,7 +132,7 @@ async function sendVerificationEmail(user, deps) {
  * the email is taken: a new address gets an account and a verification link, an existing
  * unverified email account gets a fresh link, and anything else gets nothing.
  */
-export async function register({ name, email, password }, { config, mailer }) {
+export async function register({ name, email, password, language }, { config, mailer }) {
   // Hash before looking up so both paths take about the same time.
   const passwordHash = await hashPassword(password);
   const existing = await User.findOne({ email }).select('+passwordHash');
@@ -146,7 +146,7 @@ export async function register({ name, email, password }, { config, mailer }) {
 
   let user;
   try {
-    user = await User.create({ name, email, passwordHash, emailVerified: false });
+    user = await User.create({ name, email, passwordHash, emailVerified: false, language });
   } catch (err) {
     if (err?.code === 11000) return; // Registered concurrently; treat as existing.
     throw err;

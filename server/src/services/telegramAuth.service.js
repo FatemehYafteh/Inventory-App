@@ -188,13 +188,18 @@ async function startRequest(
   };
 }
 
+/** Telegram's `language_code` (an IETF tag such as `fa` or `fa-IR`) as a supported language. */
+export function languageFromTelegram(languageCode) {
+  return typeof languageCode === 'string' && /^fa(-|$)/i.test(languageCode) ? 'fa' : 'en';
+}
+
 /**
  * Pressing Start in Telegram. Claims the pending request for this Telegram account and
  * returns the reply the bot sends to the chat (the code, or a short help text).
  * The bot and the tg:start development script both call this.
  */
 export async function handleStart(
-  { startToken, telegramId, firstName, lastName, username },
+  { startToken, telegramId, firstName, lastName, username, languageCode },
   config,
 ) {
   if (!startToken) return START_REPLIES.help;
@@ -209,6 +214,7 @@ export async function handleStart(
     telegramId: String(telegramId),
     telegramUsername: username || undefined,
     name: telegramName(firstName, lastName),
+    language: languageFromTelegram(languageCode),
   };
   // Sign-in: wrong tries count across new links until the first one would have expired.
   if (request.purpose === 'login') {
@@ -341,7 +347,7 @@ function statusOf(request, now) {
  * Signs in the User holding this Telegram ID, or creates a Placeholder user for a new one.
  * A rejected User is refused before anything about them changes.
  */
-async function signInTelegramUser({ telegramId, telegramUsername, name }, now) {
+async function signInTelegramUser({ telegramId, telegramUsername, name, language }, now) {
   const existing = await User.findOne({ telegramId });
   if (!existing) {
     try {
@@ -349,6 +355,7 @@ async function signInTelegramUser({ telegramId, telegramUsername, name }, now) {
         telegramId,
         telegramUsername,
         name,
+        language: language ?? 'en',
         role: 'staff',
         status: 'pending',
         lastLoginAt: now,
@@ -356,7 +363,7 @@ async function signInTelegramUser({ telegramId, telegramUsername, name }, now) {
     } catch (err) {
       // Two verifies for the same new Telegram ID at once: the other one created the user.
       if (err?.code !== 11000) throw err;
-      return signInTelegramUser({ telegramId, telegramUsername, name }, now);
+      return signInTelegramUser({ telegramId, telegramUsername, name, language }, now);
     }
   }
 

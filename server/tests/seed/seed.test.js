@@ -11,7 +11,7 @@ import { Product, stockStatus } from '../../src/models/Product.js';
 import { StatusChange } from '../../src/models/StatusChange.js';
 import { StockMovement } from '../../src/models/StockMovement.js';
 import { Supplier } from '../../src/models/Supplier.js';
-import { User } from '../../src/models/User.js';
+import { LANGUAGES, User } from '../../src/models/User.js';
 import { handleStart } from '../../src/services/telegramAuth.service.js';
 import { ORIGIN, buildApp, testConfig, useTestDatabase } from '../helpers/setup.js';
 
@@ -147,6 +147,15 @@ describe('seedDatabase', () => {
       expect(change).toMatchObject({ reason: rejected.statusReason });
       expect(String(change.changedBy)).toBe(String(rejected.statusChangedBy));
     }
+  });
+
+  it('gives every user a supported language, and seeds both', async () => {
+    await seedDatabase({ now });
+    const seeded = await User.find();
+
+    for (const user of seeded) expect(LANGUAGES).toContain(user.language);
+    expect(seeded.some((user) => user.language === 'fa')).toBe(true);
+    expect(seeded.some((user) => user.language === 'en')).toBe(true);
   });
 
   it('seeds enough users to page, filter and search the Users page', async () => {

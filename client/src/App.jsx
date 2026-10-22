@@ -23,8 +23,11 @@ import { ProductsPage } from '@/pages/ProductsPage';
 import { SuppliersPage } from '@/pages/SuppliersPage';
 import { UsersPage } from '@/pages/UsersPage';
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
+import '@/i18n';
+import { useLanguageSync } from '@/i18n/useLanguage';
 
 export function App() {
+  useLanguageSync();
   return (
     <Routes>
       <Route element={<RequireGuest />}>

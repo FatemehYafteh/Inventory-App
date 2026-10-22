@@ -62,6 +62,22 @@ afterEach(() => {
 });
 
 describe('Telegram sign-in', () => {
+  it('creates the user in the language Telegram reports, else English', async () => {
+    const app = buildApp();
+    for (const [languageCode, telegramId, expected] of [
+      ['fa', '555000201', 'fa'],
+      ['fa-IR', '555000202', 'fa'],
+      ['de', '555000203', 'en'],
+      [undefined, '555000204', 'en'],
+    ]) {
+      const { requestId, startToken } = await startLogin(app);
+      const reply = await pressStart(startToken, { telegramId, languageCode });
+      await post(app, '/api/auth/telegram/verify').send({ requestId, otp: codeIn(reply) });
+
+      expect((await User.findOne({ telegramId })).language).toBe(expected);
+    }
+  });
+
   it('signs a new Telegram user in as a Placeholder user', async () => {
     const app = buildApp();
     const { requestId, startToken, res: startRes } = await startLogin(app);
@@ -351,9 +367,7 @@ describe('Telegram sign-in', () => {
 
       // A new link (even without previousRequestId) is refused for this Telegram ID...
       const blocked = await startLogin(app);
-      expect(await pressStart(blocked.startToken)).toBe(
-        'Too many wrong codes. Try again later.',
-      );
+      expect(await pressStart(blocked.startToken)).toBe('Too many wrong codes. Try again later.');
       expect((await getStatus(app, blocked.requestId)).body.status).toBe('locked');
       expect(app.locals.telegram.outbox).toHaveLength(0);
       expect(await User.countDocuments()).toBe(0);

@@ -15,9 +15,15 @@ export function createBot(config, { botInfo, logger = console } = {}) {
   const privateChats = bot.errorBoundary(logError).chatType('private');
 
   privateChats.command('start', async (ctx) => {
-    const { id, first_name: firstName, last_name: lastName, username } = ctx.from;
+    const {
+      id,
+      first_name: firstName,
+      last_name: lastName,
+      username,
+      language_code: languageCode,
+    } = ctx.from;
     const reply = await handleStart(
-      { startToken: ctx.match.trim(), telegramId: id, firstName, lastName, username },
+      { startToken: ctx.match.trim(), telegramId: id, firstName, lastName, username, languageCode },
       config,
     );
     await ctx.reply(reply);

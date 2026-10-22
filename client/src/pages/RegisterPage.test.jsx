@@ -89,6 +89,7 @@ describe('RegisterPage', () => {
       email: 'nora@example.com',
       password: 'violet-harbor-lantern',
       confirmPassword: 'violet-harbor-lantern',
+      language: 'en',
     });
   });
 

@@ -22,6 +22,8 @@ const authRequestSchema = new mongoose.Schema(
     telegramId: String,
     telegramUsername: String,
     name: String,
+    // Telegram's language_code mapped to a supported language; used when sign-in creates the user.
+    language: String,
     otpHash: String,
     otpExpiresAt: Date,
     attempts: { type: Number, default: 0 },

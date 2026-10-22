@@ -40,6 +40,8 @@ const handwritten = [
     name: 'Lena Linked',
     email: 'linked@example.com',
     emailVerified: true,
+    // Persian-speaking user, so the UI, emails and bot messages can be seen in Persian.
+    language: 'fa',
     password: true,
     telegramId: '100000002',
     telegramUsername: 'lena_linked',
