@@ -8,9 +8,43 @@ Written at the end of the session. Each claim carries a tag saying where it come
 - **[prior session]**: copied from an older handoff and not re-checked.
 - **(verify)**: not checked at all.
 
-## 000000. M8 built, 2026-10-21 (READ THIS FIRST; it overrides older sections where they differ)
+## 0000000. Real state, 2026-10-22 (READ THIS FIRST; it overrides every section below where they differ)
 
-Branch `feat/i18n-server-codes`, one local commit per phase, **nothing pushed, no PR opened, nothing merged**. The plan is `docs/plans/m8-movements-dashboard-export.md` (approved by the owner, with the interview decisions D1 to D6 and the assumptions A1 to A12).
+**Branch layout [checked now, with `git log`]**
+- `feat/m8-movements` (local only, not pushed, checked out) is at `29b1740`: the 7 M8 commits (`5bc6c16`, `26c36e9`, `eb5bac1`, `2cf9391`, `a9e2b56`, `584eafd`, `29b1740`) on top of the L5 tip, plus the docs commit that adds this section. L5 is its ancestor.
+- `feat/i18n-server-codes` (L5) was moved with `git branch -f` to `origin/feat/i18n-server-codes` = `924141e`. It has none of the M8 commits and is in sync with its remote. Older sections that say M8 is on `feat/i18n-server-codes` are out of date.
+- The untracked `client/.vite/` is not part of any commit.
+
+**Open PR chain [checked now with `gh`; all MERGEABLE, CI not checked]**
+
+| PR | Head | Base |
+|---|---|---|
+| #39 | `docs/plan-phase-l` | `sub-prds` |
+| #40 | `feat/i18n-setup` | `docs/plan-phase-l` |
+| #41 | `feat/i18n-rtl` | `feat/i18n-setup` |
+| #42 | `feat/i18n-formatting` | `feat/i18n-rtl` |
+| #43 | `feat/i18n-client-strings` | `feat/i18n-formatting` |
+| #44 | `feat/i18n-server-codes` | `feat/i18n-client-strings` |
+
+Issues #34 to #38 (L1 to L5) are open and close when their PRs merge. No PR exists for M8.
+
+**Fresh test results [checked now, on `29b1740`]:** `npm run lint` clean; server 490 of 490 (40 files); client 502 of 502 (42 files). `vite build` and `prettier --check` were not re-run.
+
+**API checks over HTTP [checked now]** on a throwaway database (Telegram and mail off), as admin and staff: `/dashboard`, `/movements`, `/movements/performers`, `/movements/export` and `/products/export` all work; a date-only `from` is refused with `DATE_TIME_INVALID`; staff see fewer movement rows than admin (archived products hidden).
+
+**Still manual, not done by an agent:** the browser pass of Dashboard and Movements at 360, 768, 1024 and 1280 px in English and Persian, a CSV opened in Excel, and the Brevo SPF/DKIM check (`docs/launch-checklist.md`).
+
+**Recommended order, each step needs the owner's approval:**
+1. Merge #39 to #44 in order with merge commits, retargeting each next PR to `sub-prds` first (the method used for #19 to #21).
+2. Re-run lint and both suites on the updated `sub-prds`.
+3. Push `feat/m8-movements`, retarget it to `sub-prds`, open the M8 PR. It can only go in after #44.
+4. Add `GET /movements/performers` to the PRD API list if it is kept.
+
+Nothing is pushed or merged.
+
+## 000000. M8 built, 2026-10-21 (older than the section above)
+
+Built on `feat/i18n-server-codes` at the time; now on `feat/m8-movements`. One local commit per phase, **nothing pushed, no PR opened, nothing merged**. The plan is `docs/plans/m8-movements-dashboard-export.md` (approved by the owner, with the interview decisions D1 to D6 and the assumptions A1 to A12).
 
 | Phase | Commit | What |
 |---|---|---|
