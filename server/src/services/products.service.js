@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { Category } from '../models/Category.js';
 import { Product } from '../models/Product.js';
@@ -9,7 +10,7 @@ const CASE_INSENSITIVE = { locale: 'en', strength: 2 };
 const INITIAL_STOCK_NOTE = 'Initial stock';
 
 function notFound() {
-  return new AppError(404, 'NOT_FOUND', 'Product not found');
+  return new AppError(404, 'NOT_FOUND', m.PRODUCT_NOT_FOUND);
 }
 
 function escapeRegex(value) {
@@ -69,7 +70,7 @@ function withRelations(query) {
 export async function listProducts(user, query) {
   const { page, limit, sortBy, order } = query;
   if (query.archived && user.role !== 'admin') {
-    throw new AppError(403, 'FORBIDDEN', 'You do not have access to this.');
+    throw new AppError(403, 'FORBIDDEN', m.NO_ACCESS);
   }
   const filter = filterFor(query);
   const find = Product.find(filter);
@@ -96,12 +97,12 @@ export async function getProduct(user, id) {
 }
 
 function fieldError(field, message) {
-  return new AppError(400, 'VALIDATION_ERROR', 'Validation failed', { [field]: message });
+  return new AppError(400, 'VALIDATION_ERROR', m.VALIDATION_FAILED, { [field]: message });
 }
 
 function duplicateSku() {
-  return new AppError(409, 'DUPLICATE_SKU', 'A product with this SKU already exists', {
-    sku: 'A product with this SKU already exists',
+  return new AppError(409, 'DUPLICATE_SKU', m.PRODUCT_SKU_EXISTS, {
+    sku: m.PRODUCT_SKU_EXISTS,
   });
 }
 
@@ -115,7 +116,7 @@ async function referenceCategory(id, session) {
     { $currentDate: { updatedAt: true } },
     { session },
   );
-  if (result.matchedCount === 0) throw fieldError('category', 'Choose an existing category');
+  if (result.matchedCount === 0) throw fieldError('category', m.CATEGORY_MUST_EXIST);
 }
 
 /** As `referenceCategory`; a supplier chosen for a product must also be active. */
@@ -125,7 +126,7 @@ async function referenceSupplier(id, session) {
     { $currentDate: { updatedAt: true } },
     { session },
   );
-  if (!supplier) throw fieldError('supplier', 'Choose an active supplier');
+  if (!supplier) throw fieldError('supplier', m.SUPPLIER_MUST_BE_ACTIVE);
 }
 
 async function inTransaction(work) {
@@ -241,8 +242,8 @@ async function setArchived(id, archived) {
   if (product) return present(product);
   if (!(await Product.exists({ _id: id }))) throw notFound();
   throw archived
-    ? new AppError(409, 'ALREADY_ARCHIVED', 'This product is already archived')
-    : new AppError(409, 'NOT_ARCHIVED', 'This product is not archived');
+    ? new AppError(409, 'ALREADY_ARCHIVED', m.PRODUCT_ALREADY_ARCHIVED)
+    : new AppError(409, 'NOT_ARCHIVED', m.PRODUCT_NOT_ARCHIVED);
 }
 
 export const archiveProduct = (id) => setArchived(id, true);

@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import { AppError } from '../utils/AppError.js';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -13,10 +14,10 @@ export function csrf(config) {
 
     const origin = req.get('origin');
     if (origin && origin !== config.clientOrigin) {
-      return next(new AppError(403, 'CSRF_REJECTED', 'Request blocked'));
+      return next(new AppError(403, 'CSRF_REJECTED', m.REQUEST_BLOCKED));
     }
     if (!req.get('x-requested-with')) {
-      return next(new AppError(403, 'CSRF_REJECTED', 'Request blocked'));
+      return next(new AppError(403, 'CSRF_REJECTED', m.REQUEST_BLOCKED));
     }
     next();
   };

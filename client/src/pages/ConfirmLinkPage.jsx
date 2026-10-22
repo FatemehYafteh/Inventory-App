@@ -8,7 +8,7 @@ import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
 import { useZodForm } from '@/hooks/useZodForm';
 import { useConfirmAccountLink } from '@/lib/auth';
-import { applyFieldErrors, errorMessage } from '@/lib/errors';
+import { applyFieldErrors, errorMessage, translateNotice } from '@/lib/errors';
 
 const passwordSchema = accountLinkConfirmSchema.pick({ password: true });
 
@@ -67,7 +67,7 @@ export function ConfirmLinkPage() {
     return (
       <AuthLayout title={t('auth.confirmLink.linked')}>
         <div className="flex flex-col gap-4 text-sm">
-          <FormAlert tone="success">{confirm.data.message}</FormAlert>
+          <FormAlert tone="success">{translateNotice(confirm.data.message)}</FormAlert>
           <Button asChild>
             <Link to="/login">{t('auth.common.logIn')}</Link>
           </Button>

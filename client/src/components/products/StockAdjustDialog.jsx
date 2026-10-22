@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useZodForm } from '@/hooks/useZodForm';
-import { applyFieldErrors, errorMessage } from '@/lib/errors';
+import { applyFieldErrors, errorMessage, translateMessage } from '@/lib/errors';
 
 const FIELDS = ['quantity', 'note'];
 
@@ -128,7 +128,7 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
             />
             {errors.note && (
               <p id="stock-note-error" className="text-sm text-danger">
-                {errors.note.message}
+                {translateMessage(errors.note.message)}
               </p>
             )}
           </div>

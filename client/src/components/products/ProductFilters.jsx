@@ -23,7 +23,7 @@ function FilterSelect({ label, allLabel, value, options, onChange }) {
   const { t } = useTranslation();
   return (
     <Select value={value || ALL} onValueChange={(next) => onChange(next === ALL ? '' : next)}>
-      <SelectTrigger aria-label={label} className="w-full sm:w-44">
+      <SelectTrigger aria-label={label} className="w-full sm:w-auto sm:min-w-44">
         <SelectValue placeholder={allLabel} />
       </SelectTrigger>
       <SelectContent>

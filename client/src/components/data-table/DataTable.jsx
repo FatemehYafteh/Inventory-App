@@ -8,6 +8,7 @@ import {
 import { DataTableColumnHeader } from '@/components/data-table/DataTableColumnHeader';
 import { DataTablePagination } from '@/components/data-table/DataTablePagination';
 import { FormAlert } from '@/components/form/FormAlert';
+import { translateMessage } from '@/lib/errors';
 import {
   Table,
   TableBody,
@@ -66,7 +67,9 @@ export function DataTable({
   return (
     <div className="flex flex-col gap-3">
       {toolbar}
-      {error && <FormAlert>{error.message ?? t('common.somethingWrong')}</FormAlert>}
+      {error && (
+        <FormAlert>{translateMessage(error.message) ?? t('common.somethingWrong')}</FormAlert>
+      )}
       <div className="rounded-md border">
         <Table aria-busy={isLoading}>
           <TableHeader>

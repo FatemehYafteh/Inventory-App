@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import { AppError } from '../utils/AppError.js';
 
 /**
@@ -7,5 +8,5 @@ import { AppError } from '../utils/AppError.js';
  */
 export function requireActive(req, _res, next) {
   if (req.user.status === 'active') return next();
-  next(new AppError(403, 'ACCOUNT_PENDING', 'Your account is waiting for approval.'));
+  next(new AppError(403, 'ACCOUNT_PENDING', m.ACCOUNT_PENDING));
 }

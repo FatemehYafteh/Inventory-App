@@ -1,12 +1,16 @@
+import { codeForMessage, m } from '@inventory/shared/errorCodes';
 import { AppError } from '../utils/AppError.js';
 
 function validationError(error) {
   const errors = {};
+  const errorCodes = {};
   for (const issue of error.issues) {
     const field = issue.path.join('.') || '_';
-    errors[field] ??= issue.message;
+    if (field in errors) continue;
+    errors[field] = issue.message;
+    errorCodes[field] = codeForMessage(issue.message) ?? 'VALIDATION_INVALID';
   }
-  return new AppError(400, 'VALIDATION_ERROR', 'Validation failed', errors);
+  return new AppError(400, 'VALIDATION_ERROR', m.VALIDATION_FAILED, errors, undefined, errorCodes);
 }
 
 /** Validates and replaces `req.body` with the parsed result of a shared Zod schema. */

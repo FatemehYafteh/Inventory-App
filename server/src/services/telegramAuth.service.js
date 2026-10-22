@@ -1,7 +1,9 @@
+import { m } from '@inventory/shared/errorCodes';
 import { randomInt, timingSafeEqual } from 'node:crypto';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../models/AuthRequest.js';
 import { User, isPlaceholder } from '../models/User.js';
+import { languageOf, translate } from '../i18n/index.js';
 import { AppError } from '../utils/AppError.js';
 import { hashToken, randomToken } from '../utils/crypto.js';
 import { startSession } from './auth.service.js';
@@ -26,19 +28,37 @@ export const START_REPLIES = {
   locked: 'Too many wrong codes. Try again later.',
 };
 
-function codeMessage(code, purpose, config) {
-  const intro =
-    purpose === 'connect'
-      ? `Your code to connect Telegram to your account is ${code}.`
-      : `Your sign-in code is ${code}.`;
-  return (
-    `${intro} It expires in 2 minutes. ` +
-    `Only enter it on ${config.appUrl}. Never share it with anyone.`
-  );
+/** A bot reply in `language` (English for an unknown language). `key` is a START_REPLIES key. */
+export function startReply(key, language) {
+  return translate(language, `bot.start.${key}`);
+}
+
+/** Telegram's `language_code` (an IETF tag such as `fa` or `fa-IR`) as a supported language. */
+export function languageFromTelegram(languageCode) {
+  return typeof languageCode === 'string' && /^fa(-|$)/i.test(languageCode) ? 'fa' : 'en';
+}
+
+/**
+ * The language a bot reply to this Telegram account uses: the linked User's saved language,
+ * else Telegram's `language_code`, else English.
+ */
+export async function replyLanguage(telegramId, languageCode) {
+  if (telegramId !== undefined && telegramId !== null) {
+    const linked = await User.findOne({ telegramId: String(telegramId) }).select('language');
+    if (linked) return languageOf(linked);
+  }
+  return languageFromTelegram(languageCode);
+}
+
+function codeMessage(code, purpose, config, language) {
+  const intro = translate(language, purpose === 'connect' ? 'bot.code.connect' : 'bot.code.login', {
+    code,
+  });
+  return `${intro} ${translate(language, 'bot.code.tail', { appUrl: config.appUrl })}`;
 }
 
 function invalidCode() {
-  return new AppError(400, 'INVALID_CODE', 'This code is invalid or has expired.');
+  return new AppError(400, 'INVALID_CODE', m.TELEGRAM_CODE_INVALID_OR_EXPIRED);
 }
 
 function wrongCode(left) {
@@ -50,7 +70,7 @@ function wrongCode(left) {
 }
 
 function tooManyWrongCodes() {
-  return new AppError(400, 'TOO_MANY_ATTEMPTS', 'Too many wrong codes.');
+  return new AppError(400, 'TOO_MANY_ATTEMPTS', m.TELEGRAM_TOO_MANY_WRONG_CODES);
 }
 
 /** Display name from Telegram: first + last name, at most 100 characters. */
@@ -104,7 +124,7 @@ function sameHash(a, b) {
 async function findVisibleRequest(filter, viewer) {
   const request = await AuthRequest.findOne(filter);
   if (!request || request.purpose === 'login') return request;
-  if (!viewer) throw new AppError(401, 'NOT_AUTHENTICATED', 'Please log in to continue.');
+  if (!viewer) throw new AppError(401, 'NOT_AUTHENTICATED', m.LOGIN_REQUIRED);
   return request.connectUser?.equals(viewer._id) ? request : null;
 }
 
@@ -145,7 +165,7 @@ async function carriedTries(telegramId, now) {
 }
 
 function telegramAlreadyConnected() {
-  return new AppError(409, 'TELEGRAM_ALREADY_CONNECTED', 'Your account already has Telegram.');
+  return new AppError(409, 'TELEGRAM_ALREADY_CONNECTED', m.TELEGRAM_ALREADY_CONNECTED);
 }
 
 /** Connect Telegram on the Profile page: the same deep link, for the signed-in user. */
@@ -162,7 +182,7 @@ async function startRequest(
   const bot = config.telegram.botUsername;
   // Never guess a bot: a made-up username could belong to someone else and receive the token.
   if (!bot) {
-    throw new AppError(503, 'TELEGRAM_UNAVAILABLE', 'Telegram sign-in is not available right now.');
+    throw new AppError(503, 'TELEGRAM_UNAVAILABLE', m.TELEGRAM_UNAVAILABLE);
   }
 
   const startToken = randomToken(32);
@@ -188,11 +208,6 @@ async function startRequest(
   };
 }
 
-/** Telegram's `language_code` (an IETF tag such as `fa` or `fa-IR`) as a supported language. */
-export function languageFromTelegram(languageCode) {
-  return typeof languageCode === 'string' && /^fa(-|$)/i.test(languageCode) ? 'fa' : 'en';
-}
-
 /**
  * Pressing Start in Telegram. Claims the pending request for this Telegram account and
  * returns the reply the bot sends to the chat (the code, or a short help text).
@@ -202,13 +217,14 @@ export async function handleStart(
   { startToken, telegramId, firstName, lastName, username, languageCode },
   config,
 ) {
-  if (!startToken) return START_REPLIES.help;
+  const replyIn = await replyLanguage(telegramId, languageCode);
+  if (!startToken) return startReply('help', replyIn);
 
   const startTokenHash = hashToken(startToken, config.jwt.refreshSecret);
   const now = new Date();
   const pending = { startTokenHash, status: 'pending', expiresAt: { $gt: now } };
   const request = await AuthRequest.findOne(pending).select('purpose expiresAt');
-  if (!request) return START_REPLIES.expired;
+  if (!request) return startReply('expired', replyIn);
 
   const identity = {
     telegramId: String(telegramId),
@@ -228,14 +244,16 @@ export async function handleStart(
     const claimed = await AuthRequest.findOneAndUpdate(pending, {
       $set: { ...identity, status: refusal },
     });
-    return claimed ? START_REPLIES[refusal] : START_REPLIES.expired;
+    return startReply(claimed ? refusal : 'expired', replyIn);
   }
 
   const { code, update } = codeSend(startTokenHash, now, config);
   update.$set = { ...update.$set, ...identity, status: 'otp_sent' };
   // Atomic claim: only the first /start for a pending, unexpired request wins.
   const claimed = await AuthRequest.findOneAndUpdate(pending, update);
-  return claimed ? codeMessage(code, request.purpose, config) : START_REPLIES.expired;
+  return claimed
+    ? codeMessage(code, request.purpose, config, replyIn)
+    : startReply('expired', replyIn);
 }
 
 /** A new code for a request, and the update that stores it (old code out). */
@@ -266,7 +284,7 @@ export async function resendCode({ requestId }, config, { messenger, viewer }) {
     viewer,
   );
   if (!request) {
-    throw new AppError(400, 'REQUEST_EXPIRED', 'This link has expired. Start again.');
+    throw new AppError(400, 'REQUEST_EXPIRED', m.TELEGRAM_REQUEST_EXPIRED);
   }
   const login = request.purpose === 'login';
   if (login && request.attempts >= MAX_OTP_ATTEMPTS) throw tooManyWrongCodes();
@@ -297,12 +315,13 @@ export async function resendCode({ requestId }, config, { messenger, viewer }) {
   );
   if (!updated) throw resendTooSoon();
 
-  await messenger.send(updated.telegramId, codeMessage(code, updated.purpose, config));
+  const replyIn = await replyLanguage(updated.telegramId, updated.language);
+  await messenger.send(updated.telegramId, codeMessage(code, updated.purpose, config, replyIn));
   return statusOf(updated, now);
 }
 
 function resendTooSoon() {
-  return new AppError(429, 'RESEND_TOO_SOON', 'Please wait before asking for a new code.');
+  return new AppError(429, 'RESEND_TOO_SOON', m.TELEGRAM_RESEND_TOO_SOON);
 }
 
 /**
@@ -368,7 +387,7 @@ async function signInTelegramUser({ telegramId, telegramUsername, name, language
   }
 
   if (existing.status === 'rejected') {
-    throw new AppError(403, 'ACCOUNT_REJECTED', 'Access denied');
+    throw new AppError(403, 'ACCOUNT_REJECTED', m.ACCESS_DENIED);
   }
   // Follow the current Telegram username, including its removal; never touch the name.
   existing.telegramUsername = telegramUsername || undefined;
@@ -423,11 +442,7 @@ export async function verifyLogin({ requestId, otp }, meta, config) {
 }
 
 function telegramOwned() {
-  return new AppError(
-    409,
-    'TELEGRAM_OWNED',
-    'This Telegram account belongs to another user. Contact an admin.',
-  );
+  return new AppError(409, 'TELEGRAM_OWNED', m.TELEGRAM_OWNED_BY_OTHER);
 }
 
 /**

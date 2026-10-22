@@ -1,9 +1,10 @@
+import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { Product } from '../models/Product.js';
 import { StockMovement } from '../models/StockMovement.js';
 import { AppError } from '../utils/AppError.js';
 
-const notFound = () => new AppError(404, 'NOT_FOUND', 'Product not found');
+const notFound = () => new AppError(404, 'NOT_FOUND', m.PRODUCT_NOT_FOUND);
 
 /** The signed change a movement makes. `adjust` has no fixed delta: it depends on the current quantity. */
 function fixedDelta(type, quantity) {
@@ -26,9 +27,9 @@ async function refusal(productId, session) {
   const product = await Product.findById(productId).session(session);
   if (!product) return notFound();
   if (product.isArchived) {
-    return new AppError(409, 'PRODUCT_ARCHIVED', 'Restore this product before changing its stock');
+    return new AppError(409, 'PRODUCT_ARCHIVED', m.PRODUCT_ARCHIVED_RESTORE_FIRST);
   }
-  return new AppError(400, 'INSUFFICIENT_STOCK', 'Not enough stock for this change');
+  return new AppError(400, 'INSUFFICIENT_STOCK', m.STOCK_INSUFFICIENT);
 }
 
 /**
@@ -56,7 +57,7 @@ export async function changeStock(productId, user, { type, quantity, note }) {
         if (!current) throw await refusal(productId, session);
         delta = quantity - current.quantity;
         if (delta === 0) {
-          const message = 'The new quantity is the same as the current one';
+          const message = m.STOCK_NO_CHANGE;
           throw new AppError(400, 'NO_CHANGE', message, { quantity: message });
         }
         guard = { quantity: current.quantity };

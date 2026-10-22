@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useZodForm } from '@/hooks/useZodForm';
-import { applyFieldErrors, errorMessage } from '@/lib/errors';
+import { applyFieldErrors, errorMessage, translateMessage } from '@/lib/errors';
 import { parseNumberInput } from '@/lib/numbers';
 
 const FIELDS = [
@@ -48,7 +48,7 @@ function Field({ id, label, error, children }) {
       {children(error ? errorId : undefined)}
       {error && (
         <p id={errorId} className="text-sm text-danger">
-          {error.message}
+          {translateMessage(error.message)}
         </p>
       )}
     </div>

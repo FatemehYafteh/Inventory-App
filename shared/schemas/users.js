@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { m } from '../errorCodes.js';
 
 export const USER_STATUSES = ['pending', 'active', 'rejected'];
 export const USER_ROLES = ['admin', 'staff'];
@@ -7,17 +8,12 @@ const emptyToUndefined = (value) => value || undefined;
 
 /** Admin: approve, reject or reactivate a user. The reason is optional. */
 export const changeStatusSchema = z.object({
-  status: z.enum(USER_STATUSES, { errorMap: () => ({ message: 'Choose a valid status' }) }),
-  reason: z
-    .string()
-    .trim()
-    .max(500, 'Reason must be at most 500 characters')
-    .optional()
-    .transform(emptyToUndefined),
+  status: z.enum(USER_STATUSES, { errorMap: () => ({ message: m.STATUS_INVALID }) }),
+  reason: z.string().trim().max(500, m.REASON_TOO_LONG).optional().transform(emptyToUndefined),
 });
 
 export const changeRoleSchema = z.object({
-  role: z.enum(USER_ROLES, { errorMap: () => ({ message: 'Choose a valid role' }) }),
+  role: z.enum(USER_ROLES, { errorMap: () => ({ message: m.ROLE_INVALID }) }),
 });
 
 /**
@@ -26,7 +22,7 @@ export const changeRoleSchema = z.object({
  */
 export const listUsersQuerySchema = z.object({
   status: z.enum(USER_STATUSES).optional(),
-  search: z.string().trim().max(100, 'Search is too long').optional().transform(emptyToUndefined),
+  search: z.string().trim().max(100, m.SEARCH_TOO_LONG).optional().transform(emptyToUndefined),
   incomplete: z
     .enum(['true', 'false'])
     .optional()

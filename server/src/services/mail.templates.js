@@ -1,3 +1,5 @@
+import { languageOf, translate } from '../i18n/index.js';
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -7,114 +9,148 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-function layout(bodyHtml) {
-  return `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#111;line-height:1.5;max-width:560px;margin:0 auto;padding:24px">${bodyHtml}<p style="color:#666;font-size:12px;margin-top:32px">Inventory Manager</p></body></html>`;
+const FSI = '⁨';
+const PDI = '⁩';
+
+/** Keeps a Latin name or handle from scrambling the order of right-to-left text. */
+function isolate(language, value) {
+  return language === 'fa' ? `${FSI}${value}${PDI}` : value;
 }
 
-function button(link, label) {
-  return `<p><a href="${escapeHtml(link)}" style="display:inline-block;background:#111;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none">${escapeHtml(label)}</a></p><p style="font-size:13px;color:#555">Or paste this link into your browser:<br>${escapeHtml(link)}</p>`;
+function layout(language, bodyHtml) {
+  const footer = escapeHtml(translate(language, 'mail.footer'));
+  if (language === 'fa') {
+    const style =
+      'font-family:Tahoma,Arial,sans-serif;color:#111;line-height:1.7;max-width:560px;margin:0 auto;padding:24px;direction:rtl;text-align:right';
+    return `<!doctype html><html dir="rtl" lang="fa"><body dir="rtl" style="${style}">${bodyHtml}<p dir="ltr" style="color:#666;font-size:12px;margin-top:32px;text-align:right">${footer}</p></body></html>`;
+  }
+  return `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#111;line-height:1.5;max-width:560px;margin:0 auto;padding:24px">${bodyHtml}<p style="color:#666;font-size:12px;margin-top:32px">${footer}</p></body></html>`;
 }
 
-export function verifyEmailTemplate({ name, link }) {
-  const greeting = name ? `Hi ${name},` : 'Hi,';
+function button(language, link, label) {
+  const shownLink =
+    language === 'fa'
+      ? `<bdi dir="ltr" style="direction:ltr;unicode-bidi:isolate">${escapeHtml(link)}</bdi>`
+      : escapeHtml(link);
+  return `<p><a href="${escapeHtml(link)}" style="display:inline-block;background:#111;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none">${escapeHtml(label)}</a></p><p style="font-size:13px;color:#555">${escapeHtml(translate(language, 'mail.pasteLink'))}<br>${shownLink}</p>`;
+}
+
+function greetingFor(language, name) {
+  return name
+    ? translate(language, 'mail.greeting', { name: isolate(language, name) })
+    : translate(language, 'mail.greetingNoName');
+}
+
+export function verifyEmailTemplate({ name, link }, language = 'en') {
+  const lang = languageOf(language);
+  const t = (key) => translate(lang, `mail.verify.${key}`);
+  const greeting = greetingFor(lang, name);
   return {
-    subject: 'Verify your email address',
-    text: `${greeting}\n\nConfirm your email address to finish creating your Inventory account:\n${link}\n\nThis link expires in 24 hours and can be used once. If you did not sign up, ignore this email.`,
+    subject: t('subject'),
+    text: `${greeting}\n\n${t('textIntro')}\n${link}\n\n${t('note')}`,
     html: layout(
-      `<p>${escapeHtml(greeting)}</p><p>Confirm your email address to finish creating your Inventory account.</p>${button(link, 'Verify email')}<p>This link expires in 24 hours and can be used once. If you did not sign up, ignore this email.</p>`,
+      lang,
+      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(t('htmlIntro'))}</p>${button(lang, link, t('button'))}<p>${escapeHtml(t('note'))}</p>`,
     ),
   };
 }
 
 /** `hasPassword` false means a first password (e.g. a Telegram signup), so it says "set". */
-export function resetPasswordTemplate({ name, link, hasPassword }) {
-  const greeting = name ? `Hi ${name},` : 'Hi,';
-  const verb = hasPassword ? 'reset' : 'set';
-  const intro = hasPassword
-    ? 'We received a request to reset the password for your Inventory account.'
-    : 'We received a request to set a password for your Inventory account. Once set, you can also log in with your email.';
-  const footer = `This link expires in 30 minutes and can be used once. If you did not ask to ${verb} your password, ignore this email.`;
+export function resetPasswordTemplate({ name, link, hasPassword }, language = 'en') {
+  const lang = languageOf(language);
+  const t = (key) => translate(lang, `mail.${hasPassword ? 'reset' : 'setPassword'}.${key}`);
+  const greeting = greetingFor(lang, name);
   return {
-    subject: hasPassword ? 'Reset your password' : 'Set your password',
-    text: `${greeting}\n\n${intro}\n${link}\n\n${footer}`,
+    subject: t('subject'),
+    text: `${greeting}\n\n${t('intro')}\n${link}\n\n${t('note')}`,
     html: layout(
-      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(intro)}</p>${button(link, hasPassword ? 'Reset password' : 'Set password')}<p>${escapeHtml(footer)}</p>`,
+      lang,
+      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(t('intro'))}</p>${button(lang, link, t('button'))}<p>${escapeHtml(t('note'))}</p>`,
     ),
   };
 }
 
 /** Sent after a reset. `firstPassword` true when the account had no password before. */
-export function passwordChangedTemplate({ name, forgotLink, firstPassword }) {
-  const greeting = name ? `Hi ${name},` : 'Hi,';
-  const what = firstPassword
-    ? 'A password was set for your Inventory account. You can now log in with your email.'
-    : 'Your Inventory account password was changed and you were logged out on every device.';
-  const warning = "If this wasn't you, reset your password now:";
+export function passwordChangedTemplate({ name, forgotLink, firstPassword }, language = 'en') {
+  const lang = languageOf(language);
+  const t = (key) =>
+    translate(lang, `mail.${firstPassword ? 'passwordSet' : 'passwordChanged'}.${key}`);
+  const greeting = greetingFor(lang, name);
   return {
-    subject: firstPassword ? 'Your password was set' : 'Your password was changed',
-    text: `${greeting}\n\n${what}\n\n${warning}\n${forgotLink}`,
+    subject: t('subject'),
+    text: `${greeting}\n\n${t('what')}\n\n${t('warning')}\n${forgotLink}`,
     html: layout(
-      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(what)}</p><p>${escapeHtml(warning)}</p>${button(forgotLink, 'Reset password')}`,
+      lang,
+      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(t('what'))}</p><p>${escapeHtml(t('warning'))}</p>${button(lang, forgotLink, t('button'))}`,
     ),
   };
 }
 
 /** "Nina Novak (@nina_n)", or just the display name when there is no Telegram username. */
-function telegramAccount({ name, username }) {
-  const display = name || 'A Telegram user';
-  return username ? `${display} (@${username})` : display;
+function telegramAccount({ name, username }, language) {
+  const display = name || translate(language, 'mail.telegramUserFallback');
+  return isolate(language, username ? `${display} (@${username})` : display);
 }
 
 /** Case 2: the owner of an email + password account confirms an Account link. */
-export function accountLinkTemplate({ name, telegram, link }) {
-  const greeting = name ? `Hi ${name},` : 'Hi,';
-  const who = telegramAccount(telegram);
+export function accountLinkTemplate({ name, telegram, link }, language = 'en') {
+  const lang = languageOf(language);
+  const t = (key, vars) => translate(lang, `mail.accountLink.${key}`, vars);
+  const greeting = greetingFor(lang, name);
+  const who = telegramAccount(telegram, lang);
   return {
-    subject: 'Let a Telegram account sign in to your Inventory account?',
-    text: `${greeting}\n\nThe Telegram account ${who} wants to sign in to your Inventory account. To allow it, open this link and enter your password:\n${link}\n\nThe link expires in 24 hours and can be used once. If you did not ask for this, ignore this email and nothing will change.`,
+    subject: t('subject'),
+    text: `${greeting}\n\n${t('textBody', { who })}\n${link}\n\n${t('note')}`,
     html: layout(
-      `<p>${escapeHtml(greeting)}</p><p>The Telegram account <strong>${escapeHtml(who)}</strong> wants to sign in to your Inventory account. To allow it, open this link and enter your password.</p>${button(link, 'Review and confirm')}<p>The link expires in 24 hours and can be used once. If you did not ask for this, ignore this email and nothing will change.</p>`,
+      lang,
+      `<p>${escapeHtml(greeting)}</p><p>${t('htmlBody', { who: `<strong>${escapeHtml(who)}</strong>` })}</p>${button(lang, link, t('button'))}<p>${t('note')}</p>`,
     ),
   };
 }
 
 /** Case 3: the address already belongs to an account with a different Telegram account. */
-export function telegramConflictTemplate({ name, telegram }) {
-  const greeting = name ? `Hi ${name},` : 'Hi,';
-  const who = telegramAccount(telegram);
+export function telegramConflictTemplate({ name, telegram }, language = 'en') {
+  const lang = languageOf(language);
+  const t = (key, vars) => translate(lang, `mail.telegramConflict.${key}`, vars);
+  const greeting = greetingFor(lang, name);
+  const who = telegramAccount(telegram, lang);
   return {
-    subject: 'Someone tried to use your email address',
-    text: `${greeting}\n\nThe Telegram account ${who} entered your email address while signing up for Inventory. Your account is already connected to a different Telegram account, so nothing was changed.\n\nIf this was you, sign in with the Telegram account already connected, or contact an admin. If it was not you, you can ignore this email.`,
+    subject: t('subject'),
+    text: `${greeting}\n\n${t('body', { who })}\n\n${t('note')}`,
     html: layout(
-      `<p>${escapeHtml(greeting)}</p><p>The Telegram account <strong>${escapeHtml(who)}</strong> entered your email address while signing up for Inventory. Your account is already connected to a different Telegram account, so nothing was changed.</p><p>If this was you, sign in with the Telegram account already connected, or contact an admin. If it was not you, you can ignore this email.</p>`,
+      lang,
+      `<p>${escapeHtml(greeting)}</p><p>${t('body', { who: `<strong>${escapeHtml(who)}</strong>` })}</p><p>${t('note')}</p>`,
     ),
   };
 }
 
 /** An admin approved the account (or reactivated a rejected one). */
-export function accountApprovedTemplate({ name, loginLink }) {
-  const greeting = name ? `Hi ${name},` : 'Hi,';
-  const what = 'An admin approved your Inventory account. You can now log in and use the app.';
+export function accountApprovedTemplate({ name, loginLink }, language = 'en') {
+  const lang = languageOf(language);
+  const t = (key) => translate(lang, `mail.approved.${key}`);
+  const greeting = greetingFor(lang, name);
   return {
-    subject: 'Your Inventory account was approved',
-    text: `${greeting}\n\n${what}\n${loginLink}`,
+    subject: t('subject'),
+    text: `${greeting}\n\n${t('what')}\n${loginLink}`,
     html: layout(
-      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(what)}</p>${button(loginLink, 'Log in')}`,
+      lang,
+      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(t('what'))}</p>${button(lang, loginLink, t('button'))}`,
     ),
   };
 }
 
 /** An admin rejected the account. The reason is shown only when the admin gave one. */
-export function accountRejectedTemplate({ name, reason }) {
-  const greeting = name ? `Hi ${name},` : 'Hi,';
-  const what = 'An admin did not approve your Inventory account request.';
-  const why = reason ? `Reason: ${reason}` : '';
-  const help = 'If you think this is a mistake, contact an admin.';
+export function accountRejectedTemplate({ name, reason }, language = 'en') {
+  const lang = languageOf(language);
+  const t = (key, vars) => translate(lang, `mail.rejected.${key}`, vars);
+  const greeting = greetingFor(lang, name);
+  const why = reason ? t('reason', { reason: isolate(lang, reason) }) : '';
   return {
-    subject: 'Your Inventory account request was declined',
-    text: [greeting, what, why, help].filter(Boolean).join('\n\n'),
+    subject: t('subject'),
+    text: [greeting, t('what'), why, t('help')].filter(Boolean).join('\n\n'),
     html: layout(
-      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(what)}</p>${why ? `<p>${escapeHtml(why)}</p>` : ''}<p>${escapeHtml(help)}</p>`,
+      lang,
+      `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(t('what'))}</p>${why ? `<p>${escapeHtml(why)}</p>` : ''}<p>${escapeHtml(t('help'))}</p>`,
     ),
   };
 }

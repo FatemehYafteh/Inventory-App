@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { EmailToken } from '../models/EmailToken.js';
 import { User } from '../models/User.js';
@@ -9,11 +10,11 @@ import { applyAdminBootstrap } from './adminBootstrap.service.js';
 import { deletePlaceholder } from './placeholder.service.js';
 
 function invalidLink() {
-  return new AppError(400, 'INVALID_TOKEN', 'This link is invalid or has expired.');
+  return new AppError(400, 'INVALID_TOKEN', m.LINK_INVALID_OR_EXPIRED);
 }
 
 function wrongPassword() {
-  const message = 'Incorrect password.';
+  const message = m.PASSWORD_INCORRECT;
   return new AppError(401, 'INVALID_PASSWORD', message, { password: message });
 }
 

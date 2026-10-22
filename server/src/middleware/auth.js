@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { ACCESS_COOKIE } from '../config/cookies.js';
 import { User } from '../models/User.js';
@@ -5,7 +6,7 @@ import { isRevokedAccessToken, readAccessToken } from '../services/token.service
 import { AppError } from '../utils/AppError.js';
 
 function notAuthenticated() {
-  return new AppError(401, 'NOT_AUTHENTICATED', 'Please log in to continue.');
+  return new AppError(401, 'NOT_AUTHENTICATED', m.LOGIN_REQUIRED);
 }
 
 /**
@@ -50,7 +51,7 @@ async function resolveUser(req, config) {
   if (!user) return { error: notAuthenticated() };
   if (access && isRevokedAccessToken(access.issuedAt, user)) return { error: notAuthenticated() };
   if (user.status === 'rejected') {
-    return { error: new AppError(403, 'ACCOUNT_REJECTED', 'Access denied') };
+    return { error: new AppError(403, 'ACCOUNT_REJECTED', m.ACCESS_DENIED) };
   }
   return { user };
 }

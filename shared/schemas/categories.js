@@ -1,13 +1,14 @@
 import { z } from 'zod';
+import { m } from '../errorCodes.js';
 
 const title = z
-  .string({ required_error: 'Enter a title' })
+  .string({ required_error: m.TITLE_REQUIRED })
   .trim()
-  .min(1, 'Enter a title')
-  .max(100, 'Title must be at most 100 characters');
+  .min(1, m.TITLE_REQUIRED)
+  .max(100, m.TITLE_TOO_LONG_100);
 
 // An empty description is allowed: on create it means "none", on update it clears the field.
-const description = z.string().trim().max(500, 'Description must be at most 500 characters');
+const description = z.string().trim().max(500, m.DESCRIPTION_TOO_LONG_500);
 
 export const createCategorySchema = z.object({
   title,
@@ -20,5 +21,5 @@ export const updateCategorySchema = z
     description: description.optional(),
   })
   .refine((value) => value.title !== undefined || value.description !== undefined, {
-    message: 'Nothing to update',
+    message: m.NOTHING_TO_UPDATE,
   });

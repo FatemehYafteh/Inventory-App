@@ -1,5 +1,5 @@
 import { Bot } from 'grammy';
-import { START_REPLIES, handleStart } from '../services/telegramAuth.service.js';
+import { handleStart, replyLanguage, startReply } from '../services/telegramAuth.service.js';
 
 /**
  * The Telegram bot. It handles only `/start <token>` (the reply is the sign-in code or a
@@ -29,7 +29,10 @@ export function createBot(config, { botInfo, logger = console } = {}) {
     await ctx.reply(reply);
   });
 
-  privateChats.on('message', (ctx) => ctx.reply(START_REPLIES.help));
+  privateChats.on('message', async (ctx) => {
+    const language = await replyLanguage(ctx.from.id, ctx.from.language_code);
+    await ctx.reply(startReply('help', language));
+  });
 
   return bot;
 }

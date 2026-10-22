@@ -1,3 +1,4 @@
+import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { StatusChange } from '../models/StatusChange.js';
 import { User } from '../models/User.js';
@@ -57,7 +58,7 @@ export async function getUserWithHistory(userId) {
   const user = mongoose.isValidObjectId(userId)
     ? await User.findById(userId).select('+passwordHash')
     : null;
-  if (!user) throw new AppError(404, 'NOT_FOUND', 'User not found.');
+  if (!user) throw new AppError(404, 'NOT_FOUND', m.USER_NOT_FOUND);
 
   const history = await StatusChange.find({ user: user._id }).sort({ at: -1, _id: -1 });
   return { user, history };

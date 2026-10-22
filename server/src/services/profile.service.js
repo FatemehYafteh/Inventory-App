@@ -61,7 +61,7 @@ async function sendLinkConfirmation(user, owner, { config, mailer }) {
   const telegram = { name: user.name, username: user.telegramUsername };
   mailer.sendInBackground({
     to: owner.email,
-    ...accountLinkTemplate({ name: owner.name, telegram, link }),
+    ...accountLinkTemplate({ name: owner.name, telegram, link }, owner.language),
   });
 }
 
@@ -69,7 +69,7 @@ function sendConflictNotice(user, owner, { mailer }) {
   const telegram = { name: user.name, username: user.telegramUsername };
   mailer.sendInBackground({
     to: owner.email,
-    ...telegramConflictTemplate({ name: owner.name, telegram }),
+    ...telegramConflictTemplate({ name: owner.name, telegram }, owner.language),
   });
 }
 

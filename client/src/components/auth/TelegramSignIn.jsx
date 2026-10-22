@@ -9,7 +9,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { useSecondsUntil } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import i18n from '@/i18n';
-import { errorMessage } from '@/lib/errors';
+import { errorMessage, translateMessage } from '@/lib/errors';
 import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import {
@@ -121,9 +121,9 @@ function CodeForm({ requestId, useVerify, onWrongCode }) {
       {
         onError: (error) => {
           if (CODE_ERRORS.has(error.code)) {
-            setError('otp', { message: error.errors?.otp ?? error.message });
+            setError('otp', { message: translateMessage(error.errors?.otp ?? error.message) });
           }
-          if (error.code === 'INVALID_CODE') onWrongCode?.(error.message);
+          if (error.code === 'INVALID_CODE') onWrongCode?.(errorMessage(error));
         },
       },
     );
@@ -163,7 +163,7 @@ function CodeForm({ requestId, useVerify, onWrongCode }) {
       />
       {errors.otp && (
         <p id="otp-error" className="text-sm text-danger">
-          {errors.otp.message}
+          {translateMessage(errors.otp.message)}
         </p>
       )}
       <Button type="submit" disabled={verify.isPending}>

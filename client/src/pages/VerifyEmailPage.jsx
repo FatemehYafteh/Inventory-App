@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import { useResendVerification, useVerifyEmail } from '@/lib/auth';
-import { applyFieldErrors, errorMessage } from '@/lib/errors';
+import { applyFieldErrors, errorMessage, translateNotice } from '@/lib/errors';
 import { formatNumber } from '@/lib/format';
 
 function BackToLogin() {
@@ -83,7 +83,7 @@ export function VerifyEmailPage() {
     return (
       <AuthLayout title={t('auth.verify.verified')}>
         <div className="flex flex-col gap-4 text-sm">
-          <FormAlert tone="success">{verification.data.message}</FormAlert>
+          <FormAlert tone="success">{translateNotice(verification.data.message)}</FormAlert>
           <p className="text-muted-foreground">{t('auth.verify.adminWillReview')}</p>
           <Button asChild>
             <Link to="/login">{t('auth.common.logIn')}</Link>

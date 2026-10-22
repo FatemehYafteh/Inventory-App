@@ -21,6 +21,9 @@ export class ApiError extends Error {
     this.status = status;
     this.code = body?.code;
     this.errors = body?.errors;
+    // Additive fields: the catalogue code of the message, and one per invalid field.
+    this.messageCode = body?.messageCode;
+    this.errorCodes = body?.errorCodes;
     this.details = body?.details;
   }
 }
