@@ -142,14 +142,14 @@ Planned after M7 (7.3 to 7.6) and before M8, so M8 is built with translation key
 
 | Phase | Task | Status |
 |---|---|---|
-| L0 | Write the plan (`docs/plans/`) and create the GitHub issues; settle the open points below | ⬜ Not started |
+| L0 | Write the plan (`docs/plans/phase-l-multilingual.md`) and create the GitHub issues; settle the open points below | 🟡 Plan written, awaiting owner approval; issues not created |
 | L1 | i18n setup in the client: library, translation files for `en` and `fa`, language switcher, preference saved per user | ⬜ Not started |
 | L2 | RTL layout: `dir` and `lang` follow the language; logical CSS properties (start/end) in the tokens, `ui/` components and shell; browser pass at about 360, 768, 1024 and 1280 px in both languages | ⬜ Not started |
 | L3 | Persian digits and locale formatting for quantities, prices, dates and pagination (stored values stay unchanged) | ⬜ Not started |
 | L4 | Move the existing client strings onto translation keys and fix the tests to run in a fixed language | ⬜ Not started |
 | L5 | Server and shared messages: stable error codes translated on the client (affects the Zod messages in `shared/schemas` and `AppError` responses) | ⬜ Not started |
 
-Open points for L0: whether emails (`mail.service`) and the Telegram bot are translated; the font for Persian; whether the language preference lives on the user record (needs the seed and its test to be updated) or only in the browser.
+Open points for L0, settled in the plan (2026-10-21): emails and the Telegram bot are translated; Persian font is Vazirmatn (self-hosted); the language preference lives on the user record (seed and its test updated) plus the browser for logged-out pages. The error-code approach is decided in section 3.7 of the plan (additive `errorCodes`, shared catalogue, safe fallbacks). Still open, with who resolves them: see section 4 of `docs/plans/phase-l-multilingual.md` (Jalali library at L3, date-range timezone at L3 by the procedure in 3.8, exact code names at L5).
 
 ## Planned order of the remaining work (agreed 2026-10-21)
 
