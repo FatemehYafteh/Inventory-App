@@ -225,6 +225,39 @@ describe('DashboardPage', () => {
     );
   });
 
+  it('lays the two cards out as equal-height columns with the links pinned to the bottom', async () => {
+    dashboardApi();
+    renderApp({ route: '/' });
+
+    const low = (await screen.findByRole('heading', { name: 'Needs restocking' })).closest(
+      'div',
+    ).parentElement;
+    const recent = screen
+      .getByRole('heading', { name: 'Recent movements' })
+      .closest('div').parentElement;
+    expect(low.parentElement).toBe(recent.parentElement);
+    expect(low.parentElement).toHaveClass('grid', 'items-stretch');
+    for (const card of [low, recent]) {
+      expect(card).toHaveClass('flex', 'flex-col', 'h-full');
+      // The list takes the spare height, so the footer sits at the bottom of both cards.
+      expect(within(card).getByRole('list')).toHaveClass('flex-1');
+    }
+    expect(low.lastElementChild).toHaveClass('mt-auto');
+    expect(within(low.lastElementChild).getAllByRole('link').length).toBeGreaterThan(0);
+    expect(recent.lastElementChild).toBe(
+      within(recent).getByRole('link', { name: 'View all movements' }),
+    );
+    expect(recent.lastElementChild).toHaveClass('mt-auto');
+  });
+
+  it('keeps the empty states filling the card so equal heights hold', async () => {
+    dashboardApi({ body: { ...data, lowStock: [], recentMovements: [] } });
+    renderApp({ route: '/' });
+
+    expect(await screen.findByText('Nothing needs restocking.')).toHaveClass('flex-1');
+    expect(screen.getByText('No stock movements yet.')).toHaveClass('flex-1');
+  });
+
   it('shows the Pending approvals card to admins only', async () => {
     const adminState = dashboardApi({ pending: 3 });
     renderApp({ route: '/' });
