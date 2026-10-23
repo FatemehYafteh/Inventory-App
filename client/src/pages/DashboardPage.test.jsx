@@ -46,6 +46,13 @@ const shipped = {
   performedBy: { id: 'u2', name: 'Sam Staff', role: 'staff' },
 };
 
+const manyLow = (i) => ({
+  ...hammer,
+  id: `low${i}`,
+  title: `Item ${i}`,
+  sku: `LOW-${i}`,
+});
+
 const data = {
   summary: {
     activeProducts: 1234,
@@ -122,6 +129,39 @@ describe('DashboardPage', () => {
       'href',
       '/products?status=out_of_stock',
     );
+  });
+
+  it('caps Needs restocking at 5 rows and says how many more there are', async () => {
+    dashboardApi({
+      body: { ...data, lowStock: Array.from({ length: 7 }, (_, i) => manyLow(i)) },
+    });
+    renderApp({ route: '/' });
+
+    const heading = await screen.findByRole('heading', { name: 'Needs restocking' });
+    const section = within(heading.closest('div').parentElement);
+    const items = section.getAllByRole('listitem');
+    expect(items).toHaveLength(5);
+    expect(within(items[0]).getByText('Item 0')).toBeInTheDocument();
+    expect(within(items[4]).getByText('Item 4')).toBeInTheDocument();
+    expect(section.queryByText('Item 5')).not.toBeInTheDocument();
+    expect(section.getByText('+2 more')).toBeInTheDocument();
+    // The view-all targets stay: Products filtered to low stock (and out of stock).
+    expect(section.getByRole('link', { name: 'View all low stock' })).toHaveAttribute(
+      'href',
+      '/products?status=low_stock',
+    );
+  });
+
+  it('shows no overflow text when 5 or fewer products need restocking', async () => {
+    dashboardApi({
+      body: { ...data, lowStock: Array.from({ length: 5 }, (_, i) => manyLow(i)) },
+    });
+    renderApp({ route: '/' });
+
+    const heading = await screen.findByRole('heading', { name: 'Needs restocking' });
+    const section = within(heading.closest('div').parentElement);
+    expect(section.getAllByRole('listitem')).toHaveLength(5);
+    expect(section.queryByText(/more$/)).not.toBeInTheDocument();
   });
 
   it('receives stock for a low-stock product from the dashboard and reloads it', async () => {

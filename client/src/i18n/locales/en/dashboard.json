@@ -22,7 +22,8 @@
     "receive": "Receive",
     "receiveLabel": "Receive {{title}}",
     "viewLow": "View all low stock",
-    "viewOut": "View all out of stock"
+    "viewOut": "View all out of stock",
+    "more": "+{{n}} more"
   },
   "recent": {
     "title": "Recent movements",
