@@ -89,7 +89,7 @@
   },
   "history": {
     "title": "تاریخچه موجودی",
-    "description": "{{title}} ({{sku}})، جدیدترین‌ها اول.",
+    "description": "{{title}} ({{sku}})",
     "empty": "هنوز تغییری در موجودی ثبت نشده است.",
     "date": "تاریخ",
     "type": "نوع",
