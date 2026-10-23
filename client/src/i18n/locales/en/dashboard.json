@@ -27,7 +27,7 @@
   },
   "recent": {
     "title": "Recent movements",
-    "description": "The last 10 stock changes.",
+    "description": "The last 5 stock changes.",
     "empty": "No stock movements yet.",
     "viewAll": "View all movements"
   }

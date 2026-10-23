@@ -202,6 +202,29 @@ describe('DashboardPage', () => {
     );
   });
 
+  it('caps Recent movements at 5 rows even though the API sends 10', async () => {
+    const movements = Array.from({ length: 10 }, (_, i) => ({
+      ...received,
+      id: `m${i}`,
+      product: { ...received.product, title: `Move ${i}` },
+    }));
+    dashboardApi({ body: { ...data, recentMovements: movements } });
+    renderApp({ route: '/' });
+
+    const heading = await screen.findByRole('heading', { name: 'Recent movements' });
+    const section = within(heading.closest('div').parentElement);
+    const items = section.getAllByRole('listitem');
+    expect(items).toHaveLength(5);
+    expect(within(items[0]).getByText(/Move 0/)).toBeInTheDocument();
+    expect(within(items[4]).getByText(/Move 4/)).toBeInTheDocument();
+    expect(section.queryByText(/Move 5/)).not.toBeInTheDocument();
+    expect(section.getByText('The last 5 stock changes.')).toBeInTheDocument();
+    expect(section.getByRole('link', { name: 'View all movements' })).toHaveAttribute(
+      'href',
+      '/movements',
+    );
+  });
+
   it('shows the Pending approvals card to admins only', async () => {
     const adminState = dashboardApi({ pending: 3 });
     renderApp({ route: '/' });
