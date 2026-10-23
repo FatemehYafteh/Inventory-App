@@ -1,4 +1,4 @@
-# Handoff: Design Foundation (D0 to D8) done; Products 6.4 planned, not started (2026-10-20)
+# Handoff: M8 built (movements, dashboard, CSV export), Brevo check pending (2026-10-21)
 
 This replaces the M5 handoff of 2026-10-17, which was never committed. It is kept word for word in the appendix at the end of this file.
 Written at the end of the session. Each claim carries a tag saying where it comes from:
@@ -7,6 +7,66 @@ Written at the end of the session. Each claim carries a tag saying where it come
 - **[reported earlier]**: observed earlier in this same session and not re-run for this file.
 - **[prior session]**: copied from an older handoff and not re-checked.
 - **(verify)**: not checked at all.
+
+## 0000000. Real state, 2026-10-22 (READ THIS FIRST; it overrides every section below where they differ)
+
+**Branch layout [checked now, with `git log`]**
+- `feat/m8-movements` (pushed to `origin/feat/m8-movements` at `d0ef5b4`, checked out; the HANDOFF commit that records PR #45 is newer) holds the 7 M8 commits (`5bc6c16`, `26c36e9`, `eb5bac1`, `2cf9391`, `a9e2b56`, `584eafd`, `29b1740`), the first HANDOFF update `a6ebf08`, and the merge commit `9633b8c` of `origin/sub-prds` (clean, no conflicts). It is 9 commits ahead of `origin/sub-prds` and 0 behind.
+- `feat/i18n-server-codes` (L5) was moved with `git branch -f` to `origin/feat/i18n-server-codes` = `924141e`. It has none of the M8 commits. Older sections that say M8 is on `feat/i18n-server-codes` are out of date.
+- The untracked `client/.vite/` is not part of any commit.
+
+**PR chain: all merged into `sub-prds` as merge commits [checked now]**
+
+| PR | Head | Merge commit |
+|---|---|---|
+| #39 | `docs/plan-phase-l` | `082e2c4` |
+| #40 | `feat/i18n-setup` | `f507abd` |
+| #41 | `feat/i18n-rtl` | `0726b0c` |
+| #42 | `feat/i18n-formatting` | `0b70360` |
+| #43 | `feat/i18n-client-strings` | `f38a3f3` |
+| #44 | `feat/i18n-server-codes` | `362bded` |
+
+`origin/sub-prds` = `362bded`. No PRs and no issues are open (#34 to #38 closed). Merged branches were left on the remote.
+
+**M8 PR [checked now with `gh`]:** #45 `feat: M8: Movements, Dashboard and CSV export`, head `feat/m8-movements`, **base `feat/i18n-server-codes`** (the owner's choice, so the file diff shows only M8: 67 files). OPEN and MERGEABLE, not merged. That base branch is already merged into `sub-prds` (PR #44), so the commit list also shows the Phase L merge commits; **retarget #45 to `sub-prds` (`gh pr edit 45 --base sub-prds`) before merging**, and do not delete `feat/i18n-server-codes` on the remote before that. The body lists the visual pass, the CSV in Excel and the Brevo check as not done. Fresh results on `d0ef5b4` used in the body: lint clean, server 490 of 490, client 502 of 502, `vite build` succeeds.
+
+**Test results [checked now]**
+- On the merged `sub-prds` (`362bded`, detached checkout): lint clean; server 441 of 441 (36 files); client 458 of 458 (36 files).
+- On `feat/m8-movements` after the merge (`9633b8c`): lint clean; server 490 of 490 (40 files); client 502 of 502 (42 files); `vite build` succeeds; `prettier --check` clean on the files changed against `sub-prds`.
+
+**API checks over HTTP [checked now]** on a throwaway database (Telegram and mail off), as admin and staff: `/dashboard`, `/movements`, `/movements/performers`, `/movements/export` and `/products/export` all work; a date-only `from` is refused with `DATE_TIME_INVALID`; staff see fewer movement rows than admin (archived products hidden).
+
+**Still manual, not done by an agent:** the browser pass of Dashboard and Movements at 360, 768, 1024 and 1280 px in English and Persian, a CSV opened in Excel, and the Brevo SPF/DKIM check (`docs/launch-checklist.md`).
+
+**Next, each step needs the owner's approval:**
+1. The owner does the manual items above (browser pass, CSV in Excel); the Brevo check is a launch gate.
+2. Retarget #45 to `sub-prds`, then merge it (merge commit) once approved.
+3. Add `GET /movements/performers` to the PRD API list if it is kept.
+
+The stack used for the HTTP checks has been stopped. M8 is pushed and in PR #45; nothing of M8 is merged.
+
+## 000000. M8 built, 2026-10-21 (older than the section above)
+
+Built on `feat/i18n-server-codes` at the time; now on `feat/m8-movements`. One local commit per phase, **nothing pushed, no PR opened, nothing merged**. The plan is `docs/plans/m8-movements-dashboard-export.md` (approved by the owner, with the interview decisions D1 to D6 and the assumptions A1 to A12).
+
+| Phase | Commit | What |
+|---|---|---|
+| 8.1 | `5bc6c16` | `GET /movements` (product, type, supplier, user, from, to, page, limit); `performedBy { id, name, role }`; Option A dates (full ISO instants, `from` inclusive, `to` exclusive, date-only refused); 6 new catalogue codes in `shared/errorCodes.js` and both `errors.json` |
+| 8.2 | `26c36e9` | Movements page (filters in the URL, Jalali date range, server-searched product picker), nav item, Users drawer link enabled; **added `GET /movements/performers`** (not in the PRD) because staff cannot call `/users` |
+| 8.3 | `eb5bac1` | `GET /dashboard` (summary, 10 lowest-ratio products with out of stock first, last 10 movements) |
+| 8.4 | `2cf9391` | Dashboard page, Receive action (reuses `StockAdjustDialog`), admin-only Pending approvals card; stock changes invalidate the dashboard |
+| 8.5 | `a9e2b56` | `GET /movements/export`, `GET /products/export` (streamed, BOM, no row cap, formula-escaped text, raw numbers); Export CSV buttons use `apiDownload` |
+| 8.6 | `584eafd` (docs commit) | Brevo notes in `server/.env.example`, `docs/launch-checklist.md`, README pointer, final test pass |
+
+**Verification run at the end of the session [checked now]:** `npm run lint` clean; `prettier --check` clean; server 490 of 490, client 502 of 502; `vite build` succeeds. No browser pass was done for the new pages (no screenshots at 360/768/1024/1280 px, no manual check of the Jalali calendar or of a real CSV in Excel).
+
+**Not done / needs the owner**
+- **Brevo delivery, SPF and DKIM check** (sub-PRD 08 acceptance, last bullet): manual, steps in `docs/launch-checklist.md`. Task 8.6 is marked partly done for that reason.
+- Browser pass of Movements and Dashboard at the four widths in English and Persian (as D5/L2 did for other pages).
+- `GET /movements/performers` is an addition: add it to the PRD API list if kept.
+- Seed data was not changed (no model changed); `server/tests/seed/seed.test.js` gained a test that the seed feeds the dashboard and the Movements page (archived products hidden from staff, both roles as performers).
+- Role on a movement row is the performer's **current** role (assumption A1); `performedByName` stays the stored name.
+- Phase T (theme) and UI polish stay deferred.
 
 ## 00000. Final shutdown state, 2026-10-20 (READ THIS FIRST; it overrides every section below where they differ)
 

@@ -15,6 +15,7 @@ import { ConfirmLinkPage } from '@/pages/ConfirmLinkPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { MovementsPage } from '@/pages/MovementsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { RegisterPage } from '@/pages/RegisterPage';
@@ -58,6 +59,7 @@ export function App() {
           <Route element={<AppLayout />}>
             <Route index element={<DashboardPage />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/movements" element={<MovementsPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/suppliers" element={<SuppliersPage />} />
             <Route element={<RequireAdmin />}>

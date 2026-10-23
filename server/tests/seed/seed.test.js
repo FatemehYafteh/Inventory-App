@@ -298,6 +298,40 @@ describe('seedDatabase', () => {
     expect((await post('/api/auth/login', { email, password })).status).toBe(200);
   });
 
+  it('gives the dashboard and the Movements page data for every case the screens show', async () => {
+    await seedDatabase({ now });
+    const app = buildApp();
+    const admin = await User.findOne({ role: 'admin', status: 'active', emailVerified: true });
+    const staff = await User.findOne({ role: 'staff', status: 'active', emailVerified: true });
+    const asUser = (user, path) =>
+      request(app)
+        .get(path)
+        .set('Origin', ORIGIN)
+        .set('X-Requested-With', 'XMLHttpRequest')
+        .set('x-test-user', user.id);
+
+    const dashboard = (await asUser(admin, '/api/dashboard')).body;
+    const stored = await Product.find({ isArchived: false });
+    expect(dashboard.summary.activeProducts).toBe(stored.length);
+    expect(dashboard.summary.totalUnits).toBe(stored.reduce((sum, item) => sum + item.quantity, 0));
+    expect(dashboard.summary.outOfStockCount).toBe(stored.filter((i) => i.quantity === 0).length);
+    expect(dashboard.summary.lowStockCount).toBeGreaterThan(0);
+    expect(dashboard.summary.outOfStockCount).toBeGreaterThan(0);
+    expect(dashboard.lowStock.length).toBeGreaterThan(0);
+    expect(dashboard.recentMovements).toHaveLength(10);
+
+    const all = (await asUser(admin, '/api/movements?limit=100')).body;
+    const hidden = await StockMovement.countDocuments({
+      product: { $in: await Product.find({ isArchived: true }).distinct('_id') },
+    });
+    expect(hidden).toBeGreaterThan(0);
+    const asStaff = (await asUser(staff, '/api/movements?limit=100')).body;
+    expect(all.total).toBe(await StockMovement.countDocuments());
+    expect(asStaff.total).toBe(all.total - hidden);
+    const roles = new Set(all.items.map((row) => row.performedBy.role));
+    expect(roles).toEqual(new Set(['admin', 'staff']));
+  });
+
   it('is safe to run again and keeps changes made since', async () => {
     await seedDatabase({ now });
     await Product.updateOne({ sku: 'EL-LAP-001' }, { title: 'Renamed laptop' });

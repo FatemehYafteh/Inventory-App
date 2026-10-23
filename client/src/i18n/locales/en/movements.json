@@ -1,0 +1,45 @@
+{
+  "page": {
+    "title": "Stock movements",
+    "description": "Every stock change, newest first.",
+    "empty": "No stock movements yet.",
+    "emptyFiltered": "No movements match these filters."
+  },
+  "filters": {
+    "product": "Product",
+    "allProducts": "All products",
+    "productSearch": "Search by title or SKU",
+    "productNone": "No products found.",
+    "type": "Type",
+    "allTypes": "All types",
+    "supplier": "Supplier",
+    "allSuppliers": "All suppliers",
+    "user": "Performed by",
+    "allUsers": "All users",
+    "dates": "Dates",
+    "anyDate": "Any date",
+    "dateRange": "{{from}} to {{to}}",
+    "clearDates": "Clear dates",
+    "clear": "Clear filters"
+  },
+  "columns": {
+    "createdAt": "Date",
+    "product": "Product",
+    "type": "Type",
+    "quantityChange": "Change",
+    "quantityBefore": "Before",
+    "quantityAfter": "After",
+    "supplier": "Supplier",
+    "note": "Note",
+    "performedBy": "Performed by"
+  },
+  "types": {
+    "receive": "Receive",
+    "ship": "Ship",
+    "adjust": "Adjust",
+    "increment": "Increment",
+    "decrement": "Decrement"
+  },
+  "plus": "+{{n}}",
+  "minus": "−{{n}}"
+}

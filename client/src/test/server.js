@@ -26,6 +26,20 @@ export const server = setupServer(
     HttpResponse.json({ message: 'Session expired', code: 'INVALID_SESSION' }, { status: 401 }),
   ),
   http.post('*/api/auth/logout', () => new HttpResponse(null, { status: 204 })),
+  // The dashboard is the landing page of every signed-in test; pages override this when they care.
+  http.get('*/api/dashboard', () =>
+    HttpResponse.json({
+      summary: {
+        activeProducts: 0,
+        totalUnits: 0,
+        inventoryValue: 0,
+        lowStockCount: 0,
+        outOfStockCount: 0,
+      },
+      lowStock: [],
+      recentMovements: [],
+    }),
+  ),
   // The admin navigation polls this badge count on every page.
   http.get('*/api/users/pending-count', () => HttpResponse.json({ count: 0 })),
 );

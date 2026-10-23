@@ -1,0 +1,45 @@
+{
+  "page": {
+    "title": "حرکت‌های موجودی",
+    "description": "همهٔ تغییرات موجودی، جدیدترین‌ها اول.",
+    "empty": "هنوز حرکتی در موجودی ثبت نشده است.",
+    "emptyFiltered": "هیچ حرکتی با این فیلترها مطابقت ندارد."
+  },
+  "filters": {
+    "product": "محصول",
+    "allProducts": "همهٔ محصولات",
+    "productSearch": "جست‌وجو بر اساس عنوان یا SKU",
+    "productNone": "محصولی پیدا نشد.",
+    "type": "نوع",
+    "allTypes": "همهٔ نوع‌ها",
+    "supplier": "تأمین‌کننده",
+    "allSuppliers": "همهٔ تأمین‌کنندگان",
+    "user": "انجام‌دهنده",
+    "allUsers": "همهٔ کاربران",
+    "dates": "تاریخ‌ها",
+    "anyDate": "هر تاریخی",
+    "dateRange": "{{from}} تا {{to}}",
+    "clearDates": "پاک کردن تاریخ‌ها",
+    "clear": "پاک کردن فیلترها"
+  },
+  "columns": {
+    "createdAt": "تاریخ",
+    "product": "محصول",
+    "type": "نوع",
+    "quantityChange": "تغییر",
+    "quantityBefore": "قبل",
+    "quantityAfter": "بعد",
+    "supplier": "تأمین‌کننده",
+    "note": "یادداشت",
+    "performedBy": "انجام‌دهنده"
+  },
+  "types": {
+    "receive": "دریافت",
+    "ship": "ارسال",
+    "adjust": "اصلاح",
+    "increment": "افزایش",
+    "decrement": "کاهش"
+  },
+  "plus": "+{{n}}",
+  "minus": "−{{n}}"
+}

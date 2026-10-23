@@ -73,8 +73,7 @@
     "historyEmpty": "No status changes yet.",
     "historyChange": "{{from}} to {{to}}",
     "historyBy": "by {{name}} on {{date}}",
-    "viewMovements": "View movements",
-    "movementsLater": "Available once Movements ships."
+    "viewMovements": "View movements"
   },
   "reject": {
     "thisUser": "this user",

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { PAGE_SIZE_OPTIONS } from '@/components/data-table/DataTablePagination';
+import { ExportCsvButton } from '@/components/ExportCsvButton';
 import { FormAlert } from '@/components/form/FormAlert';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ArchiveProductDialog } from '@/components/products/ArchiveProductDialog';
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useReturnFocus } from '@/hooks/useReturnFocus';
 import { useMe } from '@/lib/auth';
 import { useCategories } from '@/lib/categories';
+import { exportQuery } from '@/lib/download';
 import { errorMessage } from '@/lib/errors';
 import {
   useArchiveProduct,
@@ -169,6 +171,16 @@ export function ProductsPage() {
 
   const sorting = useMemo(() => [{ id: sortBy, desc: order === 'desc' }], [sortBy, order]);
   const pagination = useMemo(() => ({ pageIndex: page - 1, pageSize: limit }), [page, limit]);
+  // The same search, filters and sort as the table, without the paging.
+  const exportPath = `/products/export?${exportQuery({
+    search,
+    category,
+    supplier,
+    status,
+    archived: archived ? 'true' : undefined,
+    sortBy,
+    order,
+  })}`;
   const filtered = Boolean(search || category || supplier || status || archived);
 
   return (
@@ -177,7 +189,12 @@ export function ProductsPage() {
         ref={headingRef}
         title={t('products.page.title')}
         description={t('products.page.description')}
-        actions={<Button onClick={() => openForm(null)}>{t('products.page.add')}</Button>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <ExportCsvButton path={exportPath} />
+            <Button onClick={() => openForm(null)}>{t('products.page.add')}</Button>
+          </div>
+        }
       />
       <FormAlert>{actionError}</FormAlert>
       <ProductTable

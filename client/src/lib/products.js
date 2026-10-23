@@ -2,9 +2,21 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { useCallback, useRef } from 'react';
 import { api } from './api';
 import { CATEGORIES_QUERY_KEY } from './categories';
+import { DASHBOARD_QUERY_KEY } from './dashboard';
+import { MOVEMENTS_QUERY_KEY } from './movements';
 import { SUPPLIERS_QUERY_KEY } from './suppliers';
 
 export const PRODUCTS_QUERY_KEY = ['products'];
+
+// What a product or stock change can alter: the lists, the product counts of categories and
+// suppliers, the movements, and the dashboard figures.
+const STOCK_RELATED_KEYS = [
+  PRODUCTS_QUERY_KEY,
+  CATEGORIES_QUERY_KEY,
+  SUPPLIERS_QUERY_KEY,
+  MOVEMENTS_QUERY_KEY,
+  DASHBOARD_QUERY_KEY,
+];
 
 function queryString(filters) {
   const params = new URLSearchParams();
@@ -27,6 +39,15 @@ export function useProducts(filters) {
   });
 }
 
+/** One product, for showing the name behind a product id in a link: `{ product }`. */
+export function useProduct(id) {
+  return useQuery({
+    queryKey: [...PRODUCTS_QUERY_KEY, 'detail', id],
+    queryFn: () => api(`/products/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
 function useProductMutation(mutationFn) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -34,9 +55,7 @@ function useProductMutation(mutationFn) {
     // Success or not, the list reloads; category and supplier product counts may have changed.
     onSettled: () =>
       Promise.all(
-        [PRODUCTS_QUERY_KEY, CATEGORIES_QUERY_KEY, SUPPLIERS_QUERY_KEY].map((queryKey) =>
-          queryClient.invalidateQueries({ queryKey }),
-        ),
+        STOCK_RELATED_KEYS.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
       ),
   });
 }
@@ -122,9 +141,7 @@ export function useStockStep() {
           if (queue.inFlight > 0) return;
           queues.current.delete(id);
           return Promise.all(
-            [PRODUCTS_QUERY_KEY, CATEGORIES_QUERY_KEY, SUPPLIERS_QUERY_KEY].map((queryKey) =>
-              queryClient.invalidateQueries({ queryKey }),
-            ),
+            STOCK_RELATED_KEYS.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
           );
         });
     },

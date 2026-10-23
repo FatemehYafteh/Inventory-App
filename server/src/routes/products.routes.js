@@ -18,6 +18,7 @@ export function productsRoutes(config) {
   const adminOnly = protect(config, 'admin');
 
   router.get('/', ...anyActive, validateQuery(listProductsQuerySchema), products.list);
+  router.get('/export', ...anyActive, validateQuery(listProductsQuerySchema), products.exportCsv);
   router.post('/', ...editors, validate(createProductSchema), products.create);
   router.get('/:id', ...anyActive, products.get);
   router.patch('/:id', ...editors, validate(updateProductSchema), products.update);

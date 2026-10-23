@@ -36,7 +36,7 @@ Seeded accounts share the password `inventory-demo-2026` (override with `SEED_PA
 | unverified@example.com | staff | pending | email not verified, login refused |
 | telegram-nopass@example.com | staff | active | Telegram signup with no password: set one through "Forgot password?" |
 
-`npm run user:create -w server -- you@example.com "a-long-password" "Your Name"` adds an extra active admin. Accounts made through the Register page stay `pending` until admin approval exists (milestone 4). Without SMTP settings, verification and password reset emails and their links are printed in the server log.
+`npm run user:create -w server -- you@example.com "a-long-password" "Your Name"` adds an extra active admin. Accounts made through the Register page stay `pending` until admin approval exists (milestone 4). Without SMTP settings, verification and password reset emails and their links are printed in the server log. Setting up Brevo and the checks before launch are in [docs/launch-checklist.md](docs/launch-checklist.md).
 
 ```sh
 npm test        # server (in-memory replica set) and client tests

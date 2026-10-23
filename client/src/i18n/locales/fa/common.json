@@ -28,5 +28,9 @@
     "noneYet": "هنوز ندارد",
     "email": "ایمیل",
     "telegram": "تلگرام"
+  },
+  "export": {
+    "csv": "خروجی CSV",
+    "exporting": "در حال تهیه خروجی…"
   }
 }

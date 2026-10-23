@@ -104,8 +104,12 @@ describe('Log out', () => {
 
 describe('Navigation shell', () => {
   it.each([
-    ['an admin', 'admin', ['Dashboard', 'Products', 'Categories', 'Suppliers', 'Users']],
-    ['a staff user', 'staff', ['Dashboard', 'Products', 'Categories', 'Suppliers']],
+    [
+      'an admin',
+      'admin',
+      ['Dashboard', 'Products', 'Movements', 'Categories', 'Suppliers', 'Users'],
+    ],
+    ['a staff user', 'staff', ['Dashboard', 'Products', 'Movements', 'Categories', 'Suppliers']],
   ])('lists the pages %s can open in the Main navigation', async (_label, role, expected) => {
     signedInUntilLogout({ ...activeUser, role });
     renderApp({ route: '/' });

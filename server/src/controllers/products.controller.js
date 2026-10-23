@@ -1,3 +1,4 @@
+import { csvFilename, sendCsv } from '../utils/csv.js';
 import * as products from '../services/products.service.js';
 import * as stock from '../services/stock.service.js';
 
@@ -32,4 +33,13 @@ export async function changeStock(req, res) {
 
 export async function movements(req, res) {
   res.json(await stock.listMovements(req.user, req.params.id, req.validatedQuery));
+}
+
+export async function exportCsv(req, res) {
+  await sendCsv(
+    res,
+    csvFilename('products'),
+    products.PRODUCT_CSV_HEADER,
+    products.productCsvRows(req.user, req.validatedQuery),
+  );
 }

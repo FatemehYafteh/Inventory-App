@@ -28,6 +28,23 @@ export class ApiError extends Error {
   }
 }
 
+function readText(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(blob);
+  });
+}
+
+async function errorBody(blob) {
+  try {
+    return JSON.parse(await readText(blob));
+  } catch {
+    return undefined;
+  }
+}
+
 let onSessionExpired = () => {};
 
 /** Called when a request fails with 401 and the refresh attempt fails too. */
@@ -68,6 +85,8 @@ function refreshSession() {
 http.interceptors.response.use(undefined, async (error) => {
   const { config, response } = error;
   if (!response) throw new ApiError(0, { message: i18n.t('common.networkError') });
+  // A download asks for a blob, so an error body arrives as a blob too; read it as JSON.
+  if (response.data instanceof Blob) response.data = await errorBody(response.data);
 
   const canRefresh = response.status === 401 && !NO_REFRESH_PATHS.has(config.url);
   if (canRefresh && !config.retriedAfterRefresh) {
@@ -93,4 +112,16 @@ http.interceptors.response.use(undefined, async (error) => {
 export async function api(path, { method = 'GET', body } = {}) {
   const { data } = await http.request({ url: path, method, data: body });
   return data && typeof data === 'object' ? data : null;
+}
+
+/**
+ * Downloads a file from the API (for example a CSV export): `{ blob, filename }`. It goes through
+ * the same client as every other call, so an expired session is refreshed and a failure is an
+ * ApiError. The file name comes from the Content-Disposition header.
+ */
+export async function apiDownload(path) {
+  const response = await http.get(path, { responseType: 'blob' });
+  const disposition = response.headers['content-disposition'] ?? '';
+  const filename = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? 'download.csv';
+  return { blob: response.data, filename };
 }
