@@ -67,4 +67,41 @@ describe('Dashboard texts in Persian', () => {
     expect(screen.getByRole('link', { name: 'مشاهدهٔ همهٔ حرکت‌ها' })).toBeInTheDocument();
     expect(screen.queryByText('Needs restocking')).not.toBeInTheDocument();
   });
+
+  it('caps the cards at 5 rows in Persian and uses no physical-direction classes', async () => {
+    const many = Array.from({ length: 7 }, (_, i) => ({
+      ...data.lowStock[0],
+      id: `low${i}`,
+      title: `Item ${i}`,
+    }));
+    const moves = Array.from({ length: 7 }, (_, i) => ({
+      ...data.recentMovements[0],
+      id: `m${i}`,
+    }));
+    server.use(
+      http.get('*/api/auth/me', () => HttpResponse.json({ user: admin })),
+      http.get('*/api/users/pending-count', () => HttpResponse.json({ count: 0 })),
+      http.get('*/api/dashboard', () =>
+        HttpResponse.json({ ...data, lowStock: many, recentMovements: moves }),
+      ),
+    );
+    await i18n.changeLanguage('fa');
+    renderApp({ route: '/' });
+
+    const low = (await screen.findByRole('heading', { name: 'نیازمند تأمین مجدد' })).closest(
+      'div',
+    ).parentElement;
+    const recent = screen
+      .getByRole('heading', { name: 'حرکت‌های اخیر' })
+      .closest('div').parentElement;
+    expect(within(low).getAllByRole('listitem')).toHaveLength(5);
+    expect(within(recent).getAllByRole('listitem')).toHaveLength(5);
+    expect(within(low).getByText('+۲ مورد دیگر')).toBeInTheDocument();
+    expect(within(recent).getByText('۵ تغییر آخر موجودی.')).toBeInTheDocument();
+    // Logical classes only, so the cards mirror in RTL.
+    const physical = /(^|\s)-?(ml|mr|pl|pr|left|right|text-left|text-right)(-|\s|$)/;
+    for (const el of [low, recent, ...low.querySelectorAll('*'), ...recent.querySelectorAll('*')]) {
+      expect(el.getAttribute('class') ?? '').not.toMatch(physical);
+    }
+  });
 });

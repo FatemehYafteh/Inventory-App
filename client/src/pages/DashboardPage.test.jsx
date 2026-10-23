@@ -46,6 +46,13 @@ const shipped = {
   performedBy: { id: 'u2', name: 'Sam Staff', role: 'staff' },
 };
 
+const manyLow = (i) => ({
+  ...hammer,
+  id: `low${i}`,
+  title: `Item ${i}`,
+  sku: `LOW-${i}`,
+});
+
 const data = {
   summary: {
     activeProducts: 1234,
@@ -124,6 +131,39 @@ describe('DashboardPage', () => {
     );
   });
 
+  it('caps Needs restocking at 5 rows and says how many more there are', async () => {
+    dashboardApi({
+      body: { ...data, lowStock: Array.from({ length: 7 }, (_, i) => manyLow(i)) },
+    });
+    renderApp({ route: '/' });
+
+    const heading = await screen.findByRole('heading', { name: 'Needs restocking' });
+    const section = within(heading.closest('div').parentElement);
+    const items = section.getAllByRole('listitem');
+    expect(items).toHaveLength(5);
+    expect(within(items[0]).getByText('Item 0')).toBeInTheDocument();
+    expect(within(items[4]).getByText('Item 4')).toBeInTheDocument();
+    expect(section.queryByText('Item 5')).not.toBeInTheDocument();
+    expect(section.getByText('+2 more')).toBeInTheDocument();
+    // The view-all targets stay: Products filtered to low stock (and out of stock).
+    expect(section.getByRole('link', { name: 'View all low stock' })).toHaveAttribute(
+      'href',
+      '/products?status=low_stock',
+    );
+  });
+
+  it('shows no overflow text when 5 or fewer products need restocking', async () => {
+    dashboardApi({
+      body: { ...data, lowStock: Array.from({ length: 5 }, (_, i) => manyLow(i)) },
+    });
+    renderApp({ route: '/' });
+
+    const heading = await screen.findByRole('heading', { name: 'Needs restocking' });
+    const section = within(heading.closest('div').parentElement);
+    expect(section.getAllByRole('listitem')).toHaveLength(5);
+    expect(section.queryByText(/more$/)).not.toBeInTheDocument();
+  });
+
   it('receives stock for a low-stock product from the dashboard and reloads it', async () => {
     const user = userEvent.setup();
     const state = dashboardApi();
@@ -160,6 +200,62 @@ describe('DashboardPage', () => {
       'href',
       '/movements',
     );
+  });
+
+  it('caps Recent movements at 5 rows even though the API sends 10', async () => {
+    const movements = Array.from({ length: 10 }, (_, i) => ({
+      ...received,
+      id: `m${i}`,
+      product: { ...received.product, title: `Move ${i}` },
+    }));
+    dashboardApi({ body: { ...data, recentMovements: movements } });
+    renderApp({ route: '/' });
+
+    const heading = await screen.findByRole('heading', { name: 'Recent movements' });
+    const section = within(heading.closest('div').parentElement);
+    const items = section.getAllByRole('listitem');
+    expect(items).toHaveLength(5);
+    expect(within(items[0]).getByText(/Move 0/)).toBeInTheDocument();
+    expect(within(items[4]).getByText(/Move 4/)).toBeInTheDocument();
+    expect(section.queryByText(/Move 5/)).not.toBeInTheDocument();
+    expect(section.getByText('The last 5 stock changes.')).toBeInTheDocument();
+    expect(section.getByRole('link', { name: 'View all movements' })).toHaveAttribute(
+      'href',
+      '/movements',
+    );
+  });
+
+  it('lays the two cards out as equal-height columns with the links pinned to the bottom', async () => {
+    dashboardApi();
+    renderApp({ route: '/' });
+
+    const low = (await screen.findByRole('heading', { name: 'Needs restocking' })).closest(
+      'div',
+    ).parentElement;
+    const recent = screen
+      .getByRole('heading', { name: 'Recent movements' })
+      .closest('div').parentElement;
+    expect(low.parentElement).toBe(recent.parentElement);
+    expect(low.parentElement).toHaveClass('grid', 'items-stretch');
+    for (const card of [low, recent]) {
+      expect(card).toHaveClass('flex', 'flex-col', 'h-full');
+      // The list takes the spare height, so the footer sits at the bottom of both cards.
+      expect(within(card).getByRole('list')).toHaveClass('flex-1');
+    }
+    expect(low.lastElementChild).toHaveClass('mt-auto');
+    expect(within(low.lastElementChild).getAllByRole('link').length).toBeGreaterThan(0);
+    expect(recent.lastElementChild).toBe(
+      within(recent).getByRole('link', { name: 'View all movements' }),
+    );
+    expect(recent.lastElementChild).toHaveClass('mt-auto');
+  });
+
+  it('keeps the empty states filling the card so equal heights hold', async () => {
+    dashboardApi({ body: { ...data, lowStock: [], recentMovements: [] } });
+    renderApp({ route: '/' });
+
+    expect(await screen.findByText('Nothing needs restocking.')).toHaveClass('flex-1');
+    expect(screen.getByText('No stock movements yet.')).toHaveClass('flex-1');
   });
 
   it('shows the Pending approvals card to admins only', async () => {
