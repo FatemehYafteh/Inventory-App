@@ -40,7 +40,7 @@ describe('Suppliers page in Persian', () => {
     expect(screen.getByRole('heading', { name: 'تأمین‌کنندگان' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'افزودن تأمین‌کننده' })).toBeInTheDocument();
     expect(screen.getByRole('searchbox', { name: 'جستجوی تأمین‌کنندگان' })).toBeInTheDocument();
-    expect(screen.getByText('شخص تماس')).toBeInTheDocument();
+    expect(screen.getByText('فرد رابط')).toBeInTheDocument();
     expect(screen.getByText('تعداد محصولات')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ویرایش Acme Tools' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'غیرفعال‌سازی Acme Tools' })).toBeInTheDocument();

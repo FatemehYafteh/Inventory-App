@@ -89,7 +89,7 @@
   },
   "history": {
     "title": "Stock history",
-    "description": "{{title}} ({{sku}}), newest first.",
+    "description": "{{title}} ({{sku}})",
     "empty": "No stock changes yet.",
     "date": "Date",
     "type": "Type",

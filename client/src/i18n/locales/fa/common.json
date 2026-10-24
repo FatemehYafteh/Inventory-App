@@ -30,7 +30,7 @@
     "telegram": "تلگرام"
   },
   "export": {
-    "csv": "خروجی CSV",
+    "csv": "خروجی Excel",
     "exporting": "در حال تهیه خروجی…"
   }
 }

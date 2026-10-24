@@ -56,9 +56,12 @@ describe('Translation files', () => {
       });
 
       it('has Persian text, not a copy of the English', () => {
-        // Allow brand names, codes and similar that are legitimately the same in both.
+        // Allow brand names, codes and similar that are legitimately the same in both. Words
+        // inside {{placeholders}} are not text, so a string made only of them is the same too.
         const copies = Object.keys(english).filter(
-          (key) => persian[key] === english[key] && /[A-Za-z]{4,}/.test(english[key]),
+          (key) =>
+            persian[key] === english[key] &&
+            /[A-Za-z]{4,}/.test(english[key].replace(/\{\{[^}]*\}\}/g, '')),
         );
         expect(copies).toEqual([]);
       });

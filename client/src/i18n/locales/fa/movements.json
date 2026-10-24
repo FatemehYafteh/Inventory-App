@@ -8,7 +8,7 @@
   "filters": {
     "product": "محصول",
     "allProducts": "همهٔ محصولات",
-    "productSearch": "جست‌وجو بر اساس عنوان یا SKU",
+    "productSearch": "جست‌وجو بر اساس عنوان یا شناسه‌ی کالا",
     "productNone": "محصولی پیدا نشد.",
     "type": "نوع",
     "allTypes": "همهٔ نوع‌ها",
