@@ -16,7 +16,7 @@
   },
   "lowStock": {
     "title": "Needs restocking",
-    "description": "Out of stock and low stock products, lowest stock first.",
+    "description": "Out of stock and low stock products.",
     "empty": "Nothing needs restocking.",
     "units": "{{quantity}} in stock, reorder at {{level}}",
     "receive": "Receive",
