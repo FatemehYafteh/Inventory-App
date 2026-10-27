@@ -1,0 +1,26 @@
+{
+  "nav": {
+    "dashboard": "داشبورد",
+    "products": "محصولات",
+    "movements": "حرکت‌ها",
+    "categories": "دسته‌بندی‌ها",
+    "suppliers": "تأمین‌کنندگان",
+    "users": "کاربران",
+    "main": "اصلی",
+    "waitingForApproval": " در انتظار تأیید"
+  },
+  "skipLink": "پرش به محتوای اصلی",
+  "openMenu": "باز کردن منو",
+  "menu": "منو",
+  "mainNavigation": "ناوبری اصلی",
+  "logOut": "خروج",
+  "backToAwaitingApproval": "بازگشت به در انتظار تأیید",
+  "dashboard": {
+    "title": "داشبورد",
+    "description": "{{name}}، خوش آمدید."
+  },
+  "notFound": {
+    "title": "صفحه پیدا نشد",
+    "goHome": "رفتن به صفحه اصلی"
+  }
+}

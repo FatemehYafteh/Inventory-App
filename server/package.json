@@ -1,0 +1,36 @@
+{
+  "name": "@inventory/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file=.env src/index.js",
+    "start": "node src/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:dev": "node scripts/dev-db.js",
+    "user:create": "node --env-file=.env scripts/create-user.js",
+    "seed": "node --env-file=.env scripts/seed.js",
+    "seed:reset": "node --env-file=.env scripts/seed.js --reset",
+    "tg:start": "node --env-file=.env scripts/tg-start.js",
+    "secret:generate": "node scripts/generate-secret.js"
+  },
+  "dependencies": {
+    "@inventory/shared": "*",
+    "argon2": "^0.41.1",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "grammy": "^1.46.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.0",
+    "nodemailer": "10.0.11",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.1.2",
+    "supertest": "^7.0.0",
+    "vitest": "^4.1.11"
+  }
+}

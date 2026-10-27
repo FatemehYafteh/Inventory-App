@@ -1,0 +1,13 @@
+{
+  "empty": "نتیجه‌ای یافت نشد.",
+  "results_one": "{{n}} نتیجه",
+  "results_other": "{{n}} نتیجه",
+  "rowsPerPage": "تعداد ردیف در صفحه",
+  "pageOf": "صفحه {{page}} از {{total}}",
+  "previous": "قبلی",
+  "next": "بعدی",
+  "sortHint": "، {{action}}",
+  "sortAscending": "مرتب‌سازی صعودی",
+  "sortDescending": "مرتب‌سازی نزولی",
+  "clearSorting": "حذف مرتب‌سازی"
+}

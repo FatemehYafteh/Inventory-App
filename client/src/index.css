@@ -1,0 +1,179 @@
+@import 'tailwindcss';
+
+/* Dark tokens apply when an ancestor (normally <html>) has the .dark class. Nothing sets it yet. */
+@custom-variant dark (&:is(.dark, .dark *));
+
+/*
+ * Light theme. Every colour is a 6-digit hex so client/src/styles/tokens.test.js can verify
+ * contrast. Keep the .dark block below in sync: the test fails if a token is missing there.
+ */
+:root {
+  color-scheme: light;
+
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  /* Fills only (buttons, badges). For primary-coloured text use --primary-text, never --primary. */
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --primary-hover: #1d4ed8;
+  --primary-text: #2563eb;
+
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --accent: #eff6ff;
+  --accent-foreground: #1e3a8a;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e8f0;
+  --input: #74849b;
+  --placeholder: #64748b;
+  --ring: #2563eb;
+  --overlay: rgb(0 0 0 / 0.5);
+
+  --sidebar: #0f1e3d;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-muted: #94a3b8;
+  --sidebar-accent: #1e3a6b;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-ring: #93c5fd;
+
+  /* Status text and its tinted fill. Stock: in = success, low = warning, out = danger. */
+  --success: #166534;
+  --success-soft: #e3f0e8;
+  --warning: #92400e;
+  --warning-soft: #f5e7dd;
+  --danger: #b91c1c;
+  --danger-soft: #fce9e9;
+  --neutral: #475569;
+  --neutral-soft: #edeef0;
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #0b1220;
+  --foreground: #e2e8f0;
+  --card: #111b2e;
+  --card-foreground: #e2e8f0;
+  --popover: #111b2e;
+  --popover-foreground: #e2e8f0;
+
+  /* --primary on --card is 3.33:1: fine for shapes and edges, never for text. Text uses --primary-text. */
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --primary-hover: #1d4ed8;
+  --primary-text: #60a5fa;
+
+  --secondary: #1b2740;
+  --secondary-foreground: #e2e8f0;
+  --muted: #1b2740;
+  --muted-foreground: #94a3b8;
+  --accent: #1b2740;
+  --accent-foreground: #e2e8f0;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #26324a;
+  --input: #64748b;
+  --placeholder: #8494aa;
+  --ring: #60a5fa;
+  --overlay: rgb(0 0 0 / 0.6);
+
+  --sidebar: #0b1426;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-muted: #94a3b8;
+  --sidebar-accent: #1e3a6b;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-ring: #93c5fd;
+
+  --success: #86efac;
+  --success-soft: #193639;
+  --warning: #fcd34d;
+  --warning-soft: #32322d;
+  --danger: #fca5a5;
+  --danger-soft: #312737;
+  --neutral: #cbd5e1;
+  --neutral-soft: #232e41;
+}
+
+@theme inline {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-text: var(--primary-text);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-placeholder: var(--placeholder);
+  --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-neutral: var(--neutral);
+  --color-neutral-soft: var(--neutral-soft);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Persian text uses Vazirmatn (self-hosted, loaded in main.jsx); English keeps --font-sans. */
+:root[lang='fa'] {
+  font-family:
+    'Vazirmatn Variable',
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Tahoma,
+    sans-serif;
+}

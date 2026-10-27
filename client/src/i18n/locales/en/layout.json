@@ -1,0 +1,26 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "movements": "Movements",
+    "categories": "Categories",
+    "suppliers": "Suppliers",
+    "users": "Users",
+    "main": "Main",
+    "waitingForApproval": " waiting for approval"
+  },
+  "skipLink": "Skip to main content",
+  "openMenu": "Open menu",
+  "menu": "Menu",
+  "mainNavigation": "Main navigation",
+  "logOut": "Log out",
+  "backToAwaitingApproval": "Back to Awaiting approval",
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Welcome, {{name}}."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "goHome": "Go home"
+  }
+}

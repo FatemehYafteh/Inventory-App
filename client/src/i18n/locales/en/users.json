@@ -1,0 +1,97 @@
+{
+  "title": "Users",
+  "tabs": {
+    "pending": "Pending",
+    "active": "Active",
+    "rejected": "Rejected"
+  },
+  "status": {
+    "pending": "pending",
+    "active": "active",
+    "rejected": "rejected"
+  },
+  "statusTitle": {
+    "pending": "Pending",
+    "active": "Active",
+    "rejected": "Rejected"
+  },
+  "role": {
+    "admin": "admin",
+    "staff": "staff"
+  },
+  "empty": {
+    "search": "No users match your search.",
+    "incomplete": "No unfinished signups.",
+    "pending": "No one is waiting for approval.",
+    "active": "No active users.",
+    "rejected": "No rejected users."
+  },
+  "toolbar": {
+    "searchLabel": "Search users",
+    "searchPlaceholder": "Search name, email or Telegram",
+    "incomplete": "Incomplete profile"
+  },
+  "table": {
+    "name": "Name",
+    "email": "Email",
+    "telegram": "Telegram",
+    "methods": "Sign-in methods",
+    "role": "Role",
+    "status": "Status",
+    "createdAt": "Signed up",
+    "lastLoginAt": "Last login",
+    "actions": "Actions",
+    "noName": "No name yet",
+    "you": " (you)",
+    "never": "Never"
+  },
+  "actions": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "makeStaff": "Make staff",
+    "makeAdmin": "Make admin",
+    "reactivate": "Reactivate",
+    "moveToPending": "Move to pending",
+    "pendingIncompleteNote": "They must finish their profile before they can be approved.",
+    "selfNote": "You cannot reject or demote yourself.",
+    "rejectedIncompleteNote": "They must finish their profile before they can be reactivated."
+  },
+  "drawer": {
+    "defaultTitle": "User details",
+    "description": "Profile and status history",
+    "loading": "Loading…",
+    "email": "Email",
+    "telegram": "Telegram",
+    "methods": "Sign-in methods",
+    "role": "Role",
+    "status": "Status",
+    "reason": "Reason",
+    "createdAt": "Signed up",
+    "lastLoginAt": "Last login",
+    "never": "Never",
+    "historyTitle": "Status history",
+    "historyEmpty": "No status changes yet.",
+    "historyChange": "{{from}} to {{to}}",
+    "historyBy": "by {{name}} on {{date}}",
+    "viewMovements": "View movements"
+  },
+  "reject": {
+    "thisUser": "this user",
+    "title": "Reject {{name}}?",
+    "description": "They are signed out at once and cannot log in. They get an email, and a Telegram message if they use the bot.",
+    "reasonLabel": "Reason (optional)",
+    "reasonHelp": "The reason is included in the email, not in the Telegram message.",
+    "cancel": "Cancel",
+    "confirm": "Reject user"
+  },
+  "changeRole": {
+    "thisUser": "this user",
+    "titleAdmin": "Make {{name}} an admin?",
+    "titleStaff": "Make {{name}} staff?",
+    "descriptionAdmin": "Admins manage users, categories and suppliers, and can archive products. The change applies on their next request.",
+    "descriptionStaff": "Staff can work with products and stock, but cannot manage users. The change applies on their next request.",
+    "cancel": "Cancel",
+    "confirmAdmin": "Make admin",
+    "confirmStaff": "Make staff"
+  }
+}

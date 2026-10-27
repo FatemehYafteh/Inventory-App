@@ -1,0 +1,47 @@
+# Render Blueprint for the API (and the Telegram bot webhook it serves).
+# The web app is on Vercel, which forwards /api/* here, so the browser only ever sees one site.
+# Secrets are marked sync: false: Render asks for their values when the Blueprint is created.
+services:
+  - type: web
+    name: inventory-app-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start -w server
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BOT_MODE
+        value: webhook
+      # Vercel and Render each put one proxy in front of the API.
+      - key: TRUST_PROXY
+        value: '2'
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: TELEGRAM_WEBHOOK_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false
+      # The Vercel address, for example https://inventory-app.vercel.app
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      # A sender Brevo has verified, for example "Inventory <you@gmail.com>"
+      - key: EMAIL_FROM
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false

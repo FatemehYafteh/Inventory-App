@@ -1,0 +1,13 @@
+{
+  "name": "@inventory/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./schemas": "./schemas/index.js",
+    "./errorCodes": "./errorCodes.js"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  }
+}

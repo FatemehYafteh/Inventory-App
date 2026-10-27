@@ -1,0 +1,50 @@
+{
+  "title": "تأمین‌کنندگان",
+  "add": "افزودن تأمین‌کننده",
+  "emptySearch": "هیچ تأمین‌کننده‌ای با جستجوی شما مطابقت ندارد.",
+  "empty": "هنوز تأمین‌کننده‌ای وجود ندارد.",
+  "searchLabel": "جستجوی تأمین‌کنندگان",
+  "searchPlaceholder": "جستجوی نام، فرد رابط، تلفن یا ایمیل",
+  "movementCount_one": "{{n}} حرکت موجودی",
+  "movementCount_other": "{{n}} حرکت موجودی",
+  "inUseReason": "در {{usage}} استفاده شده است. به‌جای حذف، آن را غیرفعال کنید.",
+  "usageJoin": "{{first}} و {{second}}",
+  "table": {
+    "name": "نام",
+    "contactPerson": "فرد رابط",
+    "phone": "تلفن",
+    "email": "ایمیل",
+    "productCount": "تعداد محصولات",
+    "actions": "عملیات",
+    "editLabel": "ویرایش {{name}}",
+    "deactivateLabel": "غیرفعال‌سازی {{name}}",
+    "reactivateLabel": "فعال‌سازی مجدد {{name}}",
+    "deleteLabel": "حذف {{name}}",
+    "edit": "ویرایش",
+    "deactivate": "غیرفعال‌سازی",
+    "reactivate": "فعال‌سازی مجدد",
+    "delete": "حذف"
+  },
+  "form": {
+    "editTitle": "ویرایش تأمین‌کننده",
+    "addTitle": "افزودن تأمین‌کننده",
+    "description": "نام‌ها یکتا هستند و تفاوت حروف بزرگ و کوچک در نظر گرفته نمی‌شود. فقط نام الزامی است.",
+    "name": "نام",
+    "contactPerson": "فرد رابط",
+    "phone": "تلفن",
+    "email": "ایمیل",
+    "address": "نشانی",
+    "notes": "یادداشت‌ها",
+    "cancel": "لغو",
+    "save": "ذخیره"
+  },
+  "dialogs": {
+    "cancel": "لغو",
+    "deleteTitle": "{{name}} حذف شود؟",
+    "deleteDescription": "این تأمین‌کننده حذف می‌شود. این کار قابل بازگشت نیست.",
+    "delete": "حذف",
+    "deactivateTitle": "{{name}} غیرفعال شود؟",
+    "deactivateDescription": "هنوز {{products}} دارد. هر زمان می‌توانید آن را دوباره فعال کنید.",
+    "deactivate": "غیرفعال‌سازی"
+  }
+}
