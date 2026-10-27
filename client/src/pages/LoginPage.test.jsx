@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { QueryClient } from '@tanstack/react-query';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ACCESS_DENIED_KEY } from '@/lib/auth';
 import { renderApp } from '@/test/render';
 import { activeUser, notAuthenticated, server } from '@/test/server';
@@ -14,6 +14,27 @@ async function fillAndSubmit(user, { email, password }) {
 }
 
 describe('LoginPage', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('shows no demo account unless the build sets one', async () => {
+    renderApp({ route: '/login' });
+    await screen.findByRole('heading', { name: 'Log in' });
+    expect(screen.queryByText('Demo account')).not.toBeInTheDocument();
+  });
+
+  it('fills in the demo account from the build settings', async () => {
+    vi.stubEnv('VITE_DEMO_EMAIL', 'admin@example.com');
+    vi.stubEnv('VITE_DEMO_PASSWORD', 'inventory-demo-2026');
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+    await screen.findByRole('heading', { name: 'Demo account' });
+
+    await user.click(screen.getByRole('button', { name: 'Fill in the demo account' }));
+
+    expect(screen.getByLabelText('Email')).toHaveValue('admin@example.com');
+    expect(screen.getByLabelText('Password')).toHaveValue('inventory-demo-2026');
+  });
+
   it('says "Access denied" after an account was rejected while signed in', async () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     queryClient.setQueryData(ACCESS_DENIED_KEY, true);

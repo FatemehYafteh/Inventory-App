@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { createBrevoTransport } from './brevo.transport.js';
 
 const DEFAULT_RETRY_DELAYS_MS = [500, 2000];
 const TRANSIENT_CODES = new Set(['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'EDNS', 'ECONNRESET']);
@@ -13,7 +14,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Provider-agnostic mailer.
- * - SMTP configured: sends through Nodemailer, retrying transient failures.
+ * - BREVO_API_KEY set: sends through Brevo's HTTPS API (for hosts that block SMTP).
+ * - SMTP configured: sends through Nodemailer. Both retry transient failures.
  * - No SMTP in development: writes the email (with its links) to the log.
  * - Tests: keeps messages in `outbox`.
  * `sendInBackground` never throws and never delays the HTTP response, so a delivery
@@ -25,14 +27,16 @@ export function createMailer(
 ) {
   const transporter =
     transport ??
-    (config.smtp &&
-      nodemailer.createTransport({
-        host: config.smtp.host,
-        port: config.smtp.port,
-        secure: config.smtp.port === 465,
-        auth: { user: config.smtp.user, pass: config.smtp.pass },
-      }));
-  const from = config.smtp?.from ?? 'Inventory <no-reply@localhost>';
+    (config.brevo
+      ? createBrevoTransport({ apiKey: config.brevo.apiKey })
+      : config.smtp &&
+        nodemailer.createTransport({
+          host: config.smtp.host,
+          port: config.smtp.port,
+          secure: config.smtp.port === 465,
+          auth: { user: config.smtp.user, pass: config.smtp.pass },
+        }));
+  const from = config.brevo?.from ?? config.smtp?.from ?? 'Inventory <no-reply@localhost>';
   const outbox = [];
   const pending = new Set();
 

@@ -33,4 +33,4 @@ Thumbs.db
 .claude/settings.local.json
 
 # Local dev database (npm run db:dev)
-server/.dev-db/
+server/.dev-db*/

@@ -51,6 +51,23 @@ describe('loadConfig', () => {
     expect(() => loadConfig({ ...base, NODE_ENV: 'production' })).toThrow(/SMTP_HOST/);
   });
 
+  it('accepts a Brevo API key instead of SMTP in production', () => {
+    const {
+      SMTP_HOST: _host,
+      SMTP_USER: _user,
+      SMTP_PASS: _pass,
+      ...rest
+    } = production;
+    const config = loadConfig({ ...rest, BREVO_API_KEY: 'xkeysib-123' });
+    expect(config.brevo).toEqual({ apiKey: 'xkeysib-123', from: 'no-reply@example.com' });
+    expect(config.smtp).toBeNull();
+  });
+
+  it('still requires EMAIL_FROM with a Brevo API key', () => {
+    const { EMAIL_FROM: _from, ...rest } = production;
+    expect(() => loadConfig({ ...rest, BREVO_API_KEY: 'xkeysib-123' })).toThrow(/EMAIL_FROM/);
+  });
+
   it('forces Secure cookies in production', () => {
     const config = loadConfig({ ...production, COOKIE_SECURE: 'false' });
     expect(config.cookieSecure).toBe(true);

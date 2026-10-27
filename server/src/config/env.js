@@ -42,6 +42,8 @@ const envSchema = z
     SMTP_USER: optional,
     SMTP_PASS: optional,
     EMAIL_FROM: optional,
+    // Brevo's HTTPS API, used instead of SMTP where outbound SMTP is blocked (Render free tier).
+    BREVO_API_KEY: optional,
   })
   .superRefine((env, ctx) => {
     // Telegram verifies webhook calls with this secret, so a webhook never runs without one.
@@ -61,11 +63,12 @@ const envSchema = z
         message: 'must be webhook in production',
       });
     }
+    // Email goes out through either the Brevo API or SMTP; with the API key, SMTP is not needed.
+    const mailKeys = env.BREVO_API_KEY
+      ? ['EMAIL_FROM']
+      : ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'EMAIL_FROM'];
     for (const key of [
-      'SMTP_HOST',
-      'SMTP_USER',
-      'SMTP_PASS',
-      'EMAIL_FROM',
+      ...mailKeys,
       'TELEGRAM_BOT_TOKEN',
       'TELEGRAM_BOT_USERNAME',
       'TELEGRAM_WEBHOOK_SECRET',
@@ -109,6 +112,9 @@ export function loadConfig(source = process.env) {
       mode: env.BOT_MODE,
     },
     admins: { telegramIds: env.ADMIN_TELEGRAM_IDS, emails: env.ADMIN_EMAILS },
+    brevo: env.BREVO_API_KEY
+      ? { apiKey: env.BREVO_API_KEY, from: env.EMAIL_FROM ?? 'Inventory <no-reply@localhost>' }
+      : null,
     smtp: env.SMTP_HOST
       ? {
           host: env.SMTP_HOST,

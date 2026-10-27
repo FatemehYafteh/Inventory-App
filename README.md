@@ -43,6 +43,22 @@ npm test        # server (in-memory replica set) and client tests
 npm run lint
 ```
 
+## Deployment
+Free tier only: the web app on **Vercel**, the API and Telegram bot on **Render**, the database on **MongoDB Atlas** (`M0`, already a replica set), email through **Brevo's HTTPS API** (Render's free instances block outbound SMTP).
+
+```
+browser ──> Vercel (client/dist)  ── /api/* rewrite ──> Render (server) ──> Atlas
+Telegram ──> Vercel /api/telegram/webhook ─────────────┘
+```
+
+The browser only ever talks to the Vercel address, so the `SameSite=Strict` cookies and the CSRF Origin check work unchanged and no CORS is needed.
+
+- `render.yaml` is a Render Blueprint for the API. Create it from the Render dashboard (New > Blueprint), then fill in the values it asks for. `APP_URL` and `CLIENT_ORIGIN` are the Vercel address.
+- `vercel.json` builds `client/` from the repo root and forwards `/api/*` to the Render service. If the Render service gets a different address, change the `destination` there.
+- Vercel environment variables (optional): `VITE_DEMO_EMAIL` and `VITE_DEMO_PASSWORD` show a demo account box on the login page.
+- Demo data: run `npm run seed -w server` from your own machine with `MONGODB_URI` in `server/.env` pointing at Atlas. Visitors change the data, so refresh it now and then with `npm run seed:reset -w server`.
+- Render's free service sleeps after 15 minutes without traffic; a free uptime pinger calling `/api/health` every 10 minutes keeps it awake.
+
 ## Git workflow
 - `main` is always working. Do not commit to it directly.
 - Branch per sub-PRD or task: `feat/<area>-<short-name>`, `fix/...`, `docs/...`, `chore/...`.

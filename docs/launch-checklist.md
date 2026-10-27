@@ -21,6 +21,8 @@ The server sends mail with Nodemailer over SMTP, configured only by environment 
 
 4. Start the server in production. It refuses to start if `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` or `EMAIL_FROM` is missing.
 
+**On a host that blocks SMTP** (Render's free instances): create an API key in Brevo under *SMTP & API > API keys* and set `BREVO_API_KEY` and `EMAIL_FROM` instead. The `SMTP_*` variables are then not needed. Without a domain of your own, `EMAIL_FROM` can be a Gmail address verified as a Brevo sender, but messages are then more likely to land in spam.
+
 ## 2. DNS for the sender domain
 
 - [ ] **SPF**: the domain's TXT record includes Brevo (`include:spf.brevo.com`) and there is only one SPF record.
