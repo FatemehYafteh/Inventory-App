@@ -38,10 +38,9 @@ services:
         sync: false
       - key: TELEGRAM_BOT_USERNAME
         sync: false
-      - key: BREVO_API_KEY
-        sync: false
-      # A sender Brevo has verified, for example "Inventory <you@gmail.com>"
-      - key: EMAIL_FROM
-        sync: false
+      # No email provider yet: emails and their links go to the Render logs.
+      # To send real email, set BREVO_API_KEY and EMAIL_FROM and change this to send.
+      - key: EMAIL_DELIVERY
+        value: log
       - key: ADMIN_EMAILS
         sync: false

@@ -44,6 +44,9 @@ const envSchema = z
     EMAIL_FROM: optional,
     // Brevo's HTTPS API, used instead of SMTP where outbound SMTP is blocked (Render free tier).
     BREVO_API_KEY: optional,
+    // send: deliver email (production requires a provider). log: write emails and their links
+    // to the server log instead, for a demo deployment with no email provider.
+    EMAIL_DELIVERY: z.enum(['send', 'log']).default('send'),
   })
   .superRefine((env, ctx) => {
     // Telegram verifies webhook calls with this secret, so a webhook never runs without one.
@@ -64,9 +67,9 @@ const envSchema = z
       });
     }
     // Email goes out through either the Brevo API or SMTP; with the API key, SMTP is not needed.
-    const mailKeys = env.BREVO_API_KEY
-      ? ['EMAIL_FROM']
-      : ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'EMAIL_FROM'];
+    let mailKeys = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'EMAIL_FROM'];
+    if (env.BREVO_API_KEY) mailKeys = ['EMAIL_FROM'];
+    if (env.EMAIL_DELIVERY === 'log') mailKeys = [];
     for (const key of [
       ...mailKeys,
       'TELEGRAM_BOT_TOKEN',
@@ -112,10 +115,11 @@ export function loadConfig(source = process.env) {
       mode: env.BOT_MODE,
     },
     admins: { telegramIds: env.ADMIN_TELEGRAM_IDS, emails: env.ADMIN_EMAILS },
-    brevo: env.BREVO_API_KEY
+    emailDelivery: env.EMAIL_DELIVERY,
+    brevo: env.EMAIL_DELIVERY === 'send' && env.BREVO_API_KEY
       ? { apiKey: env.BREVO_API_KEY, from: env.EMAIL_FROM ?? 'Inventory <no-reply@localhost>' }
       : null,
-    smtp: env.SMTP_HOST
+    smtp: env.EMAIL_DELIVERY === 'send' && env.SMTP_HOST
       ? {
           host: env.SMTP_HOST,
           port: env.SMTP_PORT,

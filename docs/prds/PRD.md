@@ -424,7 +424,7 @@ All routes under `/api`, JSON, authenticated via the access cookie unless marked
 
 ## 9. Environment Variables
 
-`MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `COOKIE_SECURE`, `CLIENT_ORIGIN`, `APP_URL` (used in email links), `TRUST_PROXY` (proxies in front of the API, default 0), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `BOT_MODE`, `ADMIN_TELEGRAM_IDS`, `ADMIN_EMAILS`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`, `BREVO_API_KEY` (Brevo HTTPS API instead of SMTP, for hosts that block SMTP)
+`MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `COOKIE_SECURE`, `CLIENT_ORIGIN`, `APP_URL` (used in email links), `TRUST_PROXY` (proxies in front of the API, default 0), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `BOT_MODE`, `ADMIN_TELEGRAM_IDS`, `ADMIN_EMAILS`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`, `BREVO_API_KEY` (Brevo HTTPS API instead of SMTP, for hosts that block SMTP), `EMAIL_DELIVERY` (`send` or `log`; `log` lets production run with no email provider)
 
 ## 10. Suggested Structure
 
