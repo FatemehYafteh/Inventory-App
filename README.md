@@ -44,7 +44,7 @@ npm run lint
 ```
 
 ## Deployment
-Free tier only: the web app on **Vercel**, the API and Telegram bot on **Render**, the database on **MongoDB Atlas** (`M0`, already a replica set), email through **Brevo's HTTPS API** (Render's free instances block outbound SMTP).
+Free tier only: the web app on **Vercel**, the API and Telegram bot on **Render**, the database on **MongoDB Atlas** (`M0`, already a replica set), email off for now (`EMAIL_DELIVERY=log`: verification and reset emails, with their links, are written to the Render logs). Brevo's HTTPS API is supported for when a provider is available (Render's free instances block outbound SMTP).
 
 ```
 browser ──> Vercel (client/dist)  ── /api/* rewrite ──> Render (server) ──> Atlas

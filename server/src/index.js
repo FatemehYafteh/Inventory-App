@@ -13,6 +13,9 @@ async function main() {
     process.exit(1);
   }
 
+  if (config.isProduction && config.emailDelivery === 'log') {
+    console.warn('[mail] EMAIL_DELIVERY=log: emails are written to this log, not sent.');
+  }
   await connectDatabase(config.mongoUri);
   // Without a token (development only) the server logs start tokens and codes instead,
   // and `npm run tg:start` stands in for pressing Start.
