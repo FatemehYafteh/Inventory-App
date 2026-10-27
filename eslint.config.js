@@ -18,7 +18,7 @@ export default [
     },
   },
   {
-    files: ['server/**/*.js', 'shared/**/*.js', '*.config.js'],
+    files: ['server/**/*.js', 'shared/**/*.js', 'api/**/*.js', '*.config.js'],
     languageOptions: { globals: globals.node },
   },
   {

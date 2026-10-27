@@ -42,7 +42,7 @@ const envSchema = z
     SMTP_USER: optional,
     SMTP_PASS: optional,
     EMAIL_FROM: optional,
-    // Brevo's HTTPS API, used instead of SMTP where outbound SMTP is blocked (Render free tier).
+    // Brevo's HTTPS API, used instead of SMTP where outbound SMTP is blocked (such as Render's free tier).
     BREVO_API_KEY: optional,
     // send: deliver email (production requires a provider). log: write emails and their links
     // to the server log instead, for a demo deployment with no email provider.

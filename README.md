@@ -44,20 +44,21 @@ npm run lint
 ```
 
 ## Deployment
-Free tier only: the web app on **Vercel**, the API and Telegram bot on **Render**, the database on **MongoDB Atlas** (`M0`, already a replica set), email off for now (`EMAIL_DELIVERY=log`: verification and reset emails, with their links, are written to the Render logs). Brevo's HTTPS API is supported for when a provider is available (Render's free instances block outbound SMTP).
+Free tier only, no credit card: the web app **and** the API on **Vercel**, the database on **MongoDB Atlas** (`M0`, already a replica set). Email is off for now (`EMAIL_DELIVERY=log`): verification and reset emails, with their links, are written to the Vercel function logs. Brevo's HTTPS API is supported for when a provider is available.
 
 ```
-browser ──> Vercel (client/dist)  ── /api/* rewrite ──> Render (server) ──> Atlas
-Telegram ──> Vercel /api/telegram/webhook ─────────────┘
+browser  ──> Vercel ── static files (client/dist)
+Telegram ──>        └─ /api/* ──> api/index.js (Express app as a Vercel Function) ──> Atlas
 ```
 
-The browser only ever talks to the Vercel address, so the `SameSite=Strict` cookies and the CSRF Origin check work unchanged and no CORS is needed.
+Everything is served from one address, so the `SameSite=Strict` cookies and the CSRF Origin check work unchanged and no CORS is needed.
 
-- `render.yaml` is a Render Blueprint for the API. Create it from the Render dashboard (New > Blueprint), then fill in the values it asks for. `APP_URL` and `CLIENT_ORIGIN` are the Vercel address.
-- `vercel.json` builds `client/` from the repo root and forwards `/api/*` to the Render service. If the Render service gets a different address, change the `destination` there.
-- Vercel environment variables (optional): `VITE_DEMO_EMAIL` and `VITE_DEMO_PASSWORD` show a demo account box on the login page.
+- `vercel.json` builds `client/`, sends every `/api/*` request to `api/index.js`, and serves `index.html` for client routes. Functions run in Frankfurt (`fra1`), next to the Atlas cluster.
+- `api/index.js` runs the same Express app as `npm run dev`, built once per instance by `server/src/serverless.js`. In webhook mode it registers the Telegram webhook on each cold start.
+- Vercel environment variables (Settings > Environment Variables), the same names as `server/.env.example`:
+  `NODE_ENV=production`, `BOT_MODE=webhook`, `TRUST_PROXY=1`, `COOKIE_SECURE=true`, `EMAIL_DELIVERY=log`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (`npm run secret:generate -w server`), `CLIENT_ORIGIN` and `APP_URL` (the Vercel address), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `ADMIN_EMAILS`. Optional: `VITE_DEMO_EMAIL` and `VITE_DEMO_PASSWORD` show a demo account box on the login page. Redeploy after changing any of them.
 - Demo data: run `npm run seed -w server` from your own machine with `MONGODB_URI` in `server/.env` pointing at Atlas. Visitors change the data, so refresh it now and then with `npm run seed:reset -w server`.
-- Render's free service sleeps after 15 minutes without traffic; a free uptime pinger calling `/api/health` every 10 minutes keeps it awake.
+- Rate limits are kept in memory, so on serverless each instance counts on its own; they are looser than on a single server.
 
 ## Git workflow
 - `main` is always working. Do not commit to it directly.
