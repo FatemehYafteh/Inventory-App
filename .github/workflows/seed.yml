@@ -1,0 +1,42 @@
+# Adds the demo data to the production database (Atlas), from GitHub's servers.
+# Run it from the Actions tab: "Seed demo data" > Run workflow.
+# Needs the repository secret MONGODB_URI (Settings > Secrets and variables > Actions).
+# Only adds what is missing, like `npm run seed -w server`: existing users and data are kept.
+name: Seed demo data
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seed
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install server dependencies
+        run: npm ci --omit=dev
+
+      - name: Seed
+        working-directory: server
+        run: node scripts/seed.js
+        env:
+          NODE_ENV: development
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          # The seed never signs tokens or builds links; loadConfig only needs valid values.
+          JWT_ACCESS_SECRET: seed-only-placeholder-not-used-anywhere-000
+          JWT_REFRESH_SECRET: seed-only-placeholder-not-used-anywhere-111
+          CLIENT_ORIGIN: https://inventory-app-drab-tau.vercel.app
+          APP_URL: https://inventory-app-drab-tau.vercel.app

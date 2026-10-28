@@ -57,7 +57,7 @@ Everything is served from one address, so the `SameSite=Strict` cookies and the 
 - `api/index.js` runs the same Express app as `npm run dev`, built once per instance by `server/src/serverless.js`. In webhook mode it registers the Telegram webhook on each cold start.
 - Vercel environment variables (Settings > Environment Variables), the same names as `server/.env.example`:
   `NODE_ENV=production`, `BOT_MODE=webhook`, `TRUST_PROXY=1`, `COOKIE_SECURE=true`, `EMAIL_DELIVERY=log`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (`npm run secret:generate -w server`), `CLIENT_ORIGIN` and `APP_URL` (the Vercel address), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `ADMIN_EMAILS`. Optional: `VITE_DEMO_EMAIL` and `VITE_DEMO_PASSWORD` show a demo account box on the login page. Redeploy after changing any of them.
-- Demo data: run `npm run seed -w server` from your own machine with `MONGODB_URI` in `server/.env` pointing at Atlas. Visitors change the data, so refresh it now and then with `npm run seed:reset -w server`.
+- Demo data: in GitHub, Actions > **Seed demo data** > Run workflow (needs the repository secret `MONGODB_URI`). It runs `server/scripts/seed.js` on GitHub's servers and only adds what is missing. Running it from your own machine also works (`npm run seed -w server` with `MONGODB_URI` pointing at Atlas) where DNS answers SRV lookups. `npm run seed:reset -w server` wipes every seeded collection, users included.
 - Rate limits are kept in memory, so on serverless each instance counts on its own; they are looser than on a single server.
 
 ## Git workflow
