@@ -130,7 +130,7 @@ describe('Theme switcher', () => {
     await i18n.changeLanguage('fa');
     renderApp({ route: '/login' });
 
-    const group = await screen.findByRole('radiogroup', { name: 'پوسته' });
+    const group = await screen.findByRole('radiogroup', { name: 'حالت نمایش' });
 
     expect(within(group).getByRole('radio', { name: 'تیره' })).toBeInTheDocument();
     expect(within(group).getByRole('radio', { name: 'روشن' })).toBeInTheDocument();
