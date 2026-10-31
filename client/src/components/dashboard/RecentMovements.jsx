@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { formatDateTime, formatNumber } from '@/lib/format';
+import { LIST_ITEM_HIGHLIGHT } from '@/lib/highlight';
 
 /** Rows shown in the card; the full, filterable table is the Movements page. */
 export const RECENT_MOVEMENT_ROWS = 5;
@@ -27,7 +28,7 @@ export function RecentMovements({ items }) {
       ) : (
         <ul className="flex flex-1 flex-col divide-y">
           {rows.map((item) => (
-            <li key={item.id} className="flex items-start gap-3 py-3">
+            <li key={item.id} className={`flex items-start gap-3 py-3 ${LIST_ITEM_HIGHLIGHT}`}>
               {/* The sign is part of the text, so direction never depends on colour. */}
               <span className="w-12 shrink-0 text-end text-lg font-semibold tabular-nums">
                 {item.quantityChange > 0
