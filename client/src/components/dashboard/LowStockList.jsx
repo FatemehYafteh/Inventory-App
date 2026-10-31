@@ -4,6 +4,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatNumber } from '@/lib/format';
+import { LIST_ITEM_HIGHLIGHT } from '@/lib/highlight';
 
 const linkClass = 'text-sm text-primary-text underline-offset-4 hover:underline';
 
@@ -32,7 +33,10 @@ export function LowStockList({ items, lowStockCount, outOfStockCount, onReceive 
       ) : (
         <ul className="flex flex-1 flex-col divide-y">
           {rows.map((item) => (
-            <li key={item.id} className="flex flex-wrap items-center gap-3 py-3">
+            <li
+              key={item.id}
+              className={`flex flex-wrap items-center gap-3 py-3 ${LIST_ITEM_HIGHLIGHT}`}
+            >
               <span
                 aria-hidden="true"
                 className="w-10 shrink-0 text-end text-xl font-semibold tabular-nums"

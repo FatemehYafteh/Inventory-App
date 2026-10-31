@@ -93,7 +93,7 @@ export function DataTable({
           </TableHeader>
           <TableBody>
             {status ? (
-              <TableRow>
+              <TableRow data-static>
                 <TableCell colSpan={columnCount} className="h-24 text-center text-muted-foreground">
                   {status}
                 </TableCell>

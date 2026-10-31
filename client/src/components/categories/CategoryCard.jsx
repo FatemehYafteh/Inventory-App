@@ -24,7 +24,7 @@ export function CategoryCard({ category, canManage, onEdit, onDelete }) {
   return (
     <Card
       data-testid="category-card"
-      className="relative flex flex-col transition-colors hover:bg-accent/40"
+      className="relative flex flex-col transition-[background-color,border-color,box-shadow] hover:border-primary/40 hover:bg-accent hover:shadow-md focus-within:border-primary/40 focus-within:bg-accent focus-within:shadow-md"
     >
       <CardHeader>
         <h2 className="text-lg font-semibold leading-tight">

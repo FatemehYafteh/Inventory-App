@@ -7,7 +7,7 @@ How the client looks and why. Built in the Design Foundation phase (D0 to D6); t
 - **Tokens only.** Colour comes from the design tokens in `client/src/index.css`. Components never use hex values or palette utilities (`bg-white`, `text-white`, `emerald-*`, `bg-black/50`).
 - **Text always accompanies colour.** A status is shown with its words, never by colour alone (stock status, user status, errors).
 - **Contrast is enforced, not hoped for.** Text needs 4.5:1 against the surface it sits on, and field borders and focus rings need 3:1. `client/src/styles/tokens.test.js` checks every pair in both themes, and `components/ui/ui.test.jsx` guards the token migrations.
-- **Light only for now.** The `.dark` token set exists, but nothing applies the `.dark` class. Theme switching and a saved preference are phase T, planned separately.
+- **Two themes, one switch.** Every token has a light and a `.dark` value, and the user chooses Light, Dark or System (the default). See "Theme switching" below.
 
 ## Source of truth
 
@@ -91,7 +91,15 @@ Use the utility form (`bg-card`, `text-muted-foreground`, `border-input`, ...). 
 - The close button on the mobile menu keeps the page ring, which is 3.19:1 on navy (above 3:1, with little margin).
 - Observed in the browser pass (D5): wide tables, such as Users on its Rejected tab, scroll inside their card even at 1280px; the Suppliers search placeholder is clipped at 360px.
 - `AwaitingApprovalPage` still uses `CardTitle` (an `<h1>`) as its heading instead of `PageHeader`.
-- Dark mode is untested in a browser, because nothing applies it yet.
+- Seen in the browser during phase T, in light and dark alike (details in `docs/plans/phase-t-dark-pass.md`): the dashboard inventory-value figure is wider than its card at 1280px, and the Products table shows an empty "Archived" column for admins.
+
+## Theme switching
+
+- **Choice:** Light, Dark or System, saved in the browser only (`localStorage` key `theme`). It is not on the user record, so it can differ between devices and needs no API or seed. A missing or invalid value means System, which follows the OS setting live.
+- **How it applies:** `src/theme/theme.js` puts the `dark` class and `color-scheme` on `<html>` and updates the `theme-color` meta; `useTheme.js` holds the choice, syncs other tabs and follows the OS. An inline script in `index.html` does the same before the first paint so dark users never see a light flash. The three copies of the facts (the colours, the storage key, the script) are checked against each other in `theme.test.jsx`.
+- **The control:** `ThemeSwitcher` (`components/ThemeSwitcher.jsx`) is three native radios with icons and screen-reader names. It is in the sidebar footer (and so the mobile menu), the minimal bar and the signed-out card header. `tone="sidebar"` is for the navy surfaces. Each instance names its own radio group, because the sidebar and the open mobile menu can be in the page together.
+- **The navy bars:** in dark the navy is as dark as the page, so the sidebar, the mobile top bar and the minimal bar carry a dark-only 1px edge (`dark:border-sidebar-accent`). Light is unchanged.
+- **Rule for new code:** use tokens only, and look at a new page in dark before finishing it. Force dark by saving `theme=dark` in `localStorage`.
 
 ## Changing a token
 

@@ -34,3 +34,6 @@ Thumbs.db
 
 # Local dev database (npm run db:dev)
 server/.dev-db*/
+
+# Vite dependency cache
+client/.vite/

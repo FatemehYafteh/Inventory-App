@@ -27,6 +27,7 @@ client/src/
 - Inline quantity +/-: optimistic update with rollback on error. Send a delta, never an absolute value. Queue rapid clicks.
 - Use shadcn components and Tailwind utilities. Stock status is shown with text plus color, never color alone.
 - Colour comes from the design tokens only (`src/index.css`). No hard-coded hex or palette utilities (`bg-white`, `text-white`, `emerald-*`, `bg-black/50`) in components. Use `text-primary-text` for blue text, `text-danger` for error text and a full-strength `ring-ring`. See `docs/design-system.md`.
+- The app has a light and a dark theme (`ThemeSwitcher`, saved in the browser). Tokens carry both, so token-only code works in both; check a new screen in dark too. See "Theme switching" in `docs/design-system.md`.
 - Keyboard accessible dialogs, tables and the OTP input (use the shadcn input-otp component).
 - Show loading, empty and error states on every list and form.
 

@@ -1,5 +1,15 @@
 import { cn } from '@/lib/utils';
 
+// Body rows only (header rows are not in TableBody). A row marked data-static, such as an empty or
+// loading message, does not highlight. inset-ring is a shadow, so rows never shift.
+const BODY_ROW_HIGHLIGHT = [
+  '[&_tr:not([data-static])]:transition-[background-color,box-shadow]',
+  '[&_tr:not([data-static])]:duration-200',
+  '[&_tr:not([data-static]):is(:hover,:focus-within)]:bg-accent',
+  '[&_tr:not([data-static]):is(:hover,:focus-within)]:inset-ring',
+  '[&_tr:not([data-static]):is(:hover,:focus-within)]:inset-ring-primary/40',
+].join(' ');
+
 function Table({ className, ...props }) {
   return (
     <div className="relative w-full overflow-x-auto">
@@ -13,7 +23,9 @@ function TableHeader({ className, ...props }) {
 }
 
 function TableBody({ className, ...props }) {
-  return <tbody className={cn('[&_tr:last-child]:border-0', className)} {...props} />;
+  return (
+    <tbody className={cn('[&_tr:last-child]:border-0', BODY_ROW_HIGHLIGHT, className)} {...props} />
+  );
 }
 
 function TableFooter({ className, ...props }) {
@@ -26,15 +38,7 @@ function TableFooter({ className, ...props }) {
 }
 
 function TableRow({ className, ...props }) {
-  return (
-    <tr
-      className={cn(
-        'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <tr className={cn('border-b data-[state=selected]:bg-muted', className)} {...props} />;
 }
 
 function TableHead({ className, ...props }) {

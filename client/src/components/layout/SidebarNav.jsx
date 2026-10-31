@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatNumber } from '@/lib/format';
@@ -78,8 +79,9 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
         >
           {user?.name}
         </Link>
-        <div className="px-3">
+        <div className="flex flex-col gap-2 px-3">
           <LanguageSwitcher tone="sidebar" />
+          <ThemeSwitcher tone="sidebar" />
         </div>
         <Button
           variant="outline"

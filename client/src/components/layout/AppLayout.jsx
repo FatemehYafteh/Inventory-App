@@ -54,11 +54,12 @@ export function AppLayout() {
   return (
     <div className="min-h-svh lg:grid lg:grid-cols-[15rem_1fr]">
       <SkipLink targetRef={mainRef} />
-      <aside className="sticky top-0 hidden h-svh bg-sidebar text-sidebar-foreground lg:flex lg:flex-col">
+      {/* In dark the navy is as dark as the page, so a dark-only edge keeps the sidebar visible. */}
+      <aside className="sticky top-0 hidden h-svh bg-sidebar text-sidebar-foreground lg:flex lg:flex-col dark:border-e dark:border-sidebar-accent">
         <SidebarNav {...navProps} />
       </aside>
       <div className="min-w-0">
-        <header className="flex h-14 items-center gap-3 bg-sidebar px-4 text-sidebar-foreground lg:hidden">
+        <header className="flex h-14 items-center gap-3 bg-sidebar px-4 text-sidebar-foreground lg:hidden dark:border-b dark:border-sidebar-accent">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button

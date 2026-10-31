@@ -5,8 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Email links carry one-time tokens in the URL; never leak them in Referer. -->
     <meta name="referrer" content="no-referrer" />
-    <!-- Static light value; the app is light-only until the planned theme phase (T). -->
+    <meta name="color-scheme" content="light dark" />
+    <!-- Light value for the first paint; the script below and theme.js keep it in step. -->
     <meta name="theme-color" content="#F8FAFC" />
+    <!-- Sets the theme before the first paint so dark users never see a light flash.
+         Keep in step with applyTheme() in src/theme/theme.js. -->
+    <script>
+      (function () {
+        try {
+          var saved = null;
+          try {
+            saved = window.localStorage.getItem('theme');
+          } catch (e) {}
+          var dark =
+            saved === 'dark' ||
+            (saved !== 'light' &&
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          root.classList.toggle('dark', dark);
+          root.style.colorScheme = dark ? 'dark' : 'light';
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', dark ? '#0B1220' : '#F8FAFC');
+        } catch (e) {}
+      })();
+    </script>
     <title>Inventory Manager</title>
   </head>
   <body>
