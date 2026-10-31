@@ -23,11 +23,19 @@ No text failed contrast on any page or in any interactive state, in either langu
 |---|---|---|
 | 1 | The navy sidebar, mobile top bar and minimal bar (`--sidebar` `#0B1426`) are visually identical to the page (`--background` `#0B1220`) in dark, so the navigation loses its edge. | Fixed in T.3: a 1px dark-only edge using `--sidebar-accent` on the sidebar, the mobile top bar and the minimal bar. No token changes. Checked in the browser: light computes to no border, dark to 1px. |
 
+## Final pass (T.5), with the finished code
+
+The same pass was run again after T.4, in both themes: 152 renders each (4 roles, 4 widths, 2 languages), light and dark, with no overflow and no contrast failures. The real switcher was also driven in the browser (login, pending Profile and the app, at 360, 768 and 1280 px, English and Persian): clicking an option flips `html.dark`, `color-scheme`, `localStorage` and the `theme-color` meta together; the sidebar and the open mobile menu stay in step; the keyboard focus ring shows on the switcher in dark.
+
+Found and fixed while doing this: the sidebar and the mobile menu can be in the page at once, and radios with the same `name` form one group across the document, so each `ThemeSwitcher` now names its own group (`useId`), with a test.
+
+One light-mode change, caused by the new control: the minimal bar now wraps its controls onto a second line on a narrow screen. Before, it overflowed sideways at 360 px (follow-up 1 below), and a third control would have made that worse. At 768 px and wider the bar looks as before.
+
 ## Not dark-specific (follow-up list)
 
 These look the same in light mode, so they are outside this phase.
 
-1. The pending user's Profile page overflows sideways at 360 px (398 px of content in English, 364 in Persian). The minimal bar is too wide for the back link, language switcher and Log out button. T.4 adds a theme switcher to this bar, so it keeps that bar from getting worse.
+1. **Fixed in T.4.** The pending user's Profile page overflowed sideways at 360 px (398 px of content in English, 364 in Persian) because the minimal bar was too wide for its controls. The bar now wraps.
 2. On the dashboard at 1280 px the inventory-value figure is wider than its card and spills past its edge, in English and in Persian.
 3. The Products table shows an empty "Archived" column between Title and Category for admins.
 4. `ring-ring/50` in four page-level files and `placeholder:text-muted-foreground` in `ui/command.jsx` (the known follow-ups in `docs/design-system.md`) were not seen to fail in dark. They are unchanged.
