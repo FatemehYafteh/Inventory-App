@@ -16,7 +16,7 @@ export function MinimalLayout() {
   return (
     <div className="min-h-svh bg-muted/40">
       <SkipLink targetRef={mainRef} />
-      <header className="bg-sidebar text-sidebar-foreground">
+      <header className="bg-sidebar text-sidebar-foreground dark:border-b dark:border-sidebar-accent">
         <div className="mx-auto flex h-14 max-w-3xl items-center gap-4 px-4">
           <span className="font-semibold">Inventory</span>
           <Link

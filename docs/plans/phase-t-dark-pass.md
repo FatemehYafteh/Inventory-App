@@ -21,13 +21,13 @@ No text failed contrast on any page or in any interactive state, in either langu
 
 | # | Defect | Fix |
 |---|---|---|
-| 1 | The navy sidebar, mobile top bar and minimal bar (`--sidebar` `#0B1426`) are visually identical to the page (`--background` `#0B1220`) in dark, so the navigation loses its edge. | T.3: a dark-only separator using `--sidebar-accent`. No token changes. |
+| 1 | The navy sidebar, mobile top bar and minimal bar (`--sidebar` `#0B1426`) are visually identical to the page (`--background` `#0B1220`) in dark, so the navigation loses its edge. | Fixed in T.3: a 1px dark-only edge using `--sidebar-accent` on the sidebar, the mobile top bar and the minimal bar. No token changes. Checked in the browser: light computes to no border, dark to 1px. |
 
 ## Not dark-specific (follow-up list)
 
 These look the same in light mode, so they are outside this phase.
 
 1. The pending user's Profile page overflows sideways at 360 px (398 px of content in English, 364 in Persian). The minimal bar is too wide for the back link, language switcher and Log out button. T.4 adds a theme switcher to this bar, so it keeps that bar from getting worse.
-2. On the Persian dashboard at 1280 px the inventory-value figure is wider than its card and is clipped at the card edge.
+2. On the dashboard at 1280 px the inventory-value figure is wider than its card and spills past its edge, in English and in Persian.
 3. The Products table shows an empty "Archived" column between Title and Category for admins.
 4. `ring-ring/50` in four page-level files and `placeholder:text-muted-foreground` in `ui/command.jsx` (the known follow-ups in `docs/design-system.md`) were not seen to fail in dark. They are unchanged.

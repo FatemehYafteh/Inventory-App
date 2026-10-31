@@ -122,6 +122,21 @@ describe('Navigation shell', () => {
     expect(names).toEqual(expected);
   });
 
+  it('keeps the navy bars visible against the dark page with a dark-only edge', async () => {
+    signedInUntilLogout({ ...activeUser, role: 'admin' });
+    renderApp({ route: '/' });
+
+    await screen.findByRole('navigation', { name: 'Main' });
+    const sidebar = screen.getByRole('complementary', { hidden: true });
+    const topBar = screen.getAllByRole('banner', { hidden: true })[0];
+
+    // Only `dark:` classes, so the light theme renders exactly as before.
+    expect(sidebar).toHaveClass('dark:border-e', 'dark:border-sidebar-accent');
+    expect(sidebar).not.toHaveClass('border-e');
+    expect(topBar).toHaveClass('dark:border-b', 'dark:border-sidebar-accent');
+    expect(topBar).not.toHaveClass('border-b');
+  });
+
   it('marks the current page and counts users waiting for approval', async () => {
     signedInUntilLogout({ ...activeUser, role: 'admin' });
     server.use(http.get('*/api/users/pending-count', () => HttpResponse.json({ count: 3 })));
@@ -177,5 +192,15 @@ describe('Minimal layout', () => {
     expect(screen.getByRole('link', { name: 'Back to Awaiting approval' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
+  });
+
+  it('keeps the bar visible against the dark page with a dark-only edge', async () => {
+    signedInUntilLogout({ ...activeUser, role: 'staff', status: 'pending' });
+    renderApp({ route: '/profile' });
+
+    const bar = await screen.findByRole('banner');
+
+    expect(bar).toHaveClass('dark:border-b', 'dark:border-sidebar-accent');
+    expect(bar).not.toHaveClass('border-b');
   });
 });
