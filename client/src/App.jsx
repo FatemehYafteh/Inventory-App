@@ -29,9 +29,11 @@ import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { directionOf } from '@/i18n';
 import { useLanguageSync } from '@/i18n/useLanguage';
+import { useThemeSync } from '@/theme/useTheme';
 
 export function App() {
   useLanguageSync();
+  useThemeSync();
   const { i18n } = useTranslation();
   return (
     // Radix primitives (menus, selects, tabs, dialogs) need the direction for keyboard and placement.
