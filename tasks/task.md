@@ -112,7 +112,7 @@ Branch: `feat/roles-approval` (off `feat/telegram-identity`). **Tracked as GitHu
 | D6 | `docs/design-system.md` and a tokens-only rule in `client/CLAUDE.md` | ✅ Done |
 | D7 | Profile page on the design system: `PageHeader`, one card per section (Name, Sign-in methods, Password), `max-w-3xl` column, long emails wrap | ✅ Done |
 | D8 | Profile page redesign: identity card with avatar, role and status badges; two-column layout from `lg`; sign-in methods with badges; long names and emails wrap | ✅ Done |
-| T | Theme switching and persisted user preference (applies the `.dark` class); planned after M8 and before UI polish, on its own branch and PR (see "Planned order"). DEFERRED: do NOT start without the owner's explicit approval | ⬜ Not started |
+| T | Theme switching (Light / Dark / System, default System, saved in the browser only, no API or seed change); applies the `.dark` class. Approved by the owner 2026-10-31; branch `feat/theme-switching`. Steps: T.0 branch and task row, T.1 theme module, T.2 dark browser pass, T.3 dark fixes, T.4 switcher in sidebar, minimal bar and auth pages, T.5 docs and final pass | 🟡 In progress |
 
 ## M7: Stock engine and history [sub-PRD 07](../docs/prds/07-stock-engine.md)
 
@@ -160,7 +160,7 @@ Open points for L0, settled in the plan (2026-10-21): emails and the Telegram bo
 5. **Phase T**: theme switching and dark mode, after M8 and before UI polish, on its own branch and PR.
 6. **UI polish**.
 
-Nothing in this order changes an approval requirement: 7.3, Phase L and Phase T each stay deferred until the owner says to start them.
+Phase T was approved by the owner on 2026-10-31.
 
 ---
 
