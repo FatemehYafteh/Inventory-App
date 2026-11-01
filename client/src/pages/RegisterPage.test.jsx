@@ -161,6 +161,22 @@ describe('RegisterPage', () => {
     expect(screen.queryByText('Passwords do not match')).not.toBeInTheDocument();
   });
 
+  it('shows the product introduction beside the register form', async () => {
+    renderApp({ route: '/register' });
+    await screen.findByRole('heading', { name: 'Create an account' });
+
+    expect(screen.getByText('Anbar')).toBeInTheDocument();
+    expect(screen.getByText(/keeps your stock counts accurate/)).toBeInTheDocument();
+    for (const title of [
+      'Accurate stock',
+      'Telegram sign-in',
+      'Persian and English',
+      'Full movement history',
+    ]) {
+      expect(screen.getByText(title)).toBeInTheDocument();
+    }
+  });
+
   it('offers Email and Telegram as tabs, with Email first', async () => {
     const user = userEvent.setup();
     renderApp({ route: '/register' });

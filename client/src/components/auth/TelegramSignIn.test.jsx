@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -264,7 +264,9 @@ describe('Continue with Telegram', () => {
     await user.click(await screen.findByRole('tab', { name: 'Telegram' }));
 
     expect(screen.getByText(/No password needed/)).toBeInTheDocument();
-    const steps = screen.getAllByRole('listitem');
+    const steps = within(screen.getByRole('tabpanel', { name: 'Use Telegram' })).getAllByRole(
+      'listitem',
+    );
     expect(steps).toHaveLength(2);
     expect(steps.some((step) => step.getAttribute('aria-current') === 'step')).toBe(false);
 

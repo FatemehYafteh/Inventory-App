@@ -40,6 +40,7 @@ export function LoginPage() {
 
   return (
     <AuthLayout
+      intro
       title={t('auth.login.title')}
       description={t('auth.login.description')}
       footer={
