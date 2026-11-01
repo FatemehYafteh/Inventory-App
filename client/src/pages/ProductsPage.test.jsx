@@ -292,6 +292,17 @@ describe('Products page', () => {
     expect(screen.getByRole('columnheader', { name: 'Archived' })).toBeInTheDocument();
   });
 
+  it('shows no empty Archived column to an admin until archived products are included', async () => {
+    const user = userEvent.setup();
+    productsApi([hammer, oldLamp]);
+    renderApp({ route: '/products' });
+
+    await row('Claw Hammer');
+    expect(screen.queryByRole('columnheader', { name: 'Archived' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('checkbox', { name: 'Show archived' }));
+    expect(await screen.findByRole('columnheader', { name: 'Archived' })).toBeInTheDocument();
+  });
+
   it('shows no Archived column to staff', async () => {
     productsApi([hammer], { me: staff });
     renderApp({ route: '/products' });
