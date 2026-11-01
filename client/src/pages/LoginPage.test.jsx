@@ -124,6 +124,22 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('heading', { name: 'Awaiting approval' })).toBeInTheDocument();
   });
 
+  it('shows the product introduction beside the login form', async () => {
+    renderApp({ route: '/login' });
+    await screen.findByRole('heading', { name: 'Log in' });
+
+    expect(screen.getByText('Anbar')).toBeInTheDocument();
+    expect(screen.getByText(/keeps your stock counts accurate/)).toBeInTheDocument();
+    for (const title of [
+      'Accurate stock',
+      'Telegram sign-in',
+      'Persian and English',
+      'Full movement history',
+    ]) {
+      expect(screen.getByText(title)).toBeInTheDocument();
+    }
+  });
+
   it('offers Email and Telegram as tabs, with Email first', async () => {
     const user = userEvent.setup();
     renderApp({ route: '/login' });

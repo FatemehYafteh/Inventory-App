@@ -23,6 +23,26 @@ describe('signed-out auth pages in Persian', () => {
     expect(screen.queryByText('Forgot password?')).not.toBeInTheDocument();
   });
 
+  it('shows the product introduction in Persian on login and register', async () => {
+    const { unmount } = renderApp({ route: '/login' });
+    await screen.findByRole('heading', { name: 'ورود' });
+    expect(screen.getByText('انبار')).toBeInTheDocument();
+    expect(screen.getByText('موجودی دقیق')).toBeInTheDocument();
+    expect(screen.getByText('ورود با تلگرام')).toBeInTheDocument();
+    expect(screen.queryByText('Anbar')).not.toBeInTheDocument();
+    unmount();
+
+    renderApp({ route: '/register' });
+    await screen.findByRole('heading', { name: 'ایجاد حساب کاربری' });
+    expect(screen.getByText('انبار')).toBeInTheDocument();
+  });
+
+  it('shows no introduction on the other signed-out pages', async () => {
+    renderApp({ route: '/forgot-password' });
+    await screen.findByRole('heading');
+    expect(screen.queryByText('انبار')).not.toBeInTheDocument();
+  });
+
   it('shows the Telegram sign-in start in Persian', async () => {
     const user = userEvent.setup();
     renderApp({ route: '/login' });

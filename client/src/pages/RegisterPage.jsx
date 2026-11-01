@@ -76,6 +76,7 @@ export function RegisterPage() {
 
   return (
     <AuthLayout
+      intro
       title={t('auth.register.title')}
       description={t('auth.register.description')}
       footer={<LoginLink />}
