@@ -222,6 +222,7 @@ export function ProductsPage() {
         onAdjust={openAdjust}
         onHistory={openHistory}
         canArchive={isAdmin}
+        showArchived={archived}
         onArchive={openArchive}
         onRestore={restore}
         isLoading={products.isPending}

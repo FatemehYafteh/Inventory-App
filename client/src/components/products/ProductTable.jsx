@@ -12,7 +12,8 @@ const dash = <span className="text-muted-foreground">—</span>;
  * The products table. The server searches, filters, sorts and pages; `sorting` is [{ id, desc }]
  * and `pagination` is { pageIndex, pageSize }. Title, Quantity and Price sort. Archive and
  * Restore show only when `canArchive` (admins). The - and + beside the quantity call
- * `onStep(product, -1 or 1)`; they are off for archived products, and - is off at 0. Adjust stock
+ * `onStep(product, -1 or 1)`; the Archived column shows only with `showArchived` (admins who chose to include
+ * archived products), since otherwise it would be empty; they are off for archived products, and - is off at 0. Adjust stock
  * calls `onAdjust(product)` and is off for archived products too. History calls `onHistory(product)`.
  */
 export function ProductTable({
@@ -31,6 +32,7 @@ export function ProductTable({
   onAdjust,
   onHistory,
   canArchive,
+  showArchived,
   onArchive,
   onRestore,
 }) {
@@ -49,9 +51,10 @@ export function ProductTable({
           </div>
         ),
       },
-      // Admins only (staff never see archived products). The column is always there, at a fixed
-      // width, so the badge appearing or disappearing moves nothing in the Title cell.
-      ...(canArchive
+      // Only when archived products are included (admins; staff never see them): without them the
+      // column would be empty. Fixed width, so the badge appearing or disappearing moves nothing
+      // in the Title cell.
+      ...(canArchive && showArchived
         ? [
             {
               id: 'archived',
@@ -192,7 +195,7 @@ export function ProductTable({
         ),
       },
     ],
-    [t, onEdit, onStep, onAdjust, onHistory, canArchive, onArchive, onRestore],
+    [t, onEdit, onStep, onAdjust, onHistory, canArchive, showArchived, onArchive, onRestore],
   );
 
   return (
