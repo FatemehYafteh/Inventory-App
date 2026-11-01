@@ -54,7 +54,7 @@ describe('Dashboard texts in Persian', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'داشبورد' })).toBeInTheDocument();
     const summary = await screen.findByLabelText('خلاصهٔ موجودی');
-    const card = (label) => within(summary).getByText(label).parentElement;
+    const card = (label) => within(summary).getByText(label).parentElement.parentElement;
     expect(within(card('محصولات فعال')).getByText('۱۲')).toBeInTheDocument();
     expect(within(card('مجموع تعداد')).getByText('۳۴۵')).toBeInTheDocument();
     expect(within(card('در انتظار تأیید')).getByText('۲')).toBeInTheDocument();
