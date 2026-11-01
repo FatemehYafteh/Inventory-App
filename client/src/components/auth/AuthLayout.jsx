@@ -28,7 +28,7 @@ export function AuthLayout({ title, description, children, footer, intro = false
   );
   if (!intro) return form;
   return (
-    <div className="min-h-svh lg:grid lg:grid-cols-2">
+    <div className="min-h-svh lg:grid lg:grid-cols-[1fr_2fr]">
       <AuthIntro />
       {form}
     </div>
