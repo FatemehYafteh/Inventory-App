@@ -95,12 +95,23 @@ function dashboardApi({ me = admin, body = data, pending = 3, fail = false } = {
 }
 
 describe('DashboardPage', () => {
+  it('colours Low stock and Out of stock only when there is something to act on', async () => {
+    dashboardApi();
+    renderApp({ route: '/' });
+    const summary = await screen.findByLabelText('Inventory summary');
+    const value = (label, text) =>
+      within(within(summary).getByText(label).parentElement.parentElement).getByText(text);
+    expect(value('Low stock', '1')).toHaveClass('text-warning');
+    expect(value('Out of stock', '1')).toHaveClass('text-danger');
+    expect(value('Active products', '1,234')).not.toHaveClass('text-warning');
+  });
+
   it('shows the summary cards with the numbers from the API', async () => {
     dashboardApi();
     renderApp({ route: '/' });
 
     const summary = await screen.findByLabelText('Inventory summary');
-    const card = (label) => within(summary).getByText(label).parentElement;
+    const card = (label) => within(summary).getByText(label).parentElement.parentElement;
     expect(within(card('Active products')).getByText('1,234')).toBeInTheDocument();
     expect(within(card('Total units')).getByText('5,678')).toBeInTheDocument();
     expect(within(card('Inventory value')).getByText('$98,765.50')).toBeInTheDocument();
@@ -263,7 +274,7 @@ describe('DashboardPage', () => {
     renderApp({ route: '/' });
 
     const summary = await screen.findByLabelText('Inventory summary');
-    const card = within(summary).getByText('Pending approvals').parentElement;
+    const card = within(summary).getByText('Pending approvals').parentElement.parentElement;
     expect(within(card).getByText('3')).toBeInTheDocument();
     expect(within(card).getByRole('link', { name: 'Review users' })).toHaveAttribute(
       'href',
