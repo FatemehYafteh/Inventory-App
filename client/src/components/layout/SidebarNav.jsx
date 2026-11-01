@@ -1,3 +1,4 @@
+import { Brand } from '@/components/Brand';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -40,7 +41,7 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
   const { t } = useTranslation();
   return (
     <div className="flex h-full flex-1 flex-col gap-6 p-4">
-      <span className="px-3 text-lg font-semibold">Inventory</span>
+      <Brand className="px-3" nameClassName="text-lg" />
       <nav aria-label={t('layout.nav.main')} className="flex flex-1 flex-col gap-1">
         {items.map((item) => (
           <NavLink

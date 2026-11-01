@@ -137,6 +137,14 @@ describe('Navigation shell', () => {
     expect(topBar).not.toHaveClass('border-b');
   });
 
+  it('shows the product name in the sidebar and the mobile bar', async () => {
+    signedInUntilLogout({ ...activeUser, role: 'admin' });
+    renderApp({ route: '/' });
+    await screen.findByRole('button', { name: 'Log out' });
+    expect(screen.getAllByText('Anbar').length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText('Inventory')).not.toBeInTheDocument();
+  });
+
   it('marks the current page and counts users waiting for approval', async () => {
     signedInUntilLogout({ ...activeUser, role: 'admin' });
     server.use(http.get('*/api/users/pending-count', () => HttpResponse.json({ count: 3 })));

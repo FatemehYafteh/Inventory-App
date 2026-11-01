@@ -1,3 +1,4 @@
+import { Brand } from '@/components/Brand';
 import {
   ArrowLeftRightIcon,
   LayoutDashboardIcon,
@@ -80,7 +81,7 @@ export function AppLayout() {
               <SidebarNav {...navProps} onNavigate={() => setMenuOpen(false)} />
             </SheetContent>
           </Sheet>
-          <span className="font-semibold">Inventory</span>
+          <Brand />
         </header>
         <main
           id="main"
