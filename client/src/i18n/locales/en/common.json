@@ -3,6 +3,7 @@
   "cancel": "Cancel",
   "close": "Close",
   "loading": "Loading…",
+  "serverStarting": "This is taking longer than usual. The server may be starting up, please wait.",
   "somethingWrong": "Something went wrong. Please try again.",
   "tooManyAttempts": "Too many attempts. Please wait a few minutes and try again.",
   "networkError": "Could not reach the server. Check your connection and try again.",
