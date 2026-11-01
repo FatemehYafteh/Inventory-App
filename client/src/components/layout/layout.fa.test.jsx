@@ -23,6 +23,9 @@ describe('Persian layout, table and common texts', () => {
     expect(screen.getByRole('link', { name: 'پرش به محتوای اصلی' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Log out' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Users' })).not.toBeInTheDocument();
+    // The product name in the sidebar and the mobile bar is translated, not hard-coded.
+    expect(screen.getAllByText('انبار').length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText('Inventory')).not.toBeInTheDocument();
   });
 
   it('shows the table controls in Persian', async () => {
