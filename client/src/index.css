@@ -177,3 +177,25 @@
     Tahoma,
     sans-serif;
 }
+
+/* The sliding fill of the global loading bar (GlobalLoading). Still when motion is reduced. */
+@keyframes loading-bar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+.loading-bar-fill {
+  animation: loading-bar 1.2s ease-in-out infinite;
+}
+[dir='rtl'] .loading-bar-fill {
+  animation-direction: reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar-fill {
+    animation: none;
+    width: 100%;
+  }
+}
