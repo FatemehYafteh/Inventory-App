@@ -72,14 +72,14 @@ describe('Products page texts in Persian', () => {
     await i18n.changeLanguage('fa');
     renderApp({ route: '/products' });
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'محصولات' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'افزودن محصول' })).toBeInTheDocument();
-    expect(screen.getByRole('searchbox', { name: 'جستجوی محصولات' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'کالاها' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'افزودن کالا' })).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'جستجوی کالاها' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'وضعیت موجودی' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'پاک کردن فیلترها' })).toBeInTheDocument();
     expect(screen.getByLabelText('نمایش بایگانی‌شده‌ها')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'اصلاح موجودی Claw Hammer' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'کاهش تعداد Claw Hammer' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'تعدیل موجودی Claw Hammer' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'کاهش موجودی Claw Hammer' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /قیمت/ })).toBeInTheDocument();
 
     expect(screen.queryByRole('heading', { name: 'Products' })).not.toBeInTheDocument();
@@ -92,7 +92,7 @@ describe('Products page texts in Persian', () => {
     await i18n.changeLanguage('fa');
     renderApp({ route: '/products' });
 
-    expect(await screen.findByText('هنوز محصولی وجود ندارد.')).toBeInTheDocument();
+    expect(await screen.findByText('هنوز کالایی وجود ندارد.')).toBeInTheDocument();
     expect(screen.queryByText('No products yet.')).not.toBeInTheDocument();
   });
 
@@ -102,29 +102,29 @@ describe('Products page texts in Persian', () => {
     const user = userEvent.setup();
     renderApp({ route: '/products' });
 
-    await user.click(await screen.findByRole('button', { name: 'افزودن محصول' }));
-    const form = within(await screen.findByRole('dialog', { name: 'افزودن محصول' }));
-    expect(form.getByLabelText('عنوان')).toBeInTheDocument();
-    expect(form.getByLabelText('حد سفارش')).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'افزودن کالا' }));
+    const form = within(await screen.findByRole('dialog', { name: 'افزودن کالا' }));
+    expect(form.getByLabelText('نام کالا')).toBeInTheDocument();
+    expect(form.getByLabelText('نقطه سفارش')).toBeInTheDocument();
     expect(form.getByLabelText('تعداد اولیه')).toBeInTheDocument();
     expect(form.getByRole('button', { name: 'ذخیره' })).toBeInTheDocument();
     expect(form.queryByText('Reorder level')).not.toBeInTheDocument();
     await user.click(form.getByRole('button', { name: 'لغو' }));
 
-    await user.click(screen.getByRole('button', { name: 'اصلاح موجودی Claw Hammer' }));
-    const adjust = within(await screen.findByRole('dialog', { name: 'اصلاح موجودی' }));
-    expect(adjust.getByRole('tab', { name: 'دریافت' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'تعدیل موجودی Claw Hammer' }));
+    const adjust = within(await screen.findByRole('dialog', { name: 'تعدیل موجودی' }));
+    expect(adjust.getByRole('tab', { name: 'ورود' })).toBeInTheDocument();
     expect(adjust.getByLabelText('تعداد برای افزودن')).toBeInTheDocument();
     expect(adjust.getByText(/تعداد فعلی/)).toHaveTextContent('تعداد فعلی: ۴۰');
     await user.type(adjust.getByLabelText('تعداد برای افزودن'), '2');
     expect(adjust.getByText(/تعداد فعلی/)).toHaveTextContent('تعداد جدید: ۴۲');
     await user.click(adjust.getByRole('button', { name: 'لغو' }));
 
-    await user.click(screen.getByRole('button', { name: 'تاریخچه موجودی Claw Hammer' }));
-    const history = within(await screen.findByRole('dialog', { name: 'تاریخچه موجودی' }));
-    expect(await history.findByText('ارسال')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'کاردکس Claw Hammer' }));
+    const history = within(await screen.findByRole('dialog', { name: 'کاردکس کالا' }));
+    expect(await history.findByText('خروج')).toBeInTheDocument();
     expect(history.getByText('−۲')).toBeInTheDocument();
-    expect(history.getByRole('columnheader', { name: /انجام‌دهنده/ })).toBeInTheDocument();
+    expect(history.getByRole('columnheader', { name: /ثبت‌کننده/ })).toBeInTheDocument();
     await user.keyboard('{Escape}');
 
     await user.click(screen.getByRole('button', { name: 'بایگانی Claw Hammer' }));

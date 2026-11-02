@@ -1,15 +1,15 @@
 {
   "page": {
-    "title": "حرکت‌های موجودی",
+    "title": "گردش کالا",
     "description": "همهٔ تغییرات موجودی، جدیدترین‌ها اول.",
-    "empty": "هنوز حرکتی در موجودی ثبت نشده است.",
-    "emptyFiltered": "هیچ حرکتی با این فیلترها مطابقت ندارد."
+    "empty": "هنوز گردشی برای کالا ثبت نشده است.",
+    "emptyFiltered": "هیچ گردشی با این فیلترها مطابقت ندارد."
   },
   "filters": {
-    "product": "محصول",
-    "allProducts": "همهٔ محصولات",
-    "productSearch": "جست‌وجو بر اساس عنوان یا شناسه‌ی کالا",
-    "productNone": "محصولی پیدا نشد.",
+    "product": "کالا",
+    "allProducts": "همهٔ کالاها",
+    "productSearch": "جست‌وجو بر اساس نام کالا یا کد کالا",
+    "productNone": "کالایی پیدا نشد.",
     "type": "نوع",
     "allTypes": "همهٔ نوع‌ها",
     "supplier": "تأمین‌کننده",
@@ -24,19 +24,19 @@
   },
   "columns": {
     "createdAt": "تاریخ",
-    "product": "محصول",
+    "product": "کالا",
     "type": "نوع",
-    "quantityChange": "تغییر",
-    "quantityBefore": "قبل",
-    "quantityAfter": "بعد",
+    "quantityChange": "مقدار",
+    "quantityBefore": "موجودی قبل",
+    "quantityAfter": "مانده",
     "supplier": "تأمین‌کننده",
     "note": "یادداشت",
-    "performedBy": "انجام‌دهنده"
+    "performedBy": "ثبت‌کننده"
   },
   "types": {
-    "receive": "دریافت",
-    "ship": "ارسال",
-    "adjust": "اصلاح",
+    "receive": "ورود",
+    "ship": "خروج",
+    "adjust": "تعدیل",
     "increment": "افزایش",
     "decrement": "کاهش"
   },
