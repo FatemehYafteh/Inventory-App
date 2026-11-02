@@ -55,16 +55,16 @@ describe('Dashboard texts in Persian', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'داشبورد' })).toBeInTheDocument();
     const summary = await screen.findByLabelText('خلاصهٔ موجودی');
     const card = (label) => within(summary).getByText(label).parentElement.parentElement;
-    expect(within(card('محصولات فعال')).getByText('۱۲')).toBeInTheDocument();
+    expect(within(card('کالاهای فعال')).getByText('۱۲')).toBeInTheDocument();
     expect(within(card('مجموع تعداد')).getByText('۳۴۵')).toBeInTheDocument();
     expect(within(card('در انتظار تأیید')).getByText('۲')).toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: 'نیازمند تأمین مجدد' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'دریافت Claw Hammer' })).toBeInTheDocument();
-    expect(screen.getByText('۲ عدد موجود، حد سفارش ۱۰')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'حرکت‌های اخیر' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ثبت ورود Claw Hammer' })).toBeInTheDocument();
+    expect(screen.getByText('۲ عدد موجود، نقطه سفارش ۱۰')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'آخرین گردش‌های کالا' })).toBeInTheDocument();
     expect(screen.getByText('−۳')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'مشاهدهٔ همهٔ حرکت‌ها' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'مشاهدهٔ همهٔ گردش‌ها' })).toBeInTheDocument();
     expect(screen.queryByText('Needs restocking')).not.toBeInTheDocument();
   });
 
@@ -92,7 +92,7 @@ describe('Dashboard texts in Persian', () => {
       'div',
     ).parentElement;
     const recent = screen
-      .getByRole('heading', { name: 'حرکت‌های اخیر' })
+      .getByRole('heading', { name: 'آخرین گردش‌های کالا' })
       .closest('div').parentElement;
     expect(within(low).getAllByRole('listitem')).toHaveLength(5);
     expect(within(recent).getAllByRole('listitem')).toHaveLength(5);

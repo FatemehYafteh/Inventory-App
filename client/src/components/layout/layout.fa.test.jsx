@@ -18,7 +18,7 @@ describe('Persian layout, table and common texts', () => {
 
     expect(await screen.findByRole('button', { name: 'خروج' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'کاربران' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'محصولات' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'کالاها' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'داشبورد' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'پرش به محتوای اصلی' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Log out' })).not.toBeInTheDocument();

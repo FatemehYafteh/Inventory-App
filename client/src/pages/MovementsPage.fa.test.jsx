@@ -45,18 +45,18 @@ describe('Movements page texts in Persian', () => {
     renderApp({ route: '/movements' });
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'حرکت‌های موجودی' }),
+      await screen.findByRole('heading', { level: 1, name: 'گردش کالا' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'محصول' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'کالا' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'نوع' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'تأمین‌کننده' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'انجام‌دهنده' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'تاریخ‌ها' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'پاک کردن فیلترها' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'انجام‌دهنده' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'ثبت‌کننده' })).toBeInTheDocument();
 
     const row = within((await screen.findAllByRole('row'))[1]);
-    expect(row.getByText('دریافت')).toBeInTheDocument();
+    expect(row.getByText('ورود')).toBeInTheDocument();
     expect(row.getByText('+۴۰')).toBeInTheDocument();
     expect(row.getByText('Ana Admin')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Stock movements' })).not.toBeInTheDocument();
@@ -67,7 +67,7 @@ describe('Movements page texts in Persian', () => {
     await i18n.changeLanguage('fa');
     renderApp({ route: '/movements' });
 
-    expect(await screen.findByText('هنوز حرکتی در موجودی ثبت نشده است.')).toBeInTheDocument();
+    expect(await screen.findByText('هنوز گردشی برای کالا ثبت نشده است.')).toBeInTheDocument();
   });
 
   it('opens a Jalali calendar and still sends ordinary ISO instants', async () => {

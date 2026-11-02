@@ -87,7 +87,7 @@ describe('Users page in Persian', () => {
 
     expect(await screen.findByText('در انتظار به ردشده')).toBeInTheDocument();
     expect(screen.getByText('پروفایل و تاریخچه وضعیت')).toBeInTheDocument();
-    expect(screen.getByText('مشاهده حرکت‌ها')).toBeInTheDocument();
+    expect(screen.getByText('مشاهده گردش‌ها')).toBeInTheDocument();
     expect(screen.queryByText('Pending to Rejected')).not.toBeInTheDocument();
     expect(screen.queryByText('View movements')).not.toBeInTheDocument();
   });

@@ -26,7 +26,7 @@ describe('Categories page in Persian', () => {
     expect(await screen.findByRole('heading', { name: 'دسته‌بندی‌ها' })).toBeInTheDocument();
     expect(await screen.findByRole('link', { name: 'Tools' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'افزودن دسته‌بندی' })).toBeInTheDocument();
-    expect(screen.getByText(/محصول/, { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByText(/کالا/, { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ویرایش Tools' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'حذف Tools' })).toBeDisabled();
 
