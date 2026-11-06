@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import i18n from '@/i18n';
 import { formatNumber } from '@/lib/format';
@@ -42,7 +43,11 @@ export function CategoryCard({ category, canManage, onEdit, onDelete }) {
         )}
       </CardHeader>
       <CardContent className="mt-auto flex flex-col gap-3">
-        <p className="text-sm text-muted-foreground">{productCountLabel(category.productCount)}</p>
+        {inUse ? (
+          <Badge variant="secondary">{productCountLabel(category.productCount)}</Badge>
+        ) : (
+          <p className="text-sm text-muted-foreground">{t('categories.card.noProducts')}</p>
+        )}
         {canManage && (
           <div className="relative z-10 flex gap-2">
             <Button

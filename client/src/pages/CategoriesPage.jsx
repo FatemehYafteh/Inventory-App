@@ -61,6 +61,7 @@ export function CategoriesPage() {
       <PageHeader
         ref={headingRef}
         title={t('categories.title')}
+        description={t('categories.description')}
         actions={canManage && <Button onClick={() => openForm(null)}>{t('categories.add')}</Button>}
       />
       <FormAlert>{actionError}</FormAlert>

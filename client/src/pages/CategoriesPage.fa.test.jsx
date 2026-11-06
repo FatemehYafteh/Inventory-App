@@ -26,12 +26,22 @@ describe('Categories page in Persian', () => {
     expect(await screen.findByRole('heading', { name: 'دسته‌بندی‌ها' })).toBeInTheDocument();
     expect(await screen.findByRole('link', { name: 'Tools' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'افزودن دسته‌بندی' })).toBeInTheDocument();
-    expect(screen.getByText(/کالا/, { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByText('کالاها را بر اساس دسته‌بندی ببینید.')).toBeInTheDocument();
+    expect(screen.getByText('۳ کالا')).toHaveClass('rounded-md', 'border');
     expect(screen.getByRole('button', { name: 'ویرایش Tools' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'حذف Tools' })).toBeDisabled();
 
     expect(screen.queryByText('Add category')).not.toBeInTheDocument();
     expect(screen.queryByText('3 products')).not.toBeInTheDocument();
+  });
+
+  it('says an empty category has no products yet, in Persian', async () => {
+    await i18n.changeLanguage('fa');
+    api([{ ...tools, productCount: 0 }]);
+    renderApp({ route: '/categories' });
+
+    expect(await screen.findByText('هنوز کالایی ندارد')).toBeInTheDocument();
+    expect(screen.queryByText('No products yet')).not.toBeInTheDocument();
   });
 
   it('shows the empty state and the add form in Persian', async () => {
