@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { TBdi } from '@/components/BidiText';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,9 +23,12 @@ export function ChangeRoleDialog({ user, onConfirm, onCancel }) {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {t(role === 'admin' ? 'users.changeRole.titleAdmin' : 'users.changeRole.titleStaff', {
-              name,
-            })}
+            <TBdi
+              i18nKey={
+                role === 'admin' ? 'users.changeRole.titleAdmin' : 'users.changeRole.titleStaff'
+              }
+              values={{ name }}
+            />
           </AlertDialogTitle>
           <AlertDialogDescription>
             {t(

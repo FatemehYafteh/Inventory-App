@@ -106,8 +106,11 @@ describe('Products page texts in Persian', () => {
     await user.click(await screen.findByRole('button', { name: 'افزودن کالا' }));
     const form = within(await screen.findByRole('dialog', { name: 'افزودن کالا' }));
     expect(form.getByLabelText('نام کالا')).toBeInTheDocument();
-    expect(form.getByLabelText('نقطه سفارش')).toBeInTheDocument();
-    expect(form.getByLabelText('تعداد اولیه')).toBeInTheDocument();
+    expect(form.getByLabelText('نقطه سفارش (اختیاری)')).toBeInTheDocument();
+    expect(form.getByLabelText('تعداد اولیه (اختیاری)')).toBeInTheDocument();
+    expect(form.getByLabelText(/^نقطه سفارش/)).toHaveAccessibleDescription(
+      'وقتی موجودی به این عدد یا کمتر برسد، «موجودی کم» نمایش داده می‌شود.',
+    );
     expect(form.getByRole('button', { name: 'ذخیره' })).toBeInTheDocument();
     expect(form.queryByText('Reorder level')).not.toBeInTheDocument();
     await user.click(form.getByRole('button', { name: 'لغو' }));
@@ -130,7 +133,7 @@ describe('Products page texts in Persian', () => {
 
     await chooseRowAction(user, 'عملیات بیشتر برای Claw Hammer', 'بایگانی Claw Hammer');
     const archive = within(
-      await screen.findByRole('alertdialog', { name: 'Claw Hammer بایگانی شود؟' }),
+      await screen.findByRole('alertdialog', { name: /Claw Hammer\s+بایگانی شود؟/ }),
     );
     expect(archive.getByRole('button', { name: 'بایگانی' })).toBeInTheDocument();
     expect(archive.getByRole('button', { name: 'لغو' })).toBeInTheDocument();

@@ -74,6 +74,7 @@ export function ForgotPasswordPage() {
         <FormAlert>{formError}</FormAlert>
         <TextField
           id="email"
+          dir="ltr"
           label={t('auth.common.email')}
           type="email"
           autoComplete="email"

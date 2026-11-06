@@ -96,7 +96,7 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
               {t('products.adjust.title')}
             </DialogTitle>
             <DialogDescription className="[overflow-wrap:anywhere]">
-              {product.title} ({product.sku})
+              <bdi>{product.title}</bdi> (<bdi>{product.sku}</bdi>)
             </DialogDescription>
           </DialogHeader>
           <FormAlert>{formError}</FormAlert>
@@ -122,6 +122,7 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
             <Label htmlFor="stock-note">{t('products.adjust.note')}</Label>
             <Textarea
               id="stock-note"
+              dir="auto"
               aria-invalid={Boolean(errors.note)}
               aria-describedby={errors.note ? 'stock-note-error' : undefined}
               {...register('note')}

@@ -165,6 +165,7 @@ export function SuppliersPage() {
         toolbar={
           <Input
             type="search"
+            dir="auto"
             aria-label={t('suppliers.searchLabel')}
             placeholder={t('suppliers.searchPlaceholder')}
             className="max-w-sm"

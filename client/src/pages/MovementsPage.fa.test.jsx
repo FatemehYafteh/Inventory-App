@@ -59,6 +59,9 @@ describe('Movements page texts in Persian', () => {
     renderApp({ route: '/movements' });
 
     expect(await screen.findByRole('heading', { level: 1, name: 'گردش کالا' })).toBeInTheDocument();
+    expect(
+      screen.getByText('سابقه‌ی همه‌ی ورود و خروج‌های کالا، از جدید به قدیم.'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'کالا' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'نوع' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'تأمین‌کننده' })).toBeInTheDocument();

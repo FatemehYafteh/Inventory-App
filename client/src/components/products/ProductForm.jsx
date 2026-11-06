@@ -40,11 +40,20 @@ const FIELDS = [
 const NO_SUPPLIER = 'none';
 
 /** Label, control and error message for controls that are not plain text inputs. */
-function Field({ id, label, error, children }) {
+function Field({ id, label, optional = false, error, children }) {
+  const { t } = useTranslation();
   const errorId = `${id}-error`;
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {optional && (
+          <>
+            {' '}
+            <span className="font-normal text-muted-foreground">{t('common.optional')}</span>
+          </>
+        )}
+      </Label>
       {children(error ? errorId : undefined)}
       {error && (
         <p id={errorId} className="text-sm text-danger">
@@ -126,12 +135,14 @@ export function ProductForm({
             <FormAlert>{formError}</FormAlert>
             <TextField
               id="product-title"
+              dir="auto"
               label={t('products.form.titleLabel')}
               error={errors.title}
               {...register('title')}
             />
             <TextField
               id="product-sku"
+              dir="ltr"
               label={t('products.form.sku')}
               error={errors.sku}
               {...register('sku')}
@@ -139,11 +150,13 @@ export function ProductForm({
             <Field
               id="product-description"
               label={t('products.form.description')}
+              optional
               error={errors.description}
             >
               {(describedBy) => (
                 <Textarea
                   id="product-description"
+                  dir="auto"
                   aria-invalid={Boolean(errors.description)}
                   aria-describedby={describedBy}
                   {...register('description')}
@@ -185,6 +198,7 @@ export function ProductForm({
             <Field
               id="product-supplier"
               label={t('products.form.supplier')}
+              optional
               error={errors.supplier}
             >
               {(describedBy) => (
@@ -218,9 +232,11 @@ export function ProductForm({
                 />
               )}
             </Field>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
               <TextField
                 id="product-price"
+                dir="ltr"
+                prefix="$"
                 label={t('products.form.price')}
                 inputMode="decimal"
                 autoComplete="off"
@@ -230,6 +246,8 @@ export function ProductForm({
               <TextField
                 id="product-reorder-level"
                 label={t('products.form.reorderLevel')}
+                optional
+                hint={t('products.form.reorderHint')}
                 inputMode="numeric"
                 autoComplete="off"
                 error={errors.reorderLevel}
@@ -240,6 +258,8 @@ export function ProductForm({
               <TextField
                 id="product-initial-quantity"
                 label={t('products.form.initialQuantity')}
+                optional
+                hint={t('products.form.initialQuantityHint')}
                 inputMode="numeric"
                 autoComplete="off"
                 error={errors.initialQuantity}
