@@ -43,6 +43,7 @@
     "increment": "افزایش",
     "decrement": "کاهش"
   },
+  "beforeAfter": "{{before}} ← {{after}}",
   "plus": "+{{n}}",
   "minus": "−{{n}}"
 }

@@ -43,6 +43,7 @@
     "increment": "Increment",
     "decrement": "Decrement"
   },
+  "beforeAfter": "{{before}} → {{after}}",
   "plus": "+{{n}}",
   "minus": "−{{n}}"
 }

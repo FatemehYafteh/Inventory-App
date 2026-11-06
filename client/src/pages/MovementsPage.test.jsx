@@ -1,7 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { mockMobile } from '@/test/mobile';
 import { renderApp } from '@/test/render';
 import { activeUser, server } from '@/test/server';
 
@@ -261,5 +262,46 @@ describe('MovementsPage', () => {
     expect(await screen.findByText('Wood Glue')).toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('link', { name: 'Movements' })).toBeInTheDocument();
+  });
+});
+
+describe('Movements page on a phone', () => {
+  let restore = () => {};
+  beforeEach(() => {
+    restore = mockMobile();
+  });
+  afterEach(() => restore());
+
+  it('shows each movement as a card with its change, before to after, user and date', async () => {
+    movementsApi([received, shipped]);
+    renderApp({ route: '/movements' });
+
+    const card = within((await screen.findByText('Claw Hammer')).closest('li'));
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(card.getByText('HAM-001')).toBeInTheDocument();
+    expect(card.getByText('Receive')).toHaveClass('text-success');
+    expect(card.getByText('+40')).toBeInTheDocument();
+    expect(card.getByText('0 → 40')).toBeInTheDocument();
+    expect(card.getByText('Ana Admin')).toBeInTheDocument();
+    expect(card.getByText(/Oct 14, 2026/)).toBeInTheDocument();
+  });
+
+  it('puts the filters in a sheet with their count, and keeps Export in the header', async () => {
+    movementsApi([received]);
+    const user = userEvent.setup();
+    renderApp({ route: `/movements?user=${SAM_ID}&type=ship` });
+
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Stock movements' });
+    expect(
+      within(heading.closest('div').parentElement).getByRole('button', { name: 'Export to Excel' }),
+    ).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /^Filters/ });
+    expect(button).toHaveTextContent('2');
+    expect(screen.queryByRole('combobox', { name: 'Type' })).not.toBeInTheDocument();
+
+    await user.click(button);
+    const sheet = within(await screen.findByRole('dialog', { name: 'Filters' }));
+    expect(sheet.getByRole('combobox', { name: 'Type' })).toBeInTheDocument();
+    expect(sheet.getByRole('button', { name: 'Clear filters' })).toBeEnabled();
   });
 });

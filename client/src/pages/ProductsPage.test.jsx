@@ -1,8 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import i18n from '@/i18n';
+import { mockMobile } from '@/test/mobile';
 import { renderApp } from '@/test/render';
 import { chooseRowAction, openRowMenu } from '@/test/rowMenu';
 import { activeUser, server } from '@/test/server';
@@ -450,13 +451,16 @@ describe('Products page', () => {
     expect(state.lists.every((list) => list.archived === undefined)).toBe(true);
   });
 
-  it('shows how many products there are and pages through them', async () => {
+  it('shows how many products there are, with no paging when they fit on one page', async () => {
     const state = productsApi([hammer, glue]);
     renderApp({ route: '/products' });
 
     await row('Claw Hammer');
     expect(lastList(state)).toMatchObject({ page: '1', limit: '20' });
-    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    // Both products fit on one page: the count stays, the paging controls go.
+    expect(screen.getByText('2 results')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Rows per page')).not.toBeInTheDocument();
   });
 
   it('clears every filter at once', async () => {
@@ -1102,6 +1106,77 @@ describe('Products page in Persian', () => {
     const hammerRow = within(await row('Claw Hammer'));
     expect(hammerRow.getByText('۴۰')).toBeInTheDocument();
     expect(hammerRow.getByText(/۱۲٫۵۰/)).toBeInTheDocument();
-    expect(screen.getByText(/صفحه ۱ از ۱/)).toBeInTheDocument();
+    expect(screen.getByText(/۱ نتیجه/)).toBeInTheDocument();
+  });
+});
+
+describe('Products page on a phone', () => {
+  let restore = () => {};
+  beforeEach(() => {
+    restore = mockMobile();
+  });
+  afterEach(() => restore());
+
+  it('shows each product as a card with its quantity, price, category and actions', async () => {
+    productsApi([hammer, glue]);
+    renderApp({ route: '/products' });
+
+    const card = within((await screen.findByText('Claw Hammer')).closest('li'));
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(card.getByText('HAM-001')).toBeInTheDocument();
+    expect(card.getByText('In stock')).toBeInTheDocument();
+    expect(card.getByText('$12.50')).toBeInTheDocument();
+    expect(card.getByText('Tools')).toBeInTheDocument();
+    expect(card.getByText('40')).toBeInTheDocument();
+    expect(
+      card.getByRole('button', { name: 'Increase quantity of Claw Hammer' }),
+    ).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'Adjust stock of Claw Hammer' })).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'More actions for Claw Hammer' })).toBeInTheDocument();
+  });
+
+  it('sorts from the Sort by select', async () => {
+    const state = productsApi([hammer, glue]);
+    const user = userEvent.setup();
+    renderApp({ route: '/products' });
+    await screen.findByText('Claw Hammer');
+
+    await user.selectOptions(screen.getByLabelText('Sort by'), 'price:desc');
+
+    await waitFor(() => expect(lastList(state)).toMatchObject({ sortBy: 'price', order: 'desc' }));
+  });
+
+  it('keeps the search and puts the filters in a sheet, with how many are active', async () => {
+    const state = productsApi([hammer]);
+    const user = userEvent.setup();
+    renderApp({ route: `/products?category=${TOOLS_ID}&status=low_stock` });
+    await screen.findByText('Claw Hammer');
+
+    expect(screen.getByRole('searchbox', { name: 'Search products' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Category' })).not.toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /^Filters/ });
+    expect(button).toHaveTextContent('2');
+
+    await user.click(button);
+    const sheet = within(await screen.findByRole('dialog', { name: 'Filters' }));
+    expect(sheet.getByRole('combobox', { name: 'Category' })).toBeInTheDocument();
+    expect(sheet.getByRole('combobox', { name: 'Supplier' })).toBeInTheDocument();
+    expect(sheet.getByRole('combobox', { name: 'Stock status' })).toBeInTheDocument();
+
+    await user.click(sheet.getByRole('button', { name: 'Clear filters' }));
+    await waitFor(() => expect(lastList(state)).not.toHaveProperty('category'));
+    expect(lastList(state)).not.toHaveProperty('status');
+    await user.click(sheet.getByRole('button', { name: 'Done' }));
+    expect(screen.getByRole('button', { name: /^Filters/ })).not.toHaveTextContent('2');
+  });
+
+  it('keeps Add product in the page header', async () => {
+    productsApi([hammer]);
+    renderApp({ route: '/products' });
+
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Products' });
+    expect(
+      within(heading.closest('div').parentElement).getByRole('button', { name: 'Add product' }),
+    ).toBeInTheDocument();
   });
 });
