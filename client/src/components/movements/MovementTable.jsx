@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/data-table/DataTable';
+import { MovementTypeBadge } from '@/components/movements/MovementTypeBadge';
+import { movementNote } from '@/components/movements/movementNote';
 import { Badge } from '@/components/ui/badge';
 import { formatDateTime, formatNumber } from '@/lib/format';
 
@@ -46,7 +48,7 @@ function buildColumns(t) {
         dash
       );
     }),
-    column('type', ({ row }) => t(`movements.types.${row.original.type}`)),
+    column('type', ({ row }) => <MovementTypeBadge type={row.original.type} />),
     column('quantityChange', ({ row }) => (
       <span className="tabular-nums">{signed(t, row.original.quantityChange)}</span>
     )),
@@ -61,15 +63,16 @@ function buildColumns(t) {
         dash
       ),
     ),
-    column('note', ({ row }) =>
-      row.original.note ? (
+    column('note', ({ row }) => {
+      const note = movementNote(t, row.original);
+      return note ? (
         <span className={wrap}>
-          <bdi>{row.original.note}</bdi>
+          <bdi>{note}</bdi>
         </span>
       ) : (
         dash
-      ),
-    ),
+      );
+    }),
     column('performedBy', ({ row }) => {
       const { name, role } = row.original.performedBy;
       return (

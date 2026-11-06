@@ -2,7 +2,7 @@
 // quantity, quantityBefore/After and the movement log always agree (PRD section 7).
 //
 // History steps: 'receive N', 'ship N', 'adjust N' (set absolute quantity), 'inc', 'dec'.
-// The first step is the initial stock ('receive N' noted "Initial stock").
+// The first step is the initial stock ('receive N' marked with reason `initial`).
 //
 // The mix covers every stock status (in / low / out), archived products, a product with
 // no supplier, and products from an inactive supplier.

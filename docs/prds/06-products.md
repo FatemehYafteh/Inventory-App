@@ -49,7 +49,7 @@ Staff can find any product quickly and create or edit products. Admins can archi
 ### 4.3 Add / Edit
 - Sheet or modal, React Hook Form + shared Zod.
 - Fields: title, SKU, description, category, supplier (only active suppliers for new choices), price, reorder level.
-- Quantity is not editable here. Add Product has an optional initial quantity, handed to the stock engine (07) as a `receive` "Initial stock".
+- Quantity is not editable here. Add Product has an optional initial quantity, handed to the stock engine (07) as a `receive` with `reason: "initial"`.
 
 ### 4.4 Archive / Restore (admin only)
 - Confirm dialog. Not rendered for staff; API returns 403 for staff.

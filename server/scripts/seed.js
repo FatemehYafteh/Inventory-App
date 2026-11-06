@@ -1,6 +1,7 @@
 // Seeds the database with demo data for every model.
 //   npm run seed -w server            add whatever is missing (keeps existing data)
-//   npm run seed:reset -w server      wipe the seeded collections and seed again
+//   npm run seed:reset -w server      wipe the seeded collections and seed again (users too!)
+//   npm run seed:demo-reset -w server reseed only the demo catalog and keep every user
 // Set SEED_PASSWORD to change the password of the seeded accounts.
 import { connectDatabase, disconnectDatabase } from '../src/config/db.js';
 import { loadConfig } from '../src/config/env.js';

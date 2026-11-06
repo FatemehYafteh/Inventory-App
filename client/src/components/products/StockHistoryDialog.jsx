@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/data-table/DataTable';
+import { MovementTypeBadge } from '@/components/movements/MovementTypeBadge';
+import { movementNote } from '@/components/movements/movementNote';
 import {
   Dialog,
   DialogContent,
@@ -37,7 +39,7 @@ function buildColumns(t) {
       id: 'type',
       header: t('products.history.type'),
       enableSorting: false,
-      cell: ({ row }) => t(`products.history.types.${row.original.type}`),
+      cell: ({ row }) => <MovementTypeBadge type={row.original.type} />,
     },
     {
       id: 'quantityChange',
@@ -80,14 +82,16 @@ function buildColumns(t) {
       id: 'note',
       header: t('products.history.note'),
       enableSorting: false,
-      cell: ({ row }) =>
-        row.original.note ? (
+      cell: ({ row }) => {
+        const note = movementNote(t, row.original);
+        return note ? (
           <span className="[overflow-wrap:anywhere]">
-            <bdi>{row.original.note}</bdi>
+            <bdi>{note}</bdi>
           </span>
         ) : (
           dash
-        ),
+        );
+      },
     },
     {
       id: 'performedBy',

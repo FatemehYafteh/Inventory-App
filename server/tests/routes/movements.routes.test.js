@@ -79,6 +79,32 @@ describe('GET /api/movements', () => {
     expect(res.body.items[1].supplier).toBeNull();
   });
 
+  it('sends the initial reason as a marker, and maps the legacy English note to it', async () => {
+    const app = buildApp();
+    const actor = await admin();
+    const item = await product();
+    const marked = await movement(item, actor, {
+      reason: 'initial',
+      createdAt: new Date('2026-10-01T10:00:00Z'),
+    });
+    // Written before `reason` existed: the English text was stored as the note.
+    const legacy = await movement(item, actor, {
+      note: 'Initial stock',
+      createdAt: new Date('2026-10-02T10:00:00Z'),
+    });
+    const typed = await movement(item, actor, {
+      note: 'Truck',
+      createdAt: new Date('2026-10-03T10:00:00Z'),
+    });
+
+    const res = await get(app, actor, '/api/movements');
+
+    const byId = Object.fromEntries(res.body.items.map((row) => [row.id, row]));
+    expect(byId[marked.id]).toMatchObject({ reason: 'initial', note: '' });
+    expect(byId[legacy.id]).toMatchObject({ reason: 'initial', note: '' });
+    expect(byId[typed.id]).toMatchObject({ reason: null, note: 'Truck' });
+  });
+
   it('breaks ties by id and pages without repeating a row', async () => {
     const app = buildApp();
     const actor = await admin();

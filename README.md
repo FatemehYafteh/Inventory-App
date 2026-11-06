@@ -24,6 +24,10 @@ The database runs on :27018 because 27017 is often taken by an installed MongoDB
 ### Seed data
 `npm run seed -w server` adds demo users, categories, suppliers, products and their stock history, and keeps anything already there. `npm run seed:reset -w server` wipes those collections and seeds again. Both refuse to run in production.
 
+> **Warning:** `npm run seed:reset -w server` deletes **every user, session and sign-in too**, not only the demo data, so real accounts are gone afterwards. To refresh only the demo catalog, use `npm run seed:demo-reset -w server` below.
+
+`npm run seed:demo-reset -w server` deletes and reseeds only products, stock movements, categories and suppliers. It keeps every user, refresh-token session, email token and status change, and creates no user. The stock history is attributed to existing active users with a verified email and a name (admins first, up to three); if there is none it stops before deleting anything. It refuses to run in production.
+
 Seeded accounts share the password `inventory-demo-2026` (override with `SEED_PASSWORD`):
 
 | Email | Role | Status | Notes |
@@ -57,7 +61,8 @@ Everything is served from one address, so the `SameSite=Strict` cookies and the 
 - `api/index.js` runs the same Express app as `npm run dev`, built once per instance by `server/src/serverless.js`. In webhook mode it registers the Telegram webhook on each cold start.
 - Vercel environment variables (Settings > Environment Variables), the same names as `server/.env.example`:
   `NODE_ENV=production`, `BOT_MODE=webhook`, `TRUST_PROXY=1`, `COOKIE_SECURE=true`, `EMAIL_DELIVERY=log`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (`npm run secret:generate -w server`), `CLIENT_ORIGIN` and `APP_URL` (the Vercel address), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `ADMIN_EMAILS`. Optional: `VITE_DEMO_EMAIL` and `VITE_DEMO_PASSWORD` show a demo account box on the login page. Redeploy after changing any of them.
-- Demo data: in GitHub, Actions > **Seed demo data** > Run workflow (needs the repository secret `MONGODB_URI`). It runs `server/scripts/seed.js` on GitHub's servers and only adds what is missing. Running it from your own machine also works (`npm run seed -w server` with `MONGODB_URI` pointing at Atlas) where DNS answers SRV lookups. `npm run seed:reset -w server` wipes every seeded collection, users included.
+- Demo data: in GitHub, Actions > **Seed demo data** > Run workflow (needs the repository secret `MONGODB_URI`). It runs `server/scripts/seed.js` on GitHub's servers and only adds what is missing. Running it from your own machine also works (`npm run seed -w server` with `MONGODB_URI` pointing at Atlas) where DNS answers SRV lookups. `npm run seed:reset -w server` wipes every seeded collection, **users included**: do not point it at a database with real accounts.
+- Reset demo data: Actions > **Reset demo data** > Run workflow, and type `RESET` in the confirm field (same `MONGODB_URI` secret). It runs `npm run seed:demo-reset` logic (`server/scripts/seed-demo-reset.js`) on GitHub's servers: products, movements, categories and suppliers are deleted and reseeded, and **all users and their sessions are kept**.
 - Rate limits are kept in memory, so on serverless each instance counts on its own; they are looser than on a single server.
 
 ## Git workflow

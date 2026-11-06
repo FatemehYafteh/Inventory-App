@@ -25,7 +25,8 @@ const received = {
   quantityBefore: 0,
   quantityAfter: 40,
   supplier: { id: ACME_ID, name: 'Acme Tools' },
-  note: 'Initial stock',
+  note: '',
+  reason: 'initial',
   performedBy: { id: ANA_ID, name: 'Ana Admin', role: 'admin' },
   createdAt: '2026-10-14T10:30:00.000Z',
 };
@@ -109,14 +110,26 @@ describe('MovementsPage', () => {
     expect(first.getByText('+40')).toBeInTheDocument();
     expect(first.getByText('Acme Tools')).toBeInTheDocument();
     expect(first.getByText('Initial stock')).toBeInTheDocument();
+    expect(first.getByText('Receive')).toHaveClass('text-success');
     expect(first.getByText('Ana Admin')).toBeInTheDocument();
     expect(first.getByText('Admin')).toBeInTheDocument();
 
     const second = within(rows[2]);
-    expect(second.getByText('Ship')).toBeInTheDocument();
+    expect(second.getByText('Ship')).toHaveClass('text-danger');
     expect(second.getByText('−3')).toBeInTheDocument();
     expect(second.getByText('Sam Staff')).toBeInTheDocument();
     expect(second.getByText('Staff')).toBeInTheDocument();
+  });
+
+  it('puts Export in the page header, not in the filter toolbar', async () => {
+    movementsApi([received]);
+    renderApp({ route: '/movements' });
+
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Stock movements' });
+    const header = heading.closest('div').parentElement;
+    expect(within(header).getByRole('button', { name: 'Export to Excel' })).toBeInTheDocument();
+    const toolbar = screen.getByRole('combobox', { name: 'Product' }).closest('div').parentElement;
+    expect(within(toolbar).queryByRole('button', { name: 'Export to Excel' })).toBeNull();
   });
 
   it('opens already filtered from a link, such as the Users drawer', async () => {

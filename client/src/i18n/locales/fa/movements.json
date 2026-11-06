@@ -33,6 +33,9 @@
     "note": "یادداشت",
     "performedBy": "ثبت‌کننده"
   },
+  "reasons": {
+    "initial": "موجودی اولیه"
+  },
   "types": {
     "receive": "ورود",
     "ship": "خروج",

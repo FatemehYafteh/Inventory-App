@@ -787,7 +787,7 @@ describe('Products page', () => {
           note: 'Order 7',
           performedBy: { id: 'a1', name: 'Ana Admin' },
         }),
-        movement(1, { supplier: { id: ACME_ID, name: 'Acme Tools' }, note: 'Initial stock' }),
+        movement(1, { supplier: { id: ACME_ID, name: 'Acme Tools' }, note: '', reason: 'initial' }),
       ];
       const user = userEvent.setup();
       renderApp({ route: '/products' });

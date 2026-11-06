@@ -1,5 +1,5 @@
 import { Product } from '../models/Product.js';
-import { StockMovement } from '../models/StockMovement.js';
+import { StockMovement, reasonAndNote } from '../models/StockMovement.js';
 
 /**
  * The Mongo filter for the movement filters. Staff never see movements of archived products
@@ -36,7 +36,7 @@ function present(movement) {
     quantityBefore: movement.quantityBefore,
     quantityAfter: movement.quantityAfter,
     supplier: supplier?.name ? { id: supplier.id, name: supplier.name } : null,
-    note: movement.note ?? '',
+    ...reasonAndNote(movement),
     // The name is the one stored with the movement; the role is the user's current role.
     performedBy: {
       id: String(performedBy?._id ?? performedBy),
@@ -113,7 +113,7 @@ export async function* movementCsvRows(user, query) {
       row.quantityBefore,
       row.quantityAfter,
       row.supplier?.name,
-      row.note,
+      row.reason === 'initial' ? 'Initial stock' : row.note,
       row.performedBy.name,
       row.performedBy.role,
     ];

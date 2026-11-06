@@ -33,6 +33,9 @@
     "note": "Note",
     "performedBy": "Performed by"
   },
+  "reasons": {
+    "initial": "Initial stock"
+  },
   "types": {
     "receive": "Receive",
     "ship": "Ship",

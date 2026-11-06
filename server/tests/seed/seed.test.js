@@ -48,7 +48,9 @@ describe('seedDatabase', () => {
         quantity = movement.quantityAfter;
       }
       expect(product.quantity).toBe(quantity);
-      expect(movements[0]).toMatchObject({ type: 'receive', note: 'Initial stock' });
+      expect(movements[0]).toMatchObject({ type: 'receive', reason: 'initial' });
+      expect(movements[0].note).toBeUndefined();
+      expect(movements.slice(1).every((movement) => !movement.reason)).toBe(true);
       expect(product.createdAt.getTime()).toBe(movements[0].createdAt.getTime());
       expect(movements.at(-1).createdAt.getTime()).toBeLessThan(now.getTime());
     }

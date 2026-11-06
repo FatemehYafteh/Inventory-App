@@ -39,14 +39,26 @@ function movementsApi(items, queries = []) {
 }
 
 describe('Movements page texts in Persian', () => {
+  it('translates the initial stock marker, and keeps a typed note as written', async () => {
+    movementsApi([
+      { ...movement, id: 'm1', reason: 'initial', note: '' },
+      { ...movement, id: 'm2', reason: null, note: 'Truck' },
+    ]);
+    await i18n.changeLanguage('fa');
+    renderApp({ route: '/movements' });
+
+    const initial = await screen.findByText('موجودی اولیه');
+    expect(initial.closest('tr')).not.toBe(screen.getByText('Truck').closest('tr'));
+    expect(screen.getByText('Truck')).toBeInTheDocument();
+    expect(screen.queryByText('Initial stock')).not.toBeInTheDocument();
+  });
+
   it('shows the table, filters and role badge in Persian with Persian digits', async () => {
     movementsApi([movement]);
     await i18n.changeLanguage('fa');
     renderApp({ route: '/movements' });
 
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'گردش کالا' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'گردش کالا' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'کالا' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'نوع' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'تأمین‌کننده' })).toBeInTheDocument();
