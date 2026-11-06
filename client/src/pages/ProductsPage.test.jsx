@@ -4,6 +4,7 @@ import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import i18n from '@/i18n';
 import { renderApp } from '@/test/render';
+import { chooseRowAction, openRowMenu } from '@/test/rowMenu';
 import { activeUser, server } from '@/test/server';
 
 const admin = { ...activeUser, id: 'a1', name: 'Ana Admin', role: 'admin' };
@@ -160,7 +161,7 @@ async function choose(user, label, option) {
 }
 
 describe('Products page', () => {
-  it('lists products with SKU, category, supplier, price, quantity, status and created date', async () => {
+  it('lists products with SKU, category, supplier, price, quantity and status, without a created date', async () => {
     productsApi([hammer, glue]);
     renderApp({ route: '/products' });
 
@@ -171,7 +172,7 @@ describe('Products page', () => {
     expect(within(hammerRow).getByText('$12.50')).toBeInTheDocument();
     expect(within(hammerRow).getByText('40')).toBeInTheDocument();
     expect(within(hammerRow).getByText('In stock')).toBeInTheDocument();
-    expect(within(hammerRow).getByText('Oct 14, 2026')).toBeInTheDocument();
+    expect(within(hammerRow).queryByText('Oct 14, 2026')).not.toBeInTheDocument();
 
     const glueRow = await row('Wood Glue');
     expect(within(glueRow).getByText('Out of stock')).toBeInTheDocument();
@@ -179,15 +180,48 @@ describe('Products page', () => {
     for (const name of ['Title', 'Category', 'Supplier', 'Price', 'Quantity', 'Stock status']) {
       expect(screen.getByRole('columnheader', { name: new RegExp(name) })).toBeInTheDocument();
     }
+    expect(screen.queryByRole('columnheader', { name: /Created/ })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Products' })).toBeInTheDocument();
+  });
+
+  it('keeps Adjust stock visible and puts History, Edit and Archive in a menu for admins', async () => {
+    productsApi([hammer]);
+    const user = userEvent.setup();
+    renderApp({ route: '/products' });
+
+    const hammerRow = await row('Claw Hammer');
+    expect(
+      within(hammerRow).getByRole('button', { name: 'Adjust stock of Claw Hammer' }),
+    ).toBeInTheDocument();
+    expect(within(hammerRow).queryByRole('button', { name: /history|^edit|^archive/i })).toBeNull();
+    await openRowMenu(user, 'More actions for Claw Hammer');
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
+      'History',
+      'Edit',
+      'Archive',
+    ]);
+  });
+
+  it('keeps the title, SKU, category and supplier in bdi so their direction stays their own', async () => {
+    productsApi([hammer]);
+    renderApp({ route: '/products' });
+
+    const hammerRow = await row('Claw Hammer');
+    for (const text of ['Claw Hammer', 'HAM-001', 'Tools', 'Acme Tools']) {
+      expect(within(hammerRow).getByText(text).tagName).toBe('BDI');
+    }
   });
 
   it('gives staff no Archive or Restore action', async () => {
     productsApi([hammer], { me: staff });
     renderApp({ route: '/products' });
 
+    const user = userEvent.setup();
     await row('Claw Hammer');
     expect(screen.queryByRole('button', { name: /archive|restore/i })).not.toBeInTheDocument();
+    await openRowMenu(user, 'More actions for Claw Hammer');
+    expect(await screen.findByRole('menuitem', { name: /history/i })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /archive|restore/i })).not.toBeInTheDocument();
   });
 
   describe('Archive and Restore', () => {
@@ -197,7 +231,7 @@ describe('Products page', () => {
       renderApp({ route: '/products' });
 
       await row('Claw Hammer');
-      await user.click(screen.getByRole('button', { name: 'Archive Claw Hammer' }));
+      await chooseRowAction(user, 'More actions for Claw Hammer', 'Archive Claw Hammer');
       const dialog = await screen.findByRole('alertdialog', { name: 'Archive Claw Hammer?' });
       expect(state.writes).toEqual([]);
 
@@ -215,14 +249,14 @@ describe('Products page', () => {
       renderApp({ route: '/products' });
 
       await row('Claw Hammer');
-      await user.click(screen.getByRole('button', { name: 'Archive Claw Hammer' }));
+      await chooseRowAction(user, 'More actions for Claw Hammer', 'Archive Claw Hammer');
       await user.click(
         within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Cancel' }),
       );
 
       await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
       expect(state.writes).toEqual([]);
-      expect(screen.getByRole('button', { name: 'Archive Claw Hammer' })).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'More actions for Claw Hammer' })).toHaveFocus();
     });
 
     it('restores an archived product straight away', async () => {
@@ -236,7 +270,7 @@ describe('Products page', () => {
         within(await row('Claw Hammer')).queryByRole('button', { name: /^Restore/ }),
       ).not.toBeInTheDocument();
 
-      await user.click(within(lamp).getByRole('button', { name: 'Restore Old Lamp' }));
+      await chooseRowAction(user, 'More actions for Old Lamp', 'Restore Old Lamp');
 
       await waitFor(() =>
         expect(state.writes).toEqual([{ method: 'PATCH', id: 'p3', action: 'restore' }]),
@@ -253,7 +287,7 @@ describe('Products page', () => {
       };
 
       await row('Claw Hammer');
-      await user.click(screen.getByRole('button', { name: 'Archive Claw Hammer' }));
+      await chooseRowAction(user, 'More actions for Claw Hammer', 'Archive Claw Hammer');
       await user.click(
         within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Archive' }),
       );
@@ -493,8 +527,10 @@ describe('Products page', () => {
     productsApi([product({ id: 'p9', title, sku })]);
     renderApp({ route: '/products' });
 
-    expect((await screen.findByText(title)).className).toContain('[overflow-wrap:anywhere]');
-    expect(screen.getByText(sku).className).toContain('[overflow-wrap:anywhere]');
+    expect((await screen.findByText(title)).parentElement.className).toContain(
+      '[overflow-wrap:anywhere]',
+    );
+    expect(screen.getByText(sku).parentElement.className).toContain('[overflow-wrap:anywhere]');
   });
 
   describe('Inline quantity', () => {
@@ -736,7 +772,7 @@ describe('Products page', () => {
 
     async function openHistory(user, title = 'Claw Hammer') {
       await row(title);
-      await user.click(screen.getByRole('button', { name: `Stock history of ${title}` }));
+      await chooseRowAction(user, `More actions for ${title}`, `Stock history of ${title}`);
       await screen.findByRole('dialog', { name: 'Stock history' });
     }
 
@@ -816,7 +852,7 @@ describe('Products page', () => {
 
     async function openAdd(user) {
       await row('Claw Hammer');
-      await user.click(screen.getByRole('button', { name: 'Add Product' }));
+      await user.click(screen.getByRole('button', { name: 'Add product' }));
       await screen.findByRole('dialog', { name: 'Add product' });
     }
 
@@ -988,7 +1024,7 @@ describe('Products page', () => {
       renderApp({ route: '/products' });
 
       await row('Claw Hammer');
-      await user.click(screen.getByRole('button', { name: 'Edit Claw Hammer' }));
+      await chooseRowAction(user, 'More actions for Claw Hammer', 'Edit Claw Hammer');
       await screen.findByRole('dialog', { name: 'Edit product' });
       expect(sheet().getByLabelText('Title')).toHaveValue('Claw Hammer');
       expect(sheet().getByLabelText('SKU')).toHaveValue('HAM-001');
@@ -1032,7 +1068,7 @@ describe('Products page', () => {
       renderApp({ route: '/products' });
 
       await row('Ream');
-      await user.click(screen.getByRole('button', { name: 'Edit Ream' }));
+      await chooseRowAction(user, 'More actions for Ream', 'Edit Ream');
 
       expect(await sheet().findByRole('combobox', { name: 'Supplier' })).toHaveTextContent(
         'Old Mill Paper Co. (inactive)',
@@ -1050,7 +1086,9 @@ describe('Products page', () => {
 
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       expect(state.writes).toEqual([]);
-      expect(screen.getByRole('button', { name: 'Edit Claw Hammer' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'More actions for Claw Hammer' }),
+      ).toBeInTheDocument();
     });
   });
 });

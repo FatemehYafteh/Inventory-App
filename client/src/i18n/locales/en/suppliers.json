@@ -16,6 +16,7 @@
     "email": "Email",
     "productCount": "Product count",
     "actions": "Actions",
+    "moreActions": "More actions for {{name}}",
     "editLabel": "Edit {{name}}",
     "deactivateLabel": "Deactivate {{name}}",
     "reactivateLabel": "Reactivate {{name}}",

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { renderApp } from '@/test/render';
+import { chooseRowAction, openRowMenu } from '@/test/rowMenu';
 import { activeUser, server } from '@/test/server';
 
 const admin = { ...activeUser, id: 'a1', name: 'Ana Admin', role: 'admin' };
@@ -316,7 +317,7 @@ describe('Suppliers page, admin', () => {
     const user = userEvent.setup();
     renderApp({ route: '/suppliers' });
 
-    await user.click(await screen.findByRole('button', { name: 'Deactivate Acme Tools' }));
+    await chooseRowAction(user, 'More actions for Acme Tools', 'Deactivate Acme Tools');
     const dialog = await screen.findByRole('alertdialog');
     expect(dialog).toHaveTextContent('2 products');
     expect(state.writes).toEqual([]);
@@ -331,13 +332,13 @@ describe('Suppliers page, admin', () => {
     const user = userEvent.setup();
     renderApp({ route: '/suppliers' });
 
-    await user.click(await screen.findByRole('button', { name: 'Deactivate Acme Tools' }));
+    await chooseRowAction(user, 'More actions for Acme Tools', 'Deactivate Acme Tools');
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Cancel' }),
     );
 
     expect(state.writes).toEqual([]);
-    expect(screen.getByRole('button', { name: 'Deactivate Acme Tools' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'More actions for Acme Tools' })).toHaveFocus();
   });
 
   it('deactivates a supplier with no products at once', async () => {
@@ -345,7 +346,11 @@ describe('Suppliers page, admin', () => {
     const user = userEvent.setup();
     renderApp({ route: '/suppliers' });
 
-    await user.click(await screen.findByRole('button', { name: 'Deactivate Northwind Freight' }));
+    await chooseRowAction(
+      user,
+      'More actions for Northwind Freight',
+      'Deactivate Northwind Freight',
+    );
 
     expect(await screen.findByText('Inactive')).toBeInTheDocument();
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
@@ -357,7 +362,11 @@ describe('Suppliers page, admin', () => {
     const user = userEvent.setup();
     renderApp({ route: '/suppliers' });
 
-    await user.click(await screen.findByRole('button', { name: 'Reactivate Old Mill Paper Co.' }));
+    await chooseRowAction(
+      user,
+      'More actions for Old Mill Paper Co.',
+      'Reactivate Old Mill Paper Co.',
+    );
 
     await waitFor(() => expect(screen.queryByText('Inactive')).not.toBeInTheDocument());
     expect(state.writes).toEqual([{ method: 'PATCH', id: 'p3', body: { isActive: true } }]);
@@ -368,9 +377,10 @@ describe('Suppliers page, admin', () => {
     const user = userEvent.setup();
     renderApp({ route: '/suppliers' });
 
-    const button = await screen.findByRole('button', { name: 'Delete Northwind Freight' });
-    expect(button).toBeEnabled();
-    await user.click(button);
+    await openRowMenu(user, 'More actions for Northwind Freight');
+    const item = await screen.findByRole('menuitem', { name: 'Delete Northwind Freight' });
+    expect(item).not.toHaveAttribute('aria-disabled', 'true');
+    await user.click(item);
     const dialog = await screen.findByRole('alertdialog');
     expect(dialog).toHaveTextContent('Delete Northwind Freight?');
     await user.click(within(dialog).getByRole('button', { name: 'Delete' }));
@@ -397,10 +407,11 @@ describe('Suppliers page, admin', () => {
     suppliersApi([supplier({ id: 'p9', name: 'Busy Co', ...counts })]);
     renderApp({ route: '/suppliers' });
 
-    const button = await screen.findByRole('button', { name: 'Delete Busy Co' });
-    expect(button).toBeDisabled();
-    expect(button).toHaveAccessibleDescription(expect.stringContaining(reason));
-    expect(button.parentElement).toHaveAttribute('title', expect.stringContaining(reason));
+    await openRowMenu(userEvent.setup(), 'More actions for Busy Co');
+    const item = await screen.findByRole('menuitem', { name: 'Delete Busy Co' });
+    expect(item).toHaveAttribute('aria-disabled', 'true');
+    expect(item).toHaveAccessibleDescription(expect.stringContaining(reason));
+    expect(item).toHaveAttribute('title', expect.stringContaining(reason));
   });
 
   it('shows the server message and refreshes the row when a delete is blocked after all', async () => {
@@ -416,7 +427,7 @@ describe('Suppliers page, admin', () => {
     const user = userEvent.setup();
     renderApp({ route: '/suppliers' });
 
-    await user.click(await screen.findByRole('button', { name: 'Delete Northwind Freight' }));
+    await chooseRowAction(user, 'More actions for Northwind Freight', 'Delete Northwind Freight');
     state.items = [{ ...northwind, productCount: 1, movementCount: 3 }];
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
@@ -425,8 +436,9 @@ describe('Suppliers page, admin', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Used by 1 product and 3 stock movements. The server wording wins.',
     );
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Delete Northwind Freight' })).toBeDisabled(),
-    );
+    await openRowMenu(user, 'More actions for Northwind Freight');
+    expect(
+      await screen.findByRole('menuitem', { name: 'Delete Northwind Freight' }),
+    ).toHaveAttribute('aria-disabled', 'true');
   });
 });

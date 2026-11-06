@@ -31,7 +31,7 @@
     "telegram": "Telegram"
   },
   "export": {
-    "csv": "Export CSV",
+    "csv": "Export to Excel",
     "exporting": "Exporting…"
   }
 }

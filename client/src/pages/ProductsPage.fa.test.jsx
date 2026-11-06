@@ -4,6 +4,7 @@ import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import i18n from '@/i18n';
 import { renderApp } from '@/test/render';
+import { chooseRowAction } from '@/test/rowMenu';
 import { activeUser, server } from '@/test/server';
 
 const admin = { ...activeUser, id: 'a1', name: 'Ana Admin', role: 'admin' };
@@ -83,7 +84,7 @@ describe('Products page texts in Persian', () => {
     expect(screen.getByRole('columnheader', { name: /قیمت/ })).toBeInTheDocument();
 
     expect(screen.queryByRole('heading', { name: 'Products' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Add Product' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add product' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Adjust stock of Claw Hammer' })).toBeNull();
   });
 
@@ -120,14 +121,14 @@ describe('Products page texts in Persian', () => {
     expect(adjust.getByText(/تعداد فعلی/)).toHaveTextContent('تعداد جدید: ۴۲');
     await user.click(adjust.getByRole('button', { name: 'لغو' }));
 
-    await user.click(screen.getByRole('button', { name: 'کاردکس Claw Hammer' }));
+    await chooseRowAction(user, 'عملیات بیشتر برای Claw Hammer', 'کاردکس Claw Hammer');
     const history = within(await screen.findByRole('dialog', { name: 'کاردکس کالا' }));
     expect(await history.findByText('خروج')).toBeInTheDocument();
     expect(history.getByText('−۲')).toBeInTheDocument();
     expect(history.getByRole('columnheader', { name: /ثبت‌کننده/ })).toBeInTheDocument();
     await user.keyboard('{Escape}');
 
-    await user.click(screen.getByRole('button', { name: 'بایگانی Claw Hammer' }));
+    await chooseRowAction(user, 'عملیات بیشتر برای Claw Hammer', 'بایگانی Claw Hammer');
     const archive = within(
       await screen.findByRole('alertdialog', { name: 'Claw Hammer بایگانی شود؟' }),
     );
