@@ -42,6 +42,7 @@ const FLOWS = {
     useStart: useTelegramStart,
     useVerify: useTelegramVerify,
     startLabel: 'auth.telegram.continueWith',
+    startButton: {},
     expired: 'auth.telegram.loginExpired',
     restartOnWrongCode: true,
     // Sign-in explains the way in; Connect Telegram is one step in a settings page.
@@ -51,6 +52,8 @@ const FLOWS = {
     useStart: useTelegramConnectStart,
     useVerify: useTelegramConnectVerify,
     startLabel: 'auth.telegram.connect',
+    // One quiet action in a settings row, not a full-width call to action.
+    startButton: { variant: 'outline', className: 'self-start' },
     expired: 'auth.telegram.connectExpired',
     restartOnWrongCode: false,
     guided: false,
@@ -294,7 +297,7 @@ function TelegramFlow({ flow }) {
           <p className="text-sm text-muted-foreground">{t('auth.telegram.signInHint')}</p>
         )}
         <FormAlert>{start.error ? errorMessage(start.error) : notice}</FormAlert>
-        <Button type="button" onClick={startOver} disabled={start.isPending}>
+        <Button type="button" onClick={startOver} disabled={start.isPending} {...flow.startButton}>
           {start.isPending ? t('auth.telegram.starting') : t(flow.startLabel)}
         </Button>
       </div>,

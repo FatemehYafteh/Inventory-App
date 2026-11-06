@@ -2,6 +2,10 @@
   "title": "پروفایل",
   "description": "نام شما و روش‌های ورودتان.",
   "roles": { "admin": "مدیر", "staff": "کارمند" },
+  "account": {
+    "title": "حساب کاربری",
+    "description": "نام، ایمیل و روش‌های ورود شما."
+  },
   "name": {
     "title": "نام",
     "description": "نامی که در برنامه نمایش داده می‌شود.",
@@ -10,15 +14,14 @@
     "saving": "در حال ذخیره…"
   },
   "signIn": {
-    "title": "روش‌های ورود",
-    "description": "روش‌هایی که با آن‌ها وارد این حساب می‌شوید.",
     "email": "ایمیل",
+    "emailDescription": "برای ورود و ایمیل‌های حساب استفاده می‌شود.",
     "telegram": "تلگرام",
+    "telegramDescription": "ورود با حساب تلگرام.",
     "verified": "تأییدشده",
     "notVerified": "تأییدنشده",
     "connected": "متصل",
-    "notConnected": "متصل نیست",
-    "connectedAs": "متصل با @{{username}}"
+    "notConnected": "متصل نیست"
   },
   "password": {
     "title": "رمز عبور",
