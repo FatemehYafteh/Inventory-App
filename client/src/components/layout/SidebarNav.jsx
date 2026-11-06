@@ -17,10 +17,21 @@ const focusRing =
 export const sidebarButtonClass =
   'border-sidebar-accent bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring';
 
-/** First letter of the first two words of the name (works for Persian too). */
-function initials(name) {
-  const letters = (name ?? '').trim().split(/\s+/).filter(Boolean).slice(0, 2);
-  return letters.map((word) => Array.from(word)[0]).join('') || '?';
+/**
+ * Avatar initials. Latin names give the first letter of the first two words ("FY"). Persian and
+ * Arabic names give only the first letter of the first word, because joined letters such as "فی"
+ * would read as a word.
+ */
+export function initials(name) {
+  const words = (name ?? '').trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '?';
+  const first = Array.from(words[0])[0];
+  if (/\p{Script=Arabic}/u.test(first)) return first;
+  return words
+    .slice(0, 2)
+    .map((word) => Array.from(word)[0])
+    .join('')
+    .toUpperCase();
 }
 
 /** First focusable element: jumps past the navigation to the page content. */
@@ -97,11 +108,14 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
               {initials(user?.name)}
             </span>
             <span className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-medium text-sidebar-foreground">
+              <span
+                title={user?.name}
+                className="min-w-0 truncate text-sm font-medium text-sidebar-foreground"
+              >
                 {user?.name}
               </span>
               {user?.role && (
-                <span className="truncate text-xs text-sidebar-muted">
+                <span className="min-w-0 truncate text-xs text-sidebar-muted">
                   {t(`common.role.${user.role}`)}
                 </span>
               )}

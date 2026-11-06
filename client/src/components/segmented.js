@@ -23,8 +23,10 @@ const SEGMENT_TONES = {
     peerFocus: 'peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring',
   },
   sidebar: {
-    active: 'bg-sidebar-accent font-medium text-sidebar-accent-foreground',
-    idle: 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
+    // A transparent border on every segment, so the selected one's light edge shifts nothing.
+    active:
+      'border border-sidebar-ring bg-sidebar-accent font-medium text-sidebar-accent-foreground',
+    idle: 'border border-transparent text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
     focus:
       'focus-visible:ring-[3px] focus-visible:ring-sidebar-ring focus-visible:outline-none',
     peerFocus: 'peer-focus-visible:ring-[3px] peer-focus-visible:ring-sidebar-ring',
