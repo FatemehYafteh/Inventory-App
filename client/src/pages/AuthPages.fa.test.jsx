@@ -65,15 +65,15 @@ describe('signed-out auth pages in Persian', () => {
     renderApp({ route: '/forgot-password' });
 
     expect(await screen.findByRole('heading', { name: 'فراموشی رمز عبور' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ارسال پیوند بازنشانی' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ارسال لینک بازنشانی' })).toBeInTheDocument();
     expect(screen.queryByText('Send reset link')).not.toBeInTheDocument();
   });
 
   it('shows the invalid reset link page in Persian', async () => {
     renderApp({ route: '/reset-password' });
 
-    expect(await screen.findByRole('heading', { name: 'پیوند نامعتبر است' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'درخواست پیوند جدید' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'لینک نامعتبر است' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'درخواست لینک جدید' })).toBeInTheDocument();
     expect(screen.queryByText('Link not valid')).not.toBeInTheDocument();
   });
 
@@ -81,7 +81,7 @@ describe('signed-out auth pages in Persian', () => {
     renderApp({ route: '/verify-email' });
 
     expect(await screen.findByRole('heading', { name: 'تأیید ایمیل' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ارسال پیوند تأیید' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ارسال لینک تأیید' })).toBeInTheDocument();
     expect(screen.queryByText('Verify your email')).not.toBeInTheDocument();
   });
 });

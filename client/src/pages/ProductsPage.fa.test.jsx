@@ -74,7 +74,7 @@ describe('Products page texts in Persian', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'کالاها' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'افزودن کالا' })).toBeInTheDocument();
-    expect(screen.getByRole('searchbox', { name: 'جستجوی کالاها' })).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'جست‌وجوی کالاها' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'وضعیت موجودی' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'پاک کردن فیلترها' })).toBeInTheDocument();
     expect(screen.getByLabelText('نمایش بایگانی‌شده‌ها')).toBeInTheDocument();

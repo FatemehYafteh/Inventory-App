@@ -64,7 +64,7 @@ describe('Dashboard texts in Persian', () => {
     expect(screen.getByText('۲ عدد موجود، نقطه سفارش ۱۰')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'آخرین گردش‌های کالا' })).toBeInTheDocument();
     expect(screen.getByText('−۳')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'مشاهدهٔ همهٔ گردش‌ها' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'مشاهدهٔ همه گردش‌ها' })).toBeInTheDocument();
     expect(screen.queryByText('Needs restocking')).not.toBeInTheDocument();
   });
 
