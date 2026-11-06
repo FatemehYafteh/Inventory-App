@@ -16,6 +16,7 @@
     "email": "ایمیل",
     "productCount": "تعداد کالاها",
     "actions": "عملیات",
+    "moreActions": "عملیات بیشتر برای {{name}}",
     "editLabel": "ویرایش {{name}}",
     "deactivateLabel": "غیرفعال‌سازی {{name}}",
     "reactivateLabel": "فعال‌سازی مجدد {{name}}",

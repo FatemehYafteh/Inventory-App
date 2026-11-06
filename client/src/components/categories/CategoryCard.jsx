@@ -32,10 +32,14 @@ export function CategoryCard({ category, canManage, onEdit, onDelete }) {
             to={`/products?category=${encodeURIComponent(category.id)}`}
             className="after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
           >
-            {category.title}
+            <bdi>{category.title}</bdi>
           </Link>
         </h2>
-        {category.description && <CardDescription>{category.description}</CardDescription>}
+        {category.description && (
+          <CardDescription>
+            <bdi>{category.description}</bdi>
+          </CardDescription>
+        )}
       </CardHeader>
       <CardContent className="mt-auto flex flex-col gap-3">
         <p className="text-sm text-muted-foreground">{productCountLabel(category.productCount)}</p>

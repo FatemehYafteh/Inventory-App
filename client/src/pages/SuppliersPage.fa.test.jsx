@@ -4,6 +4,7 @@ import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import i18n from '@/i18n';
 import { renderApp } from '@/test/render';
+import { openRowMenu } from '@/test/rowMenu';
 import { activeUser, server } from '@/test/server';
 
 const admin = { ...activeUser, id: 'a1', name: 'Ana Admin', role: 'admin' };
@@ -43,8 +44,14 @@ describe('Suppliers page in Persian', () => {
     expect(screen.getByText('فرد رابط')).toBeInTheDocument();
     expect(screen.getByText('تعداد کالاها')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ویرایش Acme Tools' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'غیرفعال‌سازی Acme Tools' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'حذف Acme Tools' })).toBeDisabled();
+    await openRowMenu(userEvent.setup(), 'عملیات بیشتر برای Acme Tools');
+    expect(
+      await screen.findByRole('menuitem', { name: 'غیرفعال‌سازی Acme Tools' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'حذف Acme Tools' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     expect(screen.getByText(/به‌جای حذف، آن را غیرفعال کنید/)).toBeInTheDocument();
 
     expect(screen.queryByText('Contact person')).not.toBeInTheDocument();

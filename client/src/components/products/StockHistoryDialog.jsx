@@ -69,7 +69,9 @@ function buildColumns(t) {
       enableSorting: false,
       cell: ({ row }) =>
         row.original.supplier ? (
-          <span className="[overflow-wrap:anywhere]">{row.original.supplier.name}</span>
+          <span className="[overflow-wrap:anywhere]">
+            <bdi>{row.original.supplier.name}</bdi>
+          </span>
         ) : (
           dash
         ),
@@ -80,7 +82,9 @@ function buildColumns(t) {
       enableSorting: false,
       cell: ({ row }) =>
         row.original.note ? (
-          <span className="[overflow-wrap:anywhere]">{row.original.note}</span>
+          <span className="[overflow-wrap:anywhere]">
+            <bdi>{row.original.note}</bdi>
+          </span>
         ) : (
           dash
         ),
@@ -90,7 +94,9 @@ function buildColumns(t) {
       header: t('products.history.performedBy'),
       enableSorting: false,
       cell: ({ row }) => (
-        <span className="[overflow-wrap:anywhere]">{row.original.performedBy.name}</span>
+        <span className="[overflow-wrap:anywhere]">
+          <bdi>{row.original.performedBy.name}</bdi>
+        </span>
       ),
     },
   ];

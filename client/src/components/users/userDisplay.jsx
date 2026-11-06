@@ -23,7 +23,9 @@ export function EmailCell({ user }) {
   if (!user.email) return <span className="text-muted-foreground">{t('common.user.noEmail')}</span>;
   return (
     <div className="flex flex-col gap-0.5">
-      <span>{user.email}</span>
+      <span>
+        <bdi>{user.email}</bdi>
+      </span>
       <span className="text-xs text-muted-foreground">
         {user.emailVerified ? t('common.user.verified') : t('common.user.notVerified')}
       </span>

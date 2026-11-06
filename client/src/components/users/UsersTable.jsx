@@ -141,7 +141,7 @@ export function UsersTable({
               onClick={() => onOpen(row.original)}
               className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
-              {row.original.name ?? t('users.table.noName')}
+              {row.original.name ? <bdi>{row.original.name}</bdi> : t('users.table.noName')}
             </button>
             {row.original.id === meId && (
               <span className="text-muted-foreground">{t('users.table.you')}</span>
@@ -192,7 +192,9 @@ export function UsersTable({
               label={t(`users.status.${row.original.status}`)}
             />
             {row.original.status === 'rejected' && row.original.statusReason && (
-              <span className="text-xs text-muted-foreground">{row.original.statusReason}</span>
+              <span className="text-xs text-muted-foreground">
+                <bdi>{row.original.statusReason}</bdi>
+              </span>
             )}
           </div>
         ),

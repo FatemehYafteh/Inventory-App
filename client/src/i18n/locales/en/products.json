@@ -2,7 +2,7 @@
   "page": {
     "title": "Products",
     "description": "Find products and check their stock.",
-    "add": "Add Product",
+    "add": "Add product",
     "emptyFiltered": "No products match your filters.",
     "empty": "No products yet."
   },
@@ -31,8 +31,8 @@
     "price": "Price",
     "quantity": "Quantity",
     "stockStatus": "Stock status",
-    "created": "Created",
     "actions": "Actions",
+    "moreActions": "More actions for {{title}}",
     "decreaseQuantity": "Decrease quantity of {{title}}",
     "increaseQuantity": "Increase quantity of {{title}}",
     "adjustStock": "Adjust stock",

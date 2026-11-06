@@ -35,8 +35,12 @@ function buildColumns(t) {
       const { product } = row.original;
       return product ? (
         <div className={`flex flex-col ${wrap}`}>
-          <span className="font-medium">{product.title}</span>
-          <span className="text-xs text-muted-foreground">{product.sku}</span>
+          <span className="font-medium">
+            <bdi>{product.title}</bdi>
+          </span>
+          <span className="text-xs text-muted-foreground">
+            <bdi>{product.sku}</bdi>
+          </span>
         </div>
       ) : (
         dash
@@ -49,16 +53,30 @@ function buildColumns(t) {
     quantity('quantityBefore'),
     quantity('quantityAfter'),
     column('supplier', ({ row }) =>
-      row.original.supplier ? <span className={wrap}>{row.original.supplier.name}</span> : dash,
+      row.original.supplier ? (
+        <span className={wrap}>
+          <bdi>{row.original.supplier.name}</bdi>
+        </span>
+      ) : (
+        dash
+      ),
     ),
     column('note', ({ row }) =>
-      row.original.note ? <span className={wrap}>{row.original.note}</span> : dash,
+      row.original.note ? (
+        <span className={wrap}>
+          <bdi>{row.original.note}</bdi>
+        </span>
+      ) : (
+        dash
+      ),
     ),
     column('performedBy', ({ row }) => {
       const { name, role } = row.original.performedBy;
       return (
         <div className="flex flex-wrap items-center gap-2">
-          <span className={wrap}>{name}</span>
+          <span className={wrap}>
+            <bdi>{name}</bdi>
+          </span>
           {role && <Badge variant="secondary">{t(`users.role.${role}`)}</Badge>}
         </div>
       );

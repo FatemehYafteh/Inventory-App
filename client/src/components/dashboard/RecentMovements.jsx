@@ -37,15 +37,17 @@ export function RecentMovements({ items }) {
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="font-medium [overflow-wrap:anywhere]">
-                  {item.product?.title}{' '}
+                  <bdi>{item.product?.title}</bdi>{' '}
                   <span className="text-xs font-normal text-muted-foreground">
-                    {item.product?.sku}
+                    <bdi>{item.product?.sku}</bdi>
                   </span>
                 </span>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                   <span>{t(`movements.types.${item.type}`)}</span>
                   <span aria-hidden="true">·</span>
-                  <span className="[overflow-wrap:anywhere]">{item.performedBy.name}</span>
+                  <span className="[overflow-wrap:anywhere]">
+                    <bdi>{item.performedBy.name}</bdi>
+                  </span>
                   {item.performedBy.role && (
                     <Badge variant="secondary">{t(`users.role.${item.performedBy.role}`)}</Badge>
                   )}

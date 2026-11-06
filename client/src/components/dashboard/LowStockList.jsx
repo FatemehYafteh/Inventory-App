@@ -44,9 +44,11 @@ export function LowStockList({ items, lowStockCount, outOfStockCount, onReceive 
                 {formatNumber(item.quantity)}
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="font-medium [overflow-wrap:anywhere]">{item.title}</span>
+                <span className="font-medium [overflow-wrap:anywhere]">
+                  <bdi>{item.title}</bdi>
+                </span>
                 <span className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
-                  {item.sku}
+                  <bdi>{item.sku}</bdi>
                 </span>
                 <span className="text-sm text-muted-foreground">
                   {t('dashboard.lowStock.units', {

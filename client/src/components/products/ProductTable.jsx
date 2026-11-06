@@ -2,15 +2,16 @@ import { Minus, Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/data-table/DataTable';
+import { RowActionsMenu } from '@/components/data-table/RowActionsMenu';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { formatDate, formatNumber, formatPrice } from '@/lib/format';
+import { formatNumber, formatPrice } from '@/lib/format';
 
 const dash = <span className="text-muted-foreground">—</span>;
 
 /**
  * The products table. The server searches, filters, sorts and pages; `sorting` is [{ id, desc }]
- * and `pagination` is { pageIndex, pageSize }. Title, Quantity and Price sort. Archive and
+ * and `pagination` is { pageIndex, pageSize }. Title, Quantity and Price sort. History, Edit and Archive/Restore sit in the row's "⋯" menu; Archive and
  * Restore show only when `canArchive` (admins). The - and + beside the quantity call
  * `onStep(product, -1 or 1)`; the Archived column shows only with `showArchived` (admins who chose to include
  * archived products), since otherwise it would be empty; they are off for archived products, and - is off at 0. Adjust stock
@@ -44,9 +45,11 @@ export function ProductTable({
         header: t('products.table.title'),
         cell: ({ row }) => (
           <div className="flex min-w-48 flex-col gap-0.5">
-            <span className="font-medium [overflow-wrap:anywhere]">{row.original.title}</span>
+            <span className="font-medium [overflow-wrap:anywhere]">
+              <bdi>{row.original.title}</bdi>
+            </span>
             <span className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
-              {row.original.sku}
+              <bdi>{row.original.sku}</bdi>
             </span>
           </div>
         ),
@@ -74,7 +77,9 @@ export function ProductTable({
         enableSorting: false,
         cell: ({ row }) =>
           row.original.category ? (
-            <span className="[overflow-wrap:anywhere]">{row.original.category.title}</span>
+            <span className="[overflow-wrap:anywhere]">
+              <bdi>{row.original.category.title}</bdi>
+            </span>
           ) : (
             dash
           ),
@@ -85,7 +90,9 @@ export function ProductTable({
         enableSorting: false,
         cell: ({ row }) =>
           row.original.supplier ? (
-            <span className="[overflow-wrap:anywhere]">{row.original.supplier.name}</span>
+            <span className="[overflow-wrap:anywhere]">
+              <bdi>{row.original.supplier.name}</bdi>
+            </span>
           ) : (
             dash
           ),
@@ -136,63 +143,57 @@ export function ProductTable({
         cell: ({ row }) => <StatusBadge status={row.original.stockStatus} />,
       },
       {
-        id: 'createdAt',
-        header: t('products.table.created'),
-        enableSorting: false,
-        cell: ({ row }) => (
-          <span className="whitespace-nowrap">{formatDate(row.original.createdAt)}</span>
-        ),
-      },
-      {
         id: 'actions',
         header: t('products.table.actions'),
         enableSorting: false,
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label={t('products.table.adjustStockOf', { title: row.original.title })}
-              disabled={row.original.isArchived}
-              onClick={() => onAdjust(row.original)}
-            >
-              {t('products.table.adjustStock')}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label={t('products.table.historyOf', { title: row.original.title })}
-              onClick={() => onHistory(row.original)}
-            >
-              {t('products.table.history')}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label={t('products.table.editOf', { title: row.original.title })}
-              onClick={() => onEdit(row.original)}
-            >
-              {t('products.table.edit')}
-            </Button>
-            {canArchive && (
+        cell: ({ row }) => {
+          const product = row.original;
+          const { title } = product;
+          // Adjust stock stays visible; the rest live in the menu. Staff never get Archive.
+          const items = [
+            {
+              key: 'history',
+              label: t('products.table.history'),
+              ariaLabel: t('products.table.historyOf', { title }),
+              onSelect: () => onHistory(product),
+            },
+            {
+              key: 'edit',
+              label: t('products.table.edit'),
+              ariaLabel: t('products.table.editOf', { title }),
+              onSelect: () => onEdit(product),
+            },
+            ...(canArchive
+              ? [
+                  {
+                    key: 'archive',
+                    label: product.isArchived
+                      ? t('products.table.restore')
+                      : t('products.table.archive'),
+                    ariaLabel: t(
+                      product.isArchived ? 'products.table.restoreOf' : 'products.table.archiveOf',
+                      { title },
+                    ),
+                    onSelect: () => (product.isArchived ? onRestore(product) : onArchive(product)),
+                  },
+                ]
+              : []),
+          ];
+          return (
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                aria-label={t(
-                  row.original.isArchived ? 'products.table.restoreOf' : 'products.table.archiveOf',
-                  { title: row.original.title },
-                )}
-                onClick={() =>
-                  row.original.isArchived ? onRestore(row.original) : onArchive(row.original)
-                }
+                aria-label={t('products.table.adjustStockOf', { title })}
+                disabled={product.isArchived}
+                onClick={() => onAdjust(product)}
               >
-                {row.original.isArchived
-                  ? t('products.table.restore')
-                  : t('products.table.archive')}
+                {t('products.table.adjustStock')}
               </Button>
-            )}
-          </div>
-        ),
+              <RowActionsMenu label={t('products.table.moreActions', { title })} items={items} />
+            </div>
+          );
+        },
       },
     ],
     [t, onEdit, onStep, onAdjust, onHistory, canArchive, showArchived, onArchive, onRestore],

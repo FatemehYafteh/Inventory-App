@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { productCountLabel } from '@/components/categories/CategoryCard';
 import { DataTable } from '@/components/data-table/DataTable';
+import { RowActionsMenu } from '@/components/data-table/RowActionsMenu';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import i18n from '@/i18n';
@@ -31,43 +32,44 @@ function Actions({ supplier, busy, onEdit, onToggleActive, onDelete }) {
   const inUse = supplier.productCount > 0 || supplier.movementCount > 0;
   const reasonId = `supplier-${supplier.id}-in-use`;
   const reason = inUse ? inUseReason(supplier) : undefined;
+  const { name } = supplier;
+
+  // Edit stays visible; Deactivate/Reactivate and Delete are in the "⋯" menu.
+  const items = [
+    {
+      key: 'toggle',
+      label: supplier.isActive ? t('suppliers.table.deactivate') : t('suppliers.table.reactivate'),
+      ariaLabel: t(
+        supplier.isActive ? 'suppliers.table.deactivateLabel' : 'suppliers.table.reactivateLabel',
+        { name },
+      ),
+      disabled: busy,
+      onSelect: () => onToggleActive(supplier),
+    },
+    {
+      key: 'delete',
+      label: t('suppliers.table.delete'),
+      ariaLabel: t('suppliers.table.deleteLabel', { name }),
+      describedBy: inUse ? reasonId : undefined,
+      title: reason,
+      destructive: true,
+      disabled: busy || inUse,
+      onSelect: () => onDelete(supplier),
+    },
+  ];
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex items-center gap-2">
       <Button
         variant="outline"
         size="sm"
-        aria-label={t('suppliers.table.editLabel', { name: supplier.name })}
+        aria-label={t('suppliers.table.editLabel', { name })}
         disabled={busy}
         onClick={() => onEdit(supplier)}
       >
         {t('suppliers.table.edit')}
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        aria-label={t(
-          supplier.isActive ? 'suppliers.table.deactivateLabel' : 'suppliers.table.reactivateLabel',
-          { name: supplier.name },
-        )}
-        disabled={busy}
-        onClick={() => onToggleActive(supplier)}
-      >
-        {supplier.isActive ? t('suppliers.table.deactivate') : t('suppliers.table.reactivate')}
-      </Button>
-      {/* A disabled button gets no hover events, so the span carries the tooltip. */}
-      <span title={reason}>
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label={t('suppliers.table.deleteLabel', { name: supplier.name })}
-          aria-describedby={inUse ? reasonId : undefined}
-          disabled={busy || inUse}
-          onClick={() => onDelete(supplier)}
-        >
-          {t('suppliers.table.delete')}
-        </Button>
-      </span>
+      <RowActionsMenu label={t('suppliers.table.moreActions', { name })} items={items} />
       {inUse && (
         <span id={reasonId} className="sr-only">
           {reason}
@@ -110,7 +112,7 @@ export function SupplierTable({
               to={`/products?supplier=${encodeURIComponent(row.original.id)}`}
               className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
-              {row.original.name}
+              <bdi>{row.original.name}</bdi>
             </Link>
             {!row.original.isActive && <StatusBadge status="inactive" />}
           </span>
@@ -120,19 +122,20 @@ export function SupplierTable({
         id: 'contactPerson',
         header: t('suppliers.table.contactPerson'),
         enableSorting: false,
-        cell: ({ row }) => row.original.contactPerson || dash,
+        cell: ({ row }) =>
+          row.original.contactPerson ? <bdi>{row.original.contactPerson}</bdi> : dash,
       },
       {
         id: 'phone',
         header: t('suppliers.table.phone'),
         enableSorting: false,
-        cell: ({ row }) => row.original.phone || dash,
+        cell: ({ row }) => (row.original.phone ? <bdi>{row.original.phone}</bdi> : dash),
       },
       {
         id: 'email',
         header: t('suppliers.table.email'),
         enableSorting: false,
-        cell: ({ row }) => row.original.email || dash,
+        cell: ({ row }) => (row.original.email ? <bdi>{row.original.email}</bdi> : dash),
       },
       {
         id: 'productCount',

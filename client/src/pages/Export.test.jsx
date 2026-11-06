@@ -72,7 +72,7 @@ describe('Movements CSV export', () => {
       route: `/movements?user=${SAM_ID}&type=ship&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&page=2&limit=50`,
     });
 
-    await user.click(await screen.findByRole('button', { name: 'Export CSV' }));
+    await user.click(await screen.findByRole('button', { name: 'Export to Excel' }));
 
     await waitFor(() => expect(saved).toHaveLength(1));
     expect(saved[0].filename).toBe('movements-2026-10-21.csv');
@@ -84,7 +84,7 @@ describe('Movements CSV export', () => {
     api({ me: staff });
     renderApp({ route: '/movements' });
 
-    await user.click(await screen.findByRole('button', { name: 'Export CSV' }));
+    await user.click(await screen.findByRole('button', { name: 'Export to Excel' }));
 
     await waitFor(() => expect(saved).toHaveLength(1));
   });
@@ -100,11 +100,11 @@ describe('Movements CSV export', () => {
     });
     renderApp({ route: '/movements' });
 
-    await user.click(await screen.findByRole('button', { name: 'Export CSV' }));
+    await user.click(await screen.findByRole('button', { name: 'Export to Excel' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Request is invalid');
     expect(saved).toHaveLength(0);
-    expect(screen.getByRole('button', { name: 'Export CSV' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Export to Excel' })).toBeEnabled();
   });
 });
 
@@ -114,7 +114,7 @@ describe('Products CSV export', () => {
     const state = api();
     renderApp({ route: '/products?search=ham&status=low_stock&sortBy=price&order=desc&page=3' });
 
-    await user.click(await screen.findByRole('button', { name: 'Export CSV' }));
+    await user.click(await screen.findByRole('button', { name: 'Export to Excel' }));
 
     await waitFor(() => expect(saved).toHaveLength(1));
     expect(saved[0].filename).toBe('products-2026-10-21.csv');
@@ -128,7 +128,7 @@ describe('Products CSV export', () => {
     const state = api();
     renderApp({ route: '/products?archived=true' });
 
-    await user.click(await screen.findByRole('button', { name: 'Export CSV' }));
+    await user.click(await screen.findByRole('button', { name: 'Export to Excel' }));
 
     await waitFor(() => expect(state.exports).toHaveLength(1));
     expect(state.exports[0].archived).toBe('true');
@@ -139,7 +139,7 @@ describe('Products CSV export', () => {
     const state = api({ me: staff });
     renderApp({ route: '/products?archived=true' });
 
-    await user.click(await screen.findByRole('button', { name: 'Export CSV' }));
+    await user.click(await screen.findByRole('button', { name: 'Export to Excel' }));
 
     await waitFor(() => expect(state.exports).toHaveLength(1));
     expect(state.exports[0].archived).toBeUndefined();
