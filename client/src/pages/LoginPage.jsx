@@ -99,6 +99,7 @@ export function LoginPage() {
             )}
             <TextField
               id="email"
+              dir="ltr"
               label={t('auth.common.email')}
               type="email"
               autoComplete="email"

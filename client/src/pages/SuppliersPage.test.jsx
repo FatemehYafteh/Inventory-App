@@ -222,6 +222,21 @@ describe('Suppliers page', () => {
 });
 
 describe('Suppliers page, admin', () => {
+  it('sets the direction of each form input by what it holds', async () => {
+    suppliersApi([acme]);
+    const user = userEvent.setup();
+    renderApp({ route: '/suppliers' });
+
+    await user.click(await screen.findByRole('button', { name: 'Add supplier' }));
+    const dialog = within(await screen.findByRole('dialog'));
+    for (const label of ['Name', 'Contact person', 'Address', 'Notes']) {
+      expect(dialog.getByLabelText(label)).toHaveAttribute('dir', 'auto');
+    }
+    for (const label of ['Phone', 'Email']) {
+      expect(dialog.getByLabelText(label)).toHaveAttribute('dir', 'ltr');
+    }
+  });
+
   it('adds a supplier from the form and shows it in the table', async () => {
     const state = suppliersApi([acme]);
     const user = userEvent.setup();

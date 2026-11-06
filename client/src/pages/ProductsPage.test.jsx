@@ -232,7 +232,11 @@ describe('Products page', () => {
 
       await row('Claw Hammer');
       await chooseRowAction(user, 'More actions for Claw Hammer', 'Archive Claw Hammer');
-      const dialog = await screen.findByRole('alertdialog', { name: 'Archive Claw Hammer?' });
+      const dialog = await screen.findByRole('alertdialog', {
+        name: /^Archive\s+Claw Hammer\s*\?$/,
+      });
+      // The product name in the title keeps its own direction.
+      expect(within(dialog).getByText('Claw Hammer').tagName).toBe('BDI');
       expect(state.writes).toEqual([]);
 
       const listsBefore = state.lists.length;
@@ -864,6 +868,49 @@ describe('Products page', () => {
       await user.click(await screen.findByRole('option', { name: 'Tools' }));
     }
 
+    it('marks the optional fields, helps with two of them and prefixes the price', async () => {
+      productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      for (const label of ['Title', 'SKU', 'Price']) {
+        expect(sheet().getByLabelText(label)).toBeInTheDocument();
+      }
+      for (const label of ['Description', 'Reorder level', 'Initial quantity']) {
+        expect(sheet().getByLabelText(`${label} (optional)`)).toBeInTheDocument();
+      }
+      expect(sheet().getByRole('combobox', { name: 'Supplier (optional)' })).toBeInTheDocument();
+      expect(sheet().getByRole('combobox', { name: 'Category' })).toBeInTheDocument();
+
+      // Help text is tied to its input.
+      expect(sheet().getByLabelText(/^Reorder level/)).toHaveAccessibleDescription(
+        'Low stock is shown when the quantity is at or below this.',
+      );
+      expect(sheet().getByLabelText(/^Initial quantity/)).toHaveAccessibleDescription(
+        'Set an initial quantity to record it as the first stock receipt.',
+      );
+      // That sentence moved out of the sheet description.
+      expect(sheet().getByText('SKUs are unique, ignoring letter case.')).toBeInTheDocument();
+
+      // A dollar sign inside the price field, which stays left to right.
+      const price = sheet().getByLabelText('Price');
+      expect(price).toHaveAttribute('dir', 'ltr');
+      expect(price.previousElementSibling).toHaveTextContent('$');
+    });
+
+    it('sets the text direction of each input by what it holds', async () => {
+      productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      expect(sheet().getByLabelText('Title')).toHaveAttribute('dir', 'auto');
+      expect(sheet().getByLabelText(/^Description/)).toHaveAttribute('dir', 'auto');
+      expect(sheet().getByLabelText('SKU')).toHaveAttribute('dir', 'ltr');
+      expect(sheet().getByLabelText('Price')).toHaveAttribute('dir', 'ltr');
+    });
+
     it('shows the fields, with an initial quantity of 0', async () => {
       productsApi([hammer]);
       const user = userEvent.setup();
@@ -878,11 +925,11 @@ describe('Products page', () => {
         'Reorder level',
         'Initial quantity',
       ]) {
-        expect(sheet().getByLabelText(label)).toBeInTheDocument();
+        expect(sheet().getByLabelText(new RegExp(`^${label}`))).toBeInTheDocument();
       }
       expect(sheet().getByRole('combobox', { name: 'Category' })).toBeInTheDocument();
-      expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('No supplier');
-      expect(sheet().getByLabelText('Initial quantity')).toHaveValue('0');
+      expect(sheet().getByRole('combobox', { name: /^Supplier/ })).toHaveTextContent('No supplier');
+      expect(sheet().getByLabelText(/^Initial quantity/)).toHaveValue('0');
     });
 
     it('validates before sending anything', async () => {
@@ -912,7 +959,7 @@ describe('Products page', () => {
       const listsBefore = state.lists.length;
 
       await fillRequired(user);
-      await user.click(sheet().getByRole('combobox', { name: 'Supplier' }));
+      await user.click(sheet().getByRole('combobox', { name: /^Supplier/ }));
       await user.click(await screen.findByRole('option', { name: 'Acme Tools' }));
       await user.click(sheet().getByRole('button', { name: 'Save' }));
 
@@ -942,16 +989,16 @@ describe('Products page', () => {
       await openAdd(user);
 
       await fillRequired(user);
-      await user.clear(sheet().getByLabelText('Initial quantity'));
-      await user.type(sheet().getByLabelText('Initial quantity'), '-3');
+      await user.clear(sheet().getByLabelText(/^Initial quantity/));
+      await user.type(sheet().getByLabelText(/^Initial quantity/), '-3');
       await user.click(sheet().getByRole('button', { name: 'Save' }));
       expect(
         await sheet().findByText('Initial quantity must be 0 or more', { selector: 'p' }),
       ).toBeInTheDocument();
       expect(state.writes).toEqual([]);
 
-      await user.clear(sheet().getByLabelText('Initial quantity'));
-      await user.type(sheet().getByLabelText('Initial quantity'), '8');
+      await user.clear(sheet().getByLabelText(/^Initial quantity/));
+      await user.type(sheet().getByLabelText(/^Initial quantity/), '8');
       await user.click(sheet().getByRole('button', { name: 'Save' }));
 
       await waitFor(() => expect(state.writes).toHaveLength(1));
@@ -977,7 +1024,7 @@ describe('Products page', () => {
       renderApp({ route: '/products' });
       await openAdd(user);
 
-      await user.click(sheet().getByRole('combobox', { name: 'Supplier' }));
+      await user.click(sheet().getByRole('combobox', { name: /^Supplier/ }));
       expect(await screen.findByRole('option', { name: 'Acme Tools' })).toBeInTheDocument();
       expect(screen.queryByRole('option', { name: /Old Mill/ })).not.toBeInTheDocument();
     });
@@ -1029,9 +1076,9 @@ describe('Products page', () => {
       expect(sheet().getByLabelText('Title')).toHaveValue('Claw Hammer');
       expect(sheet().getByLabelText('SKU')).toHaveValue('HAM-001');
       expect(sheet().getByLabelText('Price')).toHaveValue('12.5');
-      expect(sheet().queryByLabelText('Initial quantity')).not.toBeInTheDocument();
+      expect(sheet().queryByLabelText(/^Initial quantity/)).not.toBeInTheDocument();
       expect(sheet().getByRole('combobox', { name: 'Category' })).toHaveTextContent('Tools');
-      expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('Acme Tools');
+      expect(sheet().getByRole('combobox', { name: /^Supplier/ })).toHaveTextContent('Acme Tools');
 
       await user.clear(sheet().getByLabelText('Title'));
       await user.type(sheet().getByLabelText('Title'), 'Steel Claw Hammer');
@@ -1070,7 +1117,7 @@ describe('Products page', () => {
       await row('Ream');
       await chooseRowAction(user, 'More actions for Ream', 'Edit Ream');
 
-      expect(await sheet().findByRole('combobox', { name: 'Supplier' })).toHaveTextContent(
+      expect(await sheet().findByRole('combobox', { name: /^Supplier/ })).toHaveTextContent(
         'Old Mill Paper Co. (inactive)',
       );
     });

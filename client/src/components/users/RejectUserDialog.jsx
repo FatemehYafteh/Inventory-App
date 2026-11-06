@@ -1,5 +1,6 @@
 import { changeStatusSchema } from '@inventory/shared/schemas';
 import { useTranslation } from 'react-i18next';
+import { TBdi } from '@/components/BidiText';
 import { TextField } from '@/components/form/TextField';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,13 +36,17 @@ export function RejectUserDialog({ user, busy, onConfirm, onCancel }) {
         >
           <DialogHeader>
             <DialogTitle>
-              {t('users.reject.title', { name: user.name ?? t('users.reject.thisUser') })}
+              <TBdi
+                i18nKey="users.reject.title"
+                values={{ name: user.name ?? t('users.reject.thisUser') }}
+              />
             </DialogTitle>
             <DialogDescription>{t('users.reject.description')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
             <TextField
               id="reject-reason"
+              dir="auto"
               label={t('users.reject.reasonLabel')}
               error={errors.reason}
               {...register('reason')}

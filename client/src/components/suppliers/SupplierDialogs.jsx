@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { TBdi } from '@/components/BidiText';
 import { productCountLabel } from '@/components/categories/CategoryCard';
 import {
   AlertDialog,
@@ -44,7 +45,7 @@ export function DeleteSupplierDialog({ supplier, ...props }) {
   return (
     <ConfirmDialog
       supplier={supplier}
-      title={t('suppliers.dialogs.deleteTitle', { name: supplier?.name })}
+      title={<TBdi i18nKey="suppliers.dialogs.deleteTitle" values={{ name: supplier?.name }} />}
       description={t('suppliers.dialogs.deleteDescription')}
       action={t('suppliers.dialogs.delete')}
       {...props}
@@ -57,7 +58,7 @@ export function DeactivateSupplierDialog({ supplier, ...props }) {
   return (
     <ConfirmDialog
       supplier={supplier}
-      title={t('suppliers.dialogs.deactivateTitle', { name: supplier?.name })}
+      title={<TBdi i18nKey="suppliers.dialogs.deactivateTitle" values={{ name: supplier?.name }} />}
       description={t('suppliers.dialogs.deactivateDescription', {
         products: supplier ? productCountLabel(supplier.productCount) : '',
       })}

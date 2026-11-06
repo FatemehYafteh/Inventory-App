@@ -62,6 +62,7 @@ export function ProductFilters({
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <Input
           type="search"
+          dir="auto"
           aria-label={t('products.filters.searchLabel')}
           placeholder={t('products.filters.searchPlaceholder')}
           className="sm:max-w-xs"

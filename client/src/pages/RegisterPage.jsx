@@ -87,6 +87,7 @@ export function RegisterPage() {
             <FormAlert>{formError}</FormAlert>
             <TextField
               id="name"
+              dir="auto"
               label={t('auth.common.name')}
               autoComplete="name"
               error={errors.name}
@@ -94,6 +95,7 @@ export function RegisterPage() {
             />
             <TextField
               id="email"
+              dir="ltr"
               label={t('auth.common.email')}
               type="email"
               autoComplete="email"
