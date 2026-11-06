@@ -293,9 +293,11 @@ describe('Profile page', () => {
     renderApp({ route: '/profile' });
 
     await screen.findByRole('heading', { name: 'Profile' });
-    expect(screen.getByText('AA')).toHaveAttribute('aria-hidden', 'true');
-    expect(screen.getByText('Admin')).toBeInTheDocument();
-    expect(screen.getByText('Active')).toBeInTheDocument();
+    // The sidebar footer also shows the initials and role, so look inside the page content.
+    const page = within(screen.getByRole('main'));
+    expect(page.getByText('AA')).toHaveAttribute('aria-hidden', 'true');
+    expect(page.getByText('Admin')).toBeInTheDocument();
+    expect(page.getByText('Active')).toBeInTheDocument();
   });
 
   it('wraps a very long email and name instead of overflowing', async () => {
