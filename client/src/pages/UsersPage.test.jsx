@@ -160,7 +160,7 @@ describe('UsersPage tabs and table', () => {
     expect(pending.getByText('@pat_tg')).toBeInTheDocument();
     expect(pending.getByText('Email')).toBeInTheDocument();
     expect(pending.getByText('Telegram')).toBeInTheDocument();
-    expect(pending.getByText('staff')).toBeInTheDocument();
+    expect(pending.getByText('Staff')).toBeInTheDocument();
     expect(pending.getByText('pending')).toBeInTheDocument();
     expect(pending.getAllByText(/2026/)).toHaveLength(2);
     expect(within(rowOf('Quinn Queue')).getByText('Never')).toBeInTheDocument();
@@ -463,7 +463,7 @@ describe('UsersPage detail drawer', () => {
     expect(d.getByText('rex@example.com')).toBeInTheDocument();
     expect(d.getByText('Verified')).toBeInTheDocument();
     expect(d.getByText('rejected')).toBeInTheDocument();
-    expect(d.getByText('staff')).toBeInTheDocument();
+    expect(d.getByText('Staff')).toBeInTheDocument();
     expect(d.getByText('Not on the team')).toBeInTheDocument();
     expect(d.getByText('Never')).toBeInTheDocument();
   });
