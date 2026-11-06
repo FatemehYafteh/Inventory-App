@@ -1,4 +1,5 @@
 import { Brand } from '@/components/Brand';
+import { LogOutIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -15,6 +16,23 @@ const focusRing =
 /** Navy-surface Log out button, shared by the sidebar, the mobile menu and the minimal bar. */
 export const sidebarButtonClass =
   'border-sidebar-accent bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring';
+
+/**
+ * Avatar initials. Latin names give the first letter of the first two words ("FY"). Persian and
+ * Arabic names give only the first letter of the first word, because joined letters such as "فی"
+ * would read as a word.
+ */
+export function initials(name) {
+  const words = (name ?? '').trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '?';
+  const first = Array.from(words[0])[0];
+  if (/\p{Script=Arabic}/u.test(first)) return first;
+  return words
+    .slice(0, 2)
+    .map((word) => Array.from(word)[0])
+    .join('')
+    .toUpperCase();
+}
 
 /** First focusable element: jumps past the navigation to the page content. */
 export function SkipLink({ targetRef }) {
@@ -70,29 +88,51 @@ export function SidebarNav({ items, pendingCount, user, onLogout, logoutPending,
         ))}
       </nav>
       <div className="flex flex-col gap-2 border-t border-sidebar-accent pt-4">
-        <Link
-          to="/profile"
-          onClick={onNavigate}
-          className={cn(
-            'truncate rounded-sm px-3 text-sm text-sidebar-muted hover:text-sidebar-foreground hover:underline',
-            focusRing,
-          )}
-        >
-          {user?.name}
-        </Link>
-        <div className="flex flex-col gap-2 px-3">
+        <div className="grid grid-cols-2 gap-2">
           <LanguageSwitcher tone="sidebar" />
           <ThemeSwitcher tone="sidebar" />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn('justify-start', sidebarButtonClass)}
-          onClick={onLogout}
-          disabled={logoutPending}
-        >
-          {t('layout.logOut')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/profile"
+            onClick={onNavigate}
+            className={cn(
+              'flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 hover:bg-sidebar-accent',
+              focusRing,
+            )}
+          >
+            <span
+              aria-hidden="true"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground"
+            >
+              {initials(user?.name)}
+            </span>
+            <span className="flex min-w-0 flex-col">
+              <span
+                title={user?.name}
+                className="min-w-0 truncate text-sm font-medium text-sidebar-foreground"
+              >
+                {user?.name}
+              </span>
+              {user?.role && (
+                <span className="min-w-0 truncate text-xs text-sidebar-muted">
+                  {t(`common.role.${user.role}`)}
+                </span>
+              )}
+            </span>
+          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn('size-8 shrink-0 p-0', sidebarButtonClass)}
+            onClick={onLogout}
+            disabled={logoutPending}
+            aria-label={t('layout.logOut')}
+            title={t('layout.logOut')}
+          >
+            <LogOutIcon className="size-4 rtl:-scale-x-100" aria-hidden="true" />
+          </Button>
+        </div>
       </div>
     </div>
   );
