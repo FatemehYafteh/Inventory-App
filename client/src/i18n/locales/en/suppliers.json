@@ -1,5 +1,6 @@
 {
   "title": "Suppliers",
+  "description": "Suppliers and their contact details.",
   "add": "Add supplier",
   "emptySearch": "No suppliers match your search.",
   "empty": "No suppliers yet.",

@@ -137,6 +137,7 @@ export function SuppliersPage() {
       <PageHeader
         ref={headingRef}
         title={t('suppliers.title')}
+        description={t('suppliers.description')}
         actions={canManage && <Button onClick={() => onEdit(null)}>{t('suppliers.add')}</Button>}
       />
       <FormAlert>{actionError}</FormAlert>
