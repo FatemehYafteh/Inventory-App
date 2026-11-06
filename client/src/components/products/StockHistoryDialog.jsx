@@ -50,46 +50,40 @@ function buildColumns(t) {
       ),
     },
     {
-      id: 'quantityBefore',
-      header: t('products.history.before'),
+      id: 'quantityBeforeAfter',
+      header: t('products.history.beforeAfter'),
       enableSorting: false,
       cell: ({ row }) => (
-        <span className="tabular-nums">{formatNumber(row.original.quantityBefore)}</span>
+        <span className="whitespace-nowrap tabular-nums">
+          {t('products.history.beforeAfterValue', {
+            before: formatNumber(row.original.quantityBefore),
+            after: formatNumber(row.original.quantityAfter),
+          })}
+        </span>
       ),
-    },
-    {
-      id: 'quantityAfter',
-      header: t('products.history.after'),
-      enableSorting: false,
-      cell: ({ row }) => (
-        <span className="tabular-nums">{formatNumber(row.original.quantityAfter)}</span>
-      ),
-    },
-    {
-      id: 'supplier',
-      header: t('products.history.supplier'),
-      enableSorting: false,
-      cell: ({ row }) =>
-        row.original.supplier ? (
-          <span className="[overflow-wrap:anywhere]">
-            <bdi>{row.original.supplier.name}</bdi>
-          </span>
-        ) : (
-          dash
-        ),
     },
     {
       id: 'note',
       header: t('products.history.note'),
       enableSorting: false,
+      // The supplier of a receive sits under the note, so it needs no column of its own.
       cell: ({ row }) => {
         const note = movementNote(t, row.original);
-        return note ? (
-          <span className="[overflow-wrap:anywhere]">
-            <bdi>{note}</bdi>
-          </span>
-        ) : (
-          dash
+        const { supplier } = row.original;
+        if (!note && !supplier) return dash;
+        return (
+          <div className="flex min-w-32 flex-col gap-0.5 [overflow-wrap:anywhere]">
+            {note && (
+              <span>
+                <bdi>{note}</bdi>
+              </span>
+            )}
+            {supplier && (
+              <span className="text-xs text-muted-foreground">
+                <bdi>{supplier.name}</bdi>
+              </span>
+            )}
+          </div>
         );
       },
     },
@@ -126,19 +120,22 @@ export function StockHistoryDialog({ product, onClose, onCloseAutoFocus }) {
             {t('products.history.description', { title: product.title, sku: product.sku })}
           </DialogDescription>
         </DialogHeader>
-        <DataTable
-          columns={columns}
-          data={items}
-          rowCount={movements.data?.total ?? 0}
-          sorting={NO_SORTING}
-          onSortingChange={() => {}}
-          pagination={pagination}
-          onPaginationChange={setPagination}
-          pageSizeOptions={PAGE_SIZE_OPTIONS}
-          isLoading={movements.isPending}
-          error={movements.error}
-          emptyMessage={t('products.history.empty')}
-        />
+        {/* min-w-0 lets the table scroll inside the dialog instead of widening it. */}
+        <div className="min-w-0">
+          <DataTable
+            columns={columns}
+            data={items}
+            rowCount={movements.data?.total ?? 0}
+            sorting={NO_SORTING}
+            onSortingChange={() => {}}
+            pagination={pagination}
+            onPaginationChange={setPagination}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            isLoading={movements.isPending}
+            error={movements.error}
+            emptyMessage={t('products.history.empty')}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

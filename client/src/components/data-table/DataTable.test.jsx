@@ -106,7 +106,10 @@ describe('DataTable', () => {
     expect(onChange).toHaveBeenLastCalledWith({
       pagination: expect.objectContaining({ pageSize: 50 }),
     });
-    expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
+    // 45 rows fit on one page of 50: the controls go, the count stays.
+    expect(screen.queryByText(/Page 1 of/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Rows per page')).not.toBeInTheDocument();
+    expect(screen.getByText('45 results')).toBeInTheDocument();
   });
 
   it('shows the toolbar above the table', () => {
@@ -122,7 +125,8 @@ describe('DataTable', () => {
 
     rerender(<Harness data={noRows} rowCount={0} emptyMessage="No products found." />);
     expect(screen.getByText('No products found.')).toBeInTheDocument();
-    expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
+    expect(screen.getByText('0 results')).toBeInTheDocument();
+    expect(screen.queryByText(/Page 1 of/)).not.toBeInTheDocument();
 
     rerender(<Harness data={noRows} rowCount={0} error={new Error('Could not load products.')} />);
     expect(screen.getByRole('alert')).toHaveTextContent('Could not load products.');
