@@ -20,6 +20,7 @@
     "anyDate": "Any date",
     "dateRange": "{{from}} to {{to}}",
     "clearDates": "Clear dates",
+    "applyDates": "Apply",
     "clear": "Clear filters"
   },
   "columns": {

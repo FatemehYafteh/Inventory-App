@@ -54,7 +54,7 @@ export function MobileFilters({
           <div className="flex flex-col gap-4 px-4">{children}</div>
           <SheetFooter className="flex-col-reverse gap-2">
             <SheetClose asChild>
-              <Button>{t('common.done')}</Button>
+              <Button>{t('common.apply')}</Button>
             </SheetClose>
             <Button variant="outline" disabled={!canClear} onClick={onClear}>
               {clearLabel}

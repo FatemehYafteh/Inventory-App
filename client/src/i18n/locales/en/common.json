@@ -2,7 +2,7 @@
   "save": "Save",
   "cancel": "Cancel",
   "close": "Close",
-  "done": "Done",
+  "apply": "Apply",
   "filters": "Filters",
   "filtersActive_one": "{{count}} active filter",
   "filtersActive_other": "{{count}} active filters",

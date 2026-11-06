@@ -208,10 +208,32 @@ describe('MovementsPage', () => {
     expect(screen.getByRole('button', { name: 'Dates' })).toHaveTextContent(
       'Oct 14, 2026 to Oct 20, 2026',
     );
+    // Picking the end date closes the calendar.
+    expect(screen.queryByRole('button', { name: 'Clear dates' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Clear dates' }));
+    await user.click(screen.getByRole('button', { name: 'Dates' }));
+    await user.click(await screen.findByRole('button', { name: 'Clear dates' }));
     await waitFor(() => expect(lastQuery(state).from).toBeUndefined());
     expect(lastQuery(state).to).toBeUndefined();
+  });
+
+  it('closes the calendar with Apply when only one day was picked', async () => {
+    const user = userEvent.setup();
+    const state = movementsApi([received]);
+    const start = new Date(2026, 9, 14).toISOString();
+    renderApp({ route: `/movements?from=${encodeURIComponent(start)}` });
+    await screen.findByText('Claw Hammer');
+
+    await user.click(screen.getByRole('button', { name: 'Dates' }));
+    await user.click(await screen.findByRole('button', { name: /October 14th, 2026/ }));
+    // One day is not a finished range, so the calendar stays open.
+    await waitFor(() =>
+      expect(lastQuery(state)).toMatchObject({ from: new Date(2026, 9, 14).toISOString() }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    expect(screen.queryByRole('button', { name: 'Clear dates' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dates' })).toHaveTextContent('Oct 14, 2026');
   });
 
   it('asks the API for the next page', async () => {
@@ -303,5 +325,47 @@ describe('Movements page on a phone', () => {
     const sheet = within(await screen.findByRole('dialog', { name: 'Filters' }));
     expect(sheet.getByRole('combobox', { name: 'Type' })).toBeInTheDocument();
     expect(sheet.getByRole('button', { name: 'Clear filters' })).toBeEnabled();
+  });
+});
+
+describe('Movements date range in the phone filters sheet', () => {
+  let restore = () => {};
+  beforeEach(() => {
+    restore = mockMobile();
+  });
+  afterEach(() => restore());
+
+  it('opens the calendar inline in the sheet, closes it after the end date, and Apply is one tap', async () => {
+    const user = userEvent.setup();
+    const state = movementsApi([received]);
+    const start = new Date(2026, 9, 14).toISOString();
+    renderApp({ route: `/movements?from=${encodeURIComponent(start)}` });
+    await screen.findByText('Claw Hammer');
+
+    await user.click(screen.getByRole('button', { name: /^Filters/ }));
+    const sheet = within(await screen.findByRole('dialog', { name: 'Filters' }));
+    const dates = sheet.getByRole('button', { name: 'Dates' });
+    expect(dates).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(dates);
+    // Inline: the calendar is inside the sheet itself, not in a floating popover layer.
+    expect(dates).toHaveAttribute('aria-expanded', 'true');
+    const day = await sheet.findByRole('button', { name: /October 20th, 2026/ });
+    expect(document.querySelector('[data-radix-popper-content-wrapper]')).toBeNull();
+
+    await user.click(day);
+    await waitFor(() =>
+      expect(lastQuery(state)).toMatchObject({ to: new Date(2026, 9, 21).toISOString() }),
+    );
+    // The end date closes the calendar again; the field shows the range.
+    await waitFor(() => expect(dates).toHaveAttribute('aria-expanded', 'false'));
+    expect(dates).toHaveTextContent('Oct 14, 2026 to Oct 20, 2026');
+
+    // With the calendar open, one tap on the sheet's Apply closes the sheet.
+    await user.click(dates);
+    expect(await sheet.findByRole('button', { name: 'Clear dates' })).toBeInTheDocument();
+    const applyButtons = sheet.getAllByRole('button', { name: 'Apply' });
+    await user.click(applyButtons.at(-1));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });

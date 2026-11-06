@@ -1166,7 +1166,7 @@ describe('Products page on a phone', () => {
     await user.click(sheet.getByRole('button', { name: 'Clear filters' }));
     await waitFor(() => expect(lastList(state)).not.toHaveProperty('category'));
     expect(lastList(state)).not.toHaveProperty('status');
-    await user.click(sheet.getByRole('button', { name: 'Done' }));
+    await user.click(sheet.getByRole('button', { name: 'Apply' }));
     expect(screen.getByRole('button', { name: /^Filters/ })).not.toHaveTextContent('2');
   });
 
