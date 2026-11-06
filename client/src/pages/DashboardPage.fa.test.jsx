@@ -59,7 +59,7 @@ describe('Dashboard texts in Persian', () => {
     expect(within(card('مجموع تعداد')).getByText('۳۴۵')).toBeInTheDocument();
     expect(within(card('در انتظار تأیید')).getByText('۲')).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: 'نیازمند تأمین مجدد' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'رسیده به نقطه سفارش' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ثبت ورود Claw Hammer' })).toBeInTheDocument();
     expect(screen.getByText('۲ عدد موجود، نقطه سفارش ۱۰')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'آخرین گردش‌های کالا' })).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe('Dashboard texts in Persian', () => {
     await i18n.changeLanguage('fa');
     renderApp({ route: '/' });
 
-    const low = (await screen.findByRole('heading', { name: 'نیازمند تأمین مجدد' })).closest(
+    const low = (await screen.findByRole('heading', { name: 'رسیده به نقطه سفارش' })).closest(
       'div',
     ).parentElement;
     const recent = screen

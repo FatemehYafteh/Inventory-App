@@ -142,6 +142,21 @@ describe('DashboardPage', () => {
     );
   });
 
+  it('starts each restock row with the product name, not a repeated quantity', async () => {
+    dashboardApi();
+    renderApp({ route: '/' });
+
+    const heading = await screen.findByRole('heading', { name: 'Needs restocking' });
+    const items = within(heading.closest('div').parentElement).getAllByRole('listitem');
+    for (const item of items) {
+      expect(item.firstElementChild).toContainElement(
+        within(item).getByText(/in stock, reorder at/),
+      );
+      expect(item.firstElementChild.querySelector('[aria-hidden]')).toBeNull();
+    }
+    expect(items[0].firstElementChild).toHaveTextContent(/^Wood Glue/);
+  });
+
   it('caps Needs restocking at 5 rows and says how many more there are', async () => {
     dashboardApi({
       body: { ...data, lowStock: Array.from({ length: 7 }, (_, i) => manyLow(i)) },
@@ -203,8 +218,10 @@ describe('DashboardPage', () => {
     const items = section.getAllByRole('listitem');
     expect(items).toHaveLength(2);
     expect(within(items[0]).getByText('+40')).toBeInTheDocument();
-    expect(within(items[0]).getByText('Receive')).toBeInTheDocument();
-    expect(within(items[0]).getByText('admin')).toBeInTheDocument();
+    // The type is a small outline badge, so it does not read as a link.
+    expect(within(items[0]).getByText('Receive')).toHaveClass('border', 'rounded-md');
+    expect(within(items[0]).queryByRole('link')).toBeNull();
+    expect(within(items[0]).getByText('Admin')).toBeInTheDocument();
     expect(within(items[1]).getByText('−3')).toBeInTheDocument();
     expect(within(items[1]).getByText('Sam Staff')).toBeInTheDocument();
     expect(section.getByRole('link', { name: 'View all movements' })).toHaveAttribute(

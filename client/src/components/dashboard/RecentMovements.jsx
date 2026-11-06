@@ -43,7 +43,7 @@ export function RecentMovements({ items }) {
                   </span>
                 </span>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                  <span>{t(`movements.types.${item.type}`)}</span>
+                  <Badge variant="outline">{t(`movements.types.${item.type}`)}</Badge>
                   <span aria-hidden="true">·</span>
                   <span className="[overflow-wrap:anywhere]">
                     <bdi>{item.performedBy.name}</bdi>

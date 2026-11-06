@@ -110,13 +110,13 @@ describe('MovementsPage', () => {
     expect(first.getByText('Acme Tools')).toBeInTheDocument();
     expect(first.getByText('Initial stock')).toBeInTheDocument();
     expect(first.getByText('Ana Admin')).toBeInTheDocument();
-    expect(first.getByText('admin')).toBeInTheDocument();
+    expect(first.getByText('Admin')).toBeInTheDocument();
 
     const second = within(rows[2]);
     expect(second.getByText('Ship')).toBeInTheDocument();
     expect(second.getByText('−3')).toBeInTheDocument();
     expect(second.getByText('Sam Staff')).toBeInTheDocument();
-    expect(second.getByText('staff')).toBeInTheDocument();
+    expect(second.getByText('Staff')).toBeInTheDocument();
   });
 
   it('opens already filtered from a link, such as the Users drawer', async () => {

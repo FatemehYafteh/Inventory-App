@@ -16,8 +16,8 @@
     "rejected": "Rejected"
   },
   "role": {
-    "admin": "admin",
-    "staff": "staff"
+    "admin": "Admin",
+    "staff": "Staff"
   },
   "empty": {
     "search": "No users match your search.",
