@@ -27,6 +27,12 @@ export function inUseReason({ productCount, movementCount }) {
 
 const dash = <span className="text-muted-foreground">—</span>;
 
+const linkClass =
+  'rounded-sm text-primary-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50';
+
+// Emails and phone numbers read left to right in every language, isolated from the text around.
+const ltr = '[unicode-bidi:isolate] [overflow-wrap:anywhere]';
+
 function Actions({ supplier, busy, onEdit, onToggleActive, onDelete }) {
   const { t } = useTranslation();
   const inUse = supplier.productCount > 0 || supplier.movementCount > 0;
@@ -129,19 +135,44 @@ export function SupplierTable({
         id: 'phone',
         header: t('suppliers.table.phone'),
         enableSorting: false,
-        cell: ({ row }) => (row.original.phone ? <bdi>{row.original.phone}</bdi> : dash),
+        cell: ({ row }) =>
+          row.original.phone ? (
+            <a
+              href={`tel:${row.original.phone.replace(/[^\d+]/g, '')}`}
+              dir="ltr"
+              className={`${linkClass} ${ltr}`}
+            >
+              {row.original.phone}
+            </a>
+          ) : (
+            dash
+          ),
       },
       {
         id: 'email',
         header: t('suppliers.table.email'),
         enableSorting: false,
-        cell: ({ row }) => (row.original.email ? <bdi>{row.original.email}</bdi> : dash),
+        cell: ({ row }) =>
+          row.original.email ? (
+            <a href={`mailto:${row.original.email}`} dir="ltr" className={`${linkClass} ${ltr}`}>
+              {row.original.email}
+            </a>
+          ) : (
+            dash
+          ),
       },
       {
         id: 'productCount',
         header: t('suppliers.table.productCount'),
         enableSorting: false,
-        cell: ({ row }) => row.original.productCount,
+        cell: ({ row }) => (
+          <Link
+            to={`/products?supplier=${encodeURIComponent(row.original.id)}`}
+            className={`${linkClass} tabular-nums`}
+          >
+            {formatNumber(row.original.productCount)}
+          </Link>
+        ),
       },
       ...(canManage
         ? [
