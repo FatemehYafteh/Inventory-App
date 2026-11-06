@@ -5,7 +5,7 @@ import { RefreshToken } from '../src/models/RefreshToken.js';
 import { StatusChange } from '../src/models/StatusChange.js';
 import { StockMovement } from '../src/models/StockMovement.js';
 import { Supplier } from '../src/models/Supplier.js';
-import { User } from '../src/models/User.js';
+import { User, isProfileComplete } from '../src/models/User.js';
 import { SYSTEM_NAME } from '../src/services/adminBootstrap.service.js';
 import { hashPassword } from '../src/services/password.service.js';
 import { categories } from './data/categories.js';
@@ -259,6 +259,22 @@ export async function seedDatabase({
   const passwordHash = await hashPassword(password);
   const { byKey: usersByKey, created: usersCreated } = await seedUsers(passwordHash, now);
   const statusChangesCreated = await seedStatusChanges(usersByKey, now);
+  // Only active, profile-complete users can change stock (PRD section 7).
+  const performers = [usersByKey.admin, usersByKey.staff, usersByKey.staff2];
+  const catalog = await seedCatalog({ performers, now });
+
+  return {
+    users: usersCreated,
+    statusChanges: statusChangesCreated,
+    categories: catalog.categories,
+    suppliers: catalog.suppliers,
+    products: catalog.products,
+    movements: catalog.movements,
+  };
+}
+
+/** Categories, suppliers, products and their stock history; shared by the seed and the demo reset. */
+async function seedCatalog({ performers, now }) {
   const { byName: categoriesByTitle, created: categoriesCreated } = await upsertByName(
     Category,
     'title',
@@ -269,22 +285,40 @@ export async function seedDatabase({
     'name',
     suppliers,
   );
-
-  // Only active, profile-complete users can change stock (PRD section 7).
-  const performers = [usersByKey.admin, usersByKey.staff, usersByKey.staff2];
   const { created: productsCreated, movementCount } = await seedProducts({
     categoriesByTitle,
     suppliersByName,
     performers,
     now,
   });
-
   return {
-    users: usersCreated,
-    statusChanges: statusChangesCreated,
     categories: categoriesCreated,
     suppliers: suppliersCreated,
     products: productsCreated,
     movements: movementCount,
   };
+}
+
+/**
+ * Deletes and reseeds only the demo catalog: products, stock movements, categories and
+ * suppliers. Every user, session (refresh tokens), email token and status change is kept as it
+ * is, and no user is created, so real accounts and logins survive. The stock history is
+ * attributed to existing active users with a complete profile (admins first, up to three); with
+ * none it stops before deleting anything.
+ */
+export async function resetDemoData({ now = new Date() } = {}) {
+  const candidates = await User.find({ status: 'active' }).sort({ role: 1, createdAt: 1 });
+  const performers = candidates.filter((user) => isProfileComplete(user)).slice(0, 3);
+  if (performers.length === 0) {
+    throw new Error(
+      'No active user with a complete profile to attribute the stock history to. Nothing was changed.',
+    );
+  }
+
+  await Promise.all(
+    [StockMovement, Product, Supplier, Category].map((Model) => Model.deleteMany({})),
+  );
+  await Promise.all([Category, Supplier, Product, StockMovement].map((Model) => Model.init()));
+  const created = await seedCatalog({ performers, now });
+  return { ...created, usersKept: await User.countDocuments() };
 }

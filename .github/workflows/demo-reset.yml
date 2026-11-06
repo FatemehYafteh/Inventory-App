@@ -1,0 +1,54 @@
+# Replaces the demo catalog in the production database (Atlas), from GitHub's servers.
+# Run it from the Actions tab: "Reset demo data" > Run workflow, and type RESET to confirm.
+# Needs the repository secret MONGODB_URI (Settings > Secrets and variables > Actions).
+# Deletes and reseeds products, stock movements, categories and suppliers. Every user, session
+# and sign-in is kept (unlike `npm run seed:reset -w server`, which deletes users too).
+name: Reset demo data
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type RESET to delete and reseed products, movements, categories and suppliers (users are kept)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seed
+  cancel-in-progress: false
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check the confirmation
+        if: ${{ inputs.confirm != 'RESET' }}
+        run: |
+          echo "Type RESET in the confirm field to run this workflow."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install server dependencies
+        run: npm ci --omit=dev
+
+      - name: Reset the demo data
+        working-directory: server
+        run: node scripts/seed-demo-reset.js
+        env:
+          NODE_ENV: development
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          # The reset never signs tokens or builds links; loadConfig only needs valid values.
+          JWT_ACCESS_SECRET: seed-only-placeholder-not-used-anywhere-000
+          JWT_REFRESH_SECRET: seed-only-placeholder-not-used-anywhere-111
+          CLIENT_ORIGIN: https://inventory-app-drab-tau.vercel.app
+          APP_URL: https://inventory-app-drab-tau.vercel.app
