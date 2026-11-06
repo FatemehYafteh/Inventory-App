@@ -40,7 +40,7 @@ export function parseStep(step, before) {
 }
 
 function noteFor(type, index, productIndex) {
-  if (index === 0) return 'Initial stock';
+  if (index === 0) return undefined; // the initial stock carries a reason, not a note
   if (type === 'receive') return `Purchase order PO-${2400 + productIndex * 10 + index}`;
   if (type === 'ship') return `Customer order SO-${5100 + productIndex * 10 + index}`;
   if (type === 'adjust') return 'Stock count correction';
@@ -73,6 +73,8 @@ export function buildHistory(spec, { productIndex, now, performers }) {
       quantityBefore: quantity,
       quantityAfter: quantity + change,
       note: noteFor(type, index, productIndex),
+      // The first step is the product's initial stock, marked rather than written as English text.
+      ...(index === 0 && { reason: 'initial' }),
       performedBy: performer._id,
       performedByName: performer.name,
       createdAt: new Date(start + (index * spacing + 1) * DAY_MS + productIndex * 60_000),

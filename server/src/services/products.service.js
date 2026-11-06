@@ -7,7 +7,6 @@ import { Supplier } from '../models/Supplier.js';
 import { AppError } from '../utils/AppError.js';
 
 const CASE_INSENSITIVE = { locale: 'en', strength: 2 };
-const INITIAL_STOCK_NOTE = 'Initial stock';
 
 function notFound() {
   return new AppError(404, 'NOT_FOUND', m.PRODUCT_NOT_FOUND);
@@ -187,7 +186,7 @@ async function presentById(id) {
 }
 
 /**
- * A new product starts at 0, or at `initialQuantity`: then the product and one "Initial stock"
+ * A new product starts at 0, or at `initialQuantity`: then the product and one `initial`
  * receive movement (recording the product's supplier and the creator) are written in the same
  * transaction, so quantity and history agree from the start. After that, quantity only changes
  * through stock actions.
@@ -223,7 +222,7 @@ export async function createProduct(
               quantityBefore: 0,
               quantityAfter: initialQuantity,
               ...(supplier && { supplier }),
-              note: INITIAL_STOCK_NOTE,
+              reason: 'initial',
               performedBy: user._id,
               performedByName: user.name,
             },

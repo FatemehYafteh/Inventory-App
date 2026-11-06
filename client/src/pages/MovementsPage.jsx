@@ -69,7 +69,15 @@ export function MovementsPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title={t('movements.page.title')} description={t('movements.page.description')} />
+      <PageHeader
+        title={t('movements.page.title')}
+        description={t('movements.page.description')}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <ExportCsvButton path={exportPath} />
+          </div>
+        }
+      />
       <MovementTable
         movements={movements.data?.items ?? []}
         total={movements.data?.total ?? 0}
@@ -96,7 +104,6 @@ export function MovementsPage() {
             performers={performers.data?.items ?? []}
             includeArchived={isAdmin}
             onChange={update}
-            actions={<ExportCsvButton path={exportPath} />}
             canClear={filtered}
             onClear={() =>
               update({

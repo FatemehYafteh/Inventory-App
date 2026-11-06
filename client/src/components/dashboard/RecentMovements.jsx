@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { MovementTypeBadge } from '@/components/movements/MovementTypeBadge';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { formatDateTime, formatNumber } from '@/lib/format';
@@ -43,7 +44,7 @@ export function RecentMovements({ items }) {
                   </span>
                 </span>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                  <Badge variant="outline">{t(`movements.types.${item.type}`)}</Badge>
+                  <MovementTypeBadge type={item.type} />
                   <span aria-hidden="true">·</span>
                   <span className="[overflow-wrap:anywhere]">
                     <bdi>{item.performedBy.name}</bdi>

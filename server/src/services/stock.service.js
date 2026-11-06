@@ -1,7 +1,7 @@
 import { m } from '@inventory/shared/errorCodes';
 import mongoose from 'mongoose';
 import { Product } from '../models/Product.js';
-import { StockMovement } from '../models/StockMovement.js';
+import { StockMovement, reasonAndNote } from '../models/StockMovement.js';
 import { AppError } from '../utils/AppError.js';
 
 const notFound = () => new AppError(404, 'NOT_FOUND', m.PRODUCT_NOT_FOUND);
@@ -107,7 +107,7 @@ function presentMovement(movement) {
     supplier: movement.supplier?.name
       ? { id: movement.supplier.id, name: movement.supplier.name }
       : null,
-    note: movement.note ?? '',
+    ...reasonAndNote(movement),
     performedBy: { id: String(movement.performedBy), name: movement.performedByName },
     createdAt: movement.createdAt,
   };

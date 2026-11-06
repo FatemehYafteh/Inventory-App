@@ -20,7 +20,6 @@ export function MovementFilters({
   onChange,
   canClear,
   onClear,
-  actions = null,
 }) {
   const { t } = useTranslation();
   return (
@@ -55,7 +54,6 @@ export function MovementFilters({
       <Button variant="outline" size="sm" disabled={!canClear} onClick={onClear}>
         {t('movements.filters.clear')}
       </Button>
-      {actions}
     </div>
   );
 }

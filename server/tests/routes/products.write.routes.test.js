@@ -89,7 +89,7 @@ describe('POST /api/products', () => {
       ...extra,
     });
 
-    it('creates the product at that quantity with one "Initial stock" receive', async () => {
+    it('creates the product at that quantity with one initial receive', async () => {
       const app = buildApp();
       const actor = await staff();
       const cat = await category();
@@ -106,10 +106,11 @@ describe('POST /api/products', () => {
         quantityChange: 12,
         quantityBefore: 0,
         quantityAfter: 12,
-        note: 'Initial stock',
+        reason: 'initial',
         performedByName: 'Sam Staff',
       });
       expect(String(movements[0].performedBy)).toBe(actor.id);
+      expect(movements[0].note).toBeUndefined();
       expect(String(movements[0].supplier)).toBe(supplier.id);
     });
 

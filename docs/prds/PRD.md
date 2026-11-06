@@ -142,6 +142,7 @@ Server-side checks are the source of truth; hiding buttons in the UI is only a c
 - `quantityChange` (signed integer), `quantityBefore`, `quantityAfter`
 - `supplier` (ref Supplier, optional): snapshot of the product's supplier at the time of a `receive`
 - `note` (optional)
+- `reason` (optional marker the system sets, such as `initial`; the client translates it, so no English text is stored in `note`)
 - `performedBy` (ref User, **required**): the authenticated user who made the change, taken from the access token on the server, never from the request body. Applies to every movement type, including inline +/- clicks and the initial stock on product creation.
 - `performedByName` (string snapshot of the user's name at that time, kept for readable history)
 - `createdAt` (immutable; movements are never edited or deleted)
@@ -297,7 +298,7 @@ Password reset works only through email. There is no reset through Telegram.
    - **Adjust**: set a new absolute quantity; the system records the difference. Same-as-current is rejected.
    - Optional note. Shows current and resulting quantity before submit.
 
-**Add Product:** sheet/modal form. Optional initial quantity creates a `receive` movement noted "Initial stock".
+**Add Product:** sheet/modal form. Optional initial quantity creates a `receive` movement with `reason: "initial"` (a marker the client translates; the note stays empty).
 
 ### 5.3 Categories Page
 - Responsive grid of cards: title, description, product count.

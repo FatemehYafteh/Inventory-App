@@ -25,6 +25,7 @@ Every quantity change is atomic, can never oversell, and leaves exactly one immu
 - `quantityChange` (signed integer), `quantityBefore`, `quantityAfter`
 - `supplier` (ref, optional): snapshot of the product's supplier at the time of a `receive`
 - `note` (optional)
+- `reason` (optional marker, `initial`; movements written before it existed carry the English note "Initial stock", which the API maps to the same marker)
 - `performedBy` (ref User, **required**), `performedByName` (snapshot)
 - `createdAt` (immutable). Movements are never edited or deleted.
 - Indexes: `product + createdAt`, `type`, `supplier`, `performedBy + createdAt`
@@ -53,7 +54,7 @@ await StockMovement.create([{ product: _id, type, quantityChange: delta,
 - Archived products are refused until restored.
 
 ### 4.2 Initial stock
-- An optional initial quantity on Add Product creates a `receive` movement with note "Initial stock", in the same transaction as the product insert.
+- An optional initial quantity on Add Product creates a `receive` movement with `reason: "initial"` (shown as "Initial stock" / "موجودی اولیه"), in the same transaction as the product insert.
 
 ### 4.3 Inline quantity
 - `-` and `+` beside the quantity; each click is one `decrement` / `increment` of 1.
