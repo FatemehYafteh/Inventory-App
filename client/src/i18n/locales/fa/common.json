@@ -1,6 +1,11 @@
 {
   "save": "ذخیره",
   "cancel": "لغو",
+  "done": "تأیید",
+  "filters": "فیلترها",
+  "filtersActive_one": "{{count}} فیلتر فعال",
+  "filtersActive_other": "{{count}} فیلتر فعال",
+  "filtersDescription": "فهرست را با فیلتر محدود کنید.",
   "close": "بستن",
   "loading": "در حال بارگذاری…",
   "serverStarting": "این کار بیشتر از حد معمول طول کشیده است. ممکن است سرور در حال راه‌اندازی باشد، لطفاً صبر کنید.",

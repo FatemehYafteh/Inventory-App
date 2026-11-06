@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/data-table/DataTable';
+import { MovementCard } from '@/components/movements/MovementCard';
 import { MovementTypeBadge } from '@/components/movements/MovementTypeBadge';
 import { movementNote } from '@/components/movements/movementNote';
 import {
@@ -138,6 +139,7 @@ export function StockHistoryDialog({ product, onClose, onCloseAutoFocus }) {
           isLoading={movements.isPending}
           error={movements.error}
           emptyMessage={t('products.history.empty')}
+          renderCard={(movement) => <MovementCard movement={movement} showProduct={false} />}
         />
       </DialogContent>
     </Dialog>
