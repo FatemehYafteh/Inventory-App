@@ -35,7 +35,9 @@ describe('Persian layout, table and common texts', () => {
         HttpResponse.json({ user: { ...activeUser, role: 'admin' } }),
       ),
       http.get('*/api/users/pending-count', () => HttpResponse.json({ count: 0 })),
-      http.get('*/api/users', () => HttpResponse.json({ items: [], total: 0, page: 1, limit: 20 })),
+      http.get('*/api/users', () =>
+        HttpResponse.json({ items: [], total: 45, page: 1, limit: 20 }),
+      ),
     );
     renderApp({ route: '/users' });
 

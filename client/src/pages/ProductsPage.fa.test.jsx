@@ -116,9 +116,10 @@ describe('Products page texts in Persian', () => {
     const adjust = within(await screen.findByRole('dialog', { name: 'تعدیل موجودی' }));
     expect(adjust.getByRole('tab', { name: 'ورود' })).toBeInTheDocument();
     expect(adjust.getByLabelText('تعداد برای افزودن')).toBeInTheDocument();
-    expect(adjust.getByText(/تعداد فعلی/)).toHaveTextContent('تعداد فعلی: ۴۰');
+    expect(adjust.getByText(/^موجودی:/)).toHaveTextContent('موجودی: ۴۰');
+    expect(adjust.getByText(/به نام/)).toHaveTextContent('ثبت به نام Acme Tools.');
     await user.type(adjust.getByLabelText('تعداد برای افزودن'), '2');
-    expect(adjust.getByText(/تعداد فعلی/)).toHaveTextContent('تعداد جدید: ۴۲');
+    expect(adjust.getByText(/^موجودی:/)).toHaveTextContent('موجودی: ۴۰ ← ۴۲');
     await user.click(adjust.getByRole('button', { name: 'لغو' }));
 
     await chooseRowAction(user, 'عملیات بیشتر برای Claw Hammer', 'کاردکس Claw Hammer');
