@@ -111,7 +111,7 @@ describe('signed-in auth pages in Persian', () => {
     expect(await screen.findByRole('heading', { name: 'پروفایل' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'حساب کاربری' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ذخیره نام' })).toBeInTheDocument();
-    expect(screen.getByText('متصل نیست')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'اتصال تلگرام' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Profile' })).not.toBeInTheDocument();
     expect(screen.queryByText('Not connected')).not.toBeInTheDocument();
   });

@@ -57,7 +57,6 @@ describe('Profile page', () => {
     const methods = account();
     expect(methods.getByText('ana@example.com')).toBeInTheDocument();
     expect(methods.getByText('Verified')).toBeInTheDocument();
-    expect(methods.getByText('Not connected')).toBeInTheDocument();
     expect(methods.getByRole('button', { name: 'Connect Telegram' })).toBeInTheDocument();
   });
 
@@ -175,7 +174,8 @@ describe('Profile page', () => {
     expect(
       await screen.findByText('This Telegram account belongs to another user. Contact an admin.'),
     ).toBeInTheDocument();
-    expect(account().getByText('Not connected')).toBeInTheDocument();
+    // Still not connected: no Connected badge.
+    expect(account().queryByText('Connected')).toBeNull();
   });
 
   it('keeps the code form after a wrong code when connecting Telegram', async () => {
@@ -262,8 +262,7 @@ describe('Profile page', () => {
     renderApp({ route: '/profile' });
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Profile' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Account' })).toBeInTheDocument();
-    const rows = account().getAllByRole('heading', { level: 3 });
+    const rows = account().getAllByRole('heading', { level: 2 });
     expect(rows.map((row) => row.textContent)).toEqual(['Name', 'Email', 'Telegram', 'Password']);
     expect(screen.getAllByRole('region')).toHaveLength(1);
     // One column, centred, with no stretched cards.
@@ -276,9 +275,9 @@ describe('Profile page', () => {
     profileHandlers(activeUser);
     renderApp({ route: '/profile' });
 
-    await screen.findByRole('heading', { level: 2, name: 'Account' });
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
     const rows = account()
-      .getAllByRole('heading', { level: 3 })
+      .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.closest('.grid'));
     for (const row of rows) expect(row).toHaveClass('p-6', 'md:grid-cols-3');
     expect(rows[0].parentElement).toHaveClass('divide-y');
@@ -290,9 +289,8 @@ describe('Profile page', () => {
     renderApp({ route: '/profile' });
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Profile' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Account' })).toBeInTheDocument();
     for (const name of ['Name', 'Email', 'Telegram', 'Password']) {
-      expect(account().getByRole('heading', { level: 3, name })).toBeInTheDocument();
+      expect(account().getByRole('heading', { level: 2, name })).toBeInTheDocument();
     }
     expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to Awaiting approval' })).toBeInTheDocument();
@@ -302,7 +300,7 @@ describe('Profile page', () => {
     profileHandlers(activeUser);
     renderApp({ route: '/profile' });
 
-    await screen.findByRole('heading', { level: 2, name: 'Account' });
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
     expect(account().getByText('ana@example.com')).toHaveAttribute('dir', 'ltr');
     expect(account().getByText('Verified')).toBeInTheDocument();
   });
@@ -311,8 +309,10 @@ describe('Profile page', () => {
     profileHandlers(activeUser);
     renderApp({ route: '/profile' });
 
-    await screen.findByRole('heading', { level: 2, name: 'Account' });
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
     const connect = account().getByRole('button', { name: 'Connect Telegram' });
+    // Not connected shows only the action, with no status badge.
+    expect(account().queryByText('Not connected')).toBeNull();
     expect(connect).toHaveClass('border', 'self-start');
     expect(connect).not.toHaveClass('w-full');
   });
@@ -321,10 +321,31 @@ describe('Profile page', () => {
     profileHandlers({ ...activeUser, telegramConnected: true, telegramUsername: 'ana_tg' });
     renderApp({ route: '/profile' });
 
-    await screen.findByRole('heading', { level: 2, name: 'Account' });
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
     expect(account().getByText('@ana_tg')).toHaveAttribute('dir', 'ltr');
     expect(account().getByText('Connected')).toBeInTheDocument();
-    expect(account().queryByText('Not connected')).toBeNull();
+  });
+
+  it('puts the name input and the Save button in one row, with the input auto-directed', async () => {
+    profileHandlers({ ...activeUser, name: 'فاطمه یافته' });
+    renderApp({ route: '/profile' });
+
+    const input = await screen.findByLabelText('Name');
+    expect(input).toHaveAttribute('dir', 'auto');
+    const save = screen.getByRole('button', { name: 'Save name' });
+    const row = save.parentElement;
+    expect(row).toHaveClass('md:flex-row', 'md:justify-end');
+    expect(row).toContainElement(input);
+    expect(input.parentElement).toHaveClass('md:max-w-sm');
+  });
+
+  it('has no title of its own on the Account card, only an accessible name', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
+    expect(screen.getByRole('region', { name: 'Account' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Account' })).not.toBeInTheDocument();
   });
 
   it('shows one initial for a Persian name, not joined letters', async () => {

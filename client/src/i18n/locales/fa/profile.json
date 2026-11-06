@@ -3,8 +3,7 @@
   "description": "نام شما و روش‌های ورودتان.",
   "roles": { "admin": "مدیر", "staff": "کارمند" },
   "account": {
-    "title": "حساب کاربری",
-    "description": "نام، ایمیل و روش‌های ورود شما."
+    "title": "حساب کاربری"
   },
   "name": {
     "title": "نام",
@@ -20,8 +19,7 @@
     "telegramDescription": "ورود با حساب تلگرام.",
     "verified": "تأییدشده",
     "notVerified": "تأییدنشده",
-    "connected": "متصل",
-    "notConnected": "متصل نیست"
+    "connected": "متصل"
   },
   "password": {
     "title": "رمز عبور",

@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import { useForgotPassword, useMe, useUpdateProfile } from '@/lib/auth';
@@ -29,7 +29,7 @@ function AccountRow({ icon: Icon, title, description, children }) {
       <div className="flex min-w-0 gap-3">
         <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
         <div className="flex min-w-0 flex-col gap-1.5">
-          <h3 className="text-sm font-medium leading-none">{title}</h3>
+          <h2 className="text-sm font-medium leading-none">{title}</h2>
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
@@ -63,17 +63,23 @@ function NameForm({ user }) {
       {updateProfile.isSuccess && <FormAlert tone="success">{t('profile.name.saved')}</FormAlert>}
       <FormAlert>{formError}</FormAlert>
       {/* The row already shows "Name" as its title, so the label is for screen readers only. */}
-      <TextField
-        id="name"
-        label={t('profile.name.title')}
-        hideLabel
-        autoComplete="name"
-        error={errors.name}
-        {...register('name')}
-      />
-      <Button type="submit" className="self-start md:self-end" disabled={updateProfile.isPending}>
-        {updateProfile.isPending ? t('profile.name.saving') : t('profile.name.save')}
-      </Button>
+      {/* Input and button in one row at the end; they stack on a small screen. dir="auto" aligns a
+          Persian name to the right even when the page is in English. */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-end">
+        <TextField
+          id="name"
+          label={t('profile.name.title')}
+          hideLabel
+          autoComplete="name"
+          dir="auto"
+          className="min-w-0 md:max-w-sm md:flex-1"
+          error={errors.name}
+          {...register('name')}
+        />
+        <Button type="submit" className="shrink-0 self-start" disabled={updateProfile.isPending}>
+          {updateProfile.isPending ? t('profile.name.saving') : t('profile.name.save')}
+        </Button>
+      </div>
     </form>
   );
 }
@@ -95,25 +101,17 @@ function EmailValue({ user }) {
 
 function TelegramValue({ user }) {
   const { t } = useTranslation();
+  // Not connected: just the action, no status badge.
+  if (!user.telegramConnected) return <ConnectTelegram />;
   return (
-    <>
-      <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
-        {user.telegramConnected && user.telegramUsername && (
-          <span dir="ltr" className="text-sm font-medium [overflow-wrap:anywhere]">
-            @{user.telegramUsername}
-          </span>
-        )}
-        <StatusBadge
-          status={user.telegramConnected ? 'active' : 'inactive'}
-          label={
-            user.telegramConnected
-              ? t('profile.signIn.connected')
-              : t('profile.signIn.notConnected')
-          }
-        />
-      </div>
-      {!user.telegramConnected && <ConnectTelegram />}
-    </>
+    <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
+      {user.telegramUsername && (
+        <span dir="ltr" className="text-sm font-medium [overflow-wrap:anywhere]">
+          @{user.telegramUsername}
+        </span>
+      )}
+      <StatusBadge status="active" label={t('profile.signIn.connected')} />
+    </div>
   );
 }
 
@@ -190,16 +188,10 @@ export function ProfilePage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <PageHeader title={t('profile.title')} description={t('profile.description')} />
       <IdentityCard user={user} />
-      {/* CardTitle is an h1, so the card's title is an h2 here and the row titles are h3. */}
-      <section aria-labelledby="account-heading">
+      {/* The page header already introduces the card, so it has no title of its own, only a name. */}
+      <section aria-label={t('profile.account.title')}>
         <Card>
-          <CardHeader>
-            <h2 id="account-heading" className="text-lg font-semibold leading-none">
-              {t('profile.account.title')}
-            </h2>
-            <CardDescription>{t('profile.account.description')}</CardDescription>
-          </CardHeader>
-          <div className="divide-y border-t">
+          <div className="divide-y">
             <AccountRow
               icon={UserIcon}
               title={t('profile.name.title')}
