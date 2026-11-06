@@ -57,7 +57,7 @@ describe('Users page in Persian', () => {
     expect(screen.getByRole('heading', { name: 'کاربران' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'در انتظار' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'ردشده' })).toBeInTheDocument();
-    expect(screen.getByRole('searchbox', { name: 'جستجوی کاربران' })).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'جست‌وجوی کاربران' })).toBeInTheDocument();
     expect(screen.getByText('پروفایل ناقص')).toBeInTheDocument();
     expect(screen.getByText('روش‌های ورود')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'تأیید' })).toBeDisabled();

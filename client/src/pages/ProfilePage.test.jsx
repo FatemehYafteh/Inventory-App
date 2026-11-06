@@ -36,28 +36,27 @@ function profileHandlers(user) {
   return requests;
 }
 
-function signInMethods() {
-  return within(screen.getByRole('region', { name: 'Sign-in methods' }));
+function account() {
+  return within(screen.getByRole('region', { name: 'Account' }));
 }
 
-/** Opens Connect Telegram in the sign-in methods once the page has loaded. */
+/** Opens Connect Telegram in the Account card once the page has loaded. */
 async function startConnect(user) {
   await screen.findByRole('heading', { name: 'Profile' });
-  await user.click(signInMethods().getByRole('button', { name: 'Connect Telegram' }));
+  await user.click(account().getByRole('button', { name: 'Connect Telegram' }));
 }
 
 describe('Profile page', () => {
-  it('shows an active user their sign-in methods inside the app layout', async () => {
+  it('shows an active user their account settings inside the app layout', async () => {
     profileHandlers(activeUser);
     renderApp({ route: '/profile' });
 
     expect(await screen.findByRole('heading', { name: 'Profile' })).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
 
-    const methods = signInMethods();
+    const methods = account();
     expect(methods.getByText('ana@example.com')).toBeInTheDocument();
     expect(methods.getByText('Verified')).toBeInTheDocument();
-    expect(methods.getByText('Not connected')).toBeInTheDocument();
     expect(methods.getByRole('button', { name: 'Connect Telegram' })).toBeInTheDocument();
   });
 
@@ -71,8 +70,9 @@ describe('Profile page', () => {
     expect(await screen.findByRole('heading', { name: 'Profile' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to Awaiting approval' })).toBeInTheDocument();
-    expect(signInMethods().getByText('Connected as @pat_tg')).toBeInTheDocument();
-    expect(signInMethods().queryByRole('button', { name: 'Connect Telegram' })).toBeNull();
+    expect(account().getByText('@pat_tg')).toBeInTheDocument();
+    expect(account().getByText('Connected')).toBeInTheDocument();
+    expect(account().queryByRole('button', { name: 'Connect Telegram' })).toBeNull();
   });
 
   it('says Telegram is connected when the account has no Telegram username', async () => {
@@ -80,7 +80,7 @@ describe('Profile page', () => {
     renderApp({ route: '/profile' });
 
     await screen.findByRole('heading', { name: 'Profile' });
-    expect(signInMethods().getByText('Connected')).toBeInTheDocument();
+    expect(account().getByText('Connected')).toBeInTheDocument();
   });
 
   it('connects Telegram with the deep link and code, then shows it connected', async () => {
@@ -131,7 +131,7 @@ describe('Profile page', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Verify' }));
 
-    expect(await signInMethods().findByText('Connected as @ana_tg')).toBeInTheDocument();
+    expect(await account().findByText('@ana_tg')).toBeInTheDocument();
     expect(verifyBodies).toEqual([{ requestId: 'req-c', otp: '123456' }]);
   });
 
@@ -174,7 +174,8 @@ describe('Profile page', () => {
     expect(
       await screen.findByText('This Telegram account belongs to another user. Contact an admin.'),
     ).toBeInTheDocument();
-    expect(signInMethods().getByText('Not connected')).toBeInTheDocument();
+    // Still not connected: no Connected badge.
+    expect(account().queryByText('Connected')).toBeNull();
   });
 
   it('keeps the code form after a wrong code when connecting Telegram', async () => {
@@ -256,28 +257,103 @@ describe('Profile page', () => {
     expect(requests.reset).toEqual([{ email: 'ana@example.com' }]);
   });
 
-  it('lays the page out as a Profile heading above three titled sections', async () => {
+  it('lays the page out as a Profile heading above one Account card of four rows', async () => {
     profileHandlers(activeUser);
     renderApp({ route: '/profile' });
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Profile' })).toBeInTheDocument();
-    for (const name of ['Name', 'Sign-in methods', 'Password']) {
-      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
-    }
-    expect(screen.getByRole('region', { name: 'Sign-in methods' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Password' })).toBeInTheDocument();
+    const rows = account().getAllByRole('heading', { level: 2 });
+    expect(rows.map((row) => row.textContent)).toEqual(['Name', 'Email', 'Telegram', 'Password']);
+    expect(screen.getAllByRole('region')).toHaveLength(1);
+    // One column, centred, with no stretched cards.
+    const page = screen.getByRole('heading', { level: 1, name: 'Profile' }).closest('.max-w-3xl');
+    expect(page).toHaveClass('mx-auto', 'max-w-3xl');
+    expect(page.querySelector('.h-full')).toBeNull();
   });
 
-  it('shows a pending user the same sections in the minimal layout', async () => {
+  it('gives every row the same padding and separates them with dividers', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
+    const rows = account()
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.closest('.grid'));
+    for (const row of rows) expect(row).toHaveClass('p-6', 'md:grid-cols-3');
+    expect(rows[0].parentElement).toHaveClass('divide-y');
+    expect(rows).toHaveLength(4);
+  });
+
+  it('shows a pending user the same card in the minimal layout', async () => {
     profileHandlers(pendingUser);
     renderApp({ route: '/profile' });
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Profile' })).toBeInTheDocument();
-    for (const name of ['Name', 'Sign-in methods', 'Password']) {
-      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
+    for (const name of ['Name', 'Email', 'Telegram', 'Password']) {
+      expect(account().getByRole('heading', { level: 2, name })).toBeInTheDocument();
     }
     expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to Awaiting approval' })).toBeInTheDocument();
+  });
+
+  it('shows the email left to right with a Verified badge', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
+    expect(account().getByText('ana@example.com')).toHaveAttribute('dir', 'ltr');
+    expect(account().getByText('Verified')).toBeInTheDocument();
+  });
+
+  it('offers Connect Telegram as an outline button that is not full width', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
+    const connect = account().getByRole('button', { name: 'Connect Telegram' });
+    // Not connected shows only the action, with no status badge.
+    expect(account().queryByText('Not connected')).toBeNull();
+    expect(connect).toHaveClass('border', 'self-start');
+    expect(connect).not.toHaveClass('w-full');
+  });
+
+  it('shows the Telegram username left to right beside a Connected badge', async () => {
+    profileHandlers({ ...activeUser, telegramConnected: true, telegramUsername: 'ana_tg' });
+    renderApp({ route: '/profile' });
+
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
+    expect(account().getByText('@ana_tg')).toHaveAttribute('dir', 'ltr');
+    expect(account().getByText('Connected')).toBeInTheDocument();
+  });
+
+  it('puts the name input and the Save button in one row, with the input auto-directed', async () => {
+    profileHandlers({ ...activeUser, name: 'فاطمه یافته' });
+    renderApp({ route: '/profile' });
+
+    const input = await screen.findByLabelText('Name');
+    expect(input).toHaveAttribute('dir', 'auto');
+    const save = screen.getByRole('button', { name: 'Save name' });
+    const row = save.parentElement;
+    expect(row).toHaveClass('md:flex-row', 'md:justify-end');
+    expect(row).toContainElement(input);
+    expect(input.parentElement).toHaveClass('md:max-w-sm');
+  });
+
+  it('has no title of its own on the Account card, only an accessible name', async () => {
+    profileHandlers(activeUser);
+    renderApp({ route: '/profile' });
+
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
+    expect(screen.getByRole('region', { name: 'Account' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Account' })).not.toBeInTheDocument();
+  });
+
+  it('shows one initial for a Persian name, not joined letters', async () => {
+    profileHandlers({ ...activeUser, name: 'فاطمه یافته' });
+    renderApp({ route: '/profile' });
+
+    await screen.findByRole('heading', { level: 1, name: 'Profile' });
+    expect(within(screen.getByRole('main')).getByText('ف')).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('does not name a region after the Name field it contains', async () => {

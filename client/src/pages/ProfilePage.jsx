@@ -1,4 +1,5 @@
 import { updateProfileSchema } from '@inventory/shared/schemas';
+import { LockIcon, MailIcon, SendIcon, UserIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ConnectTelegram } from '@/components/auth/TelegramSignIn';
 import { FormAlert } from '@/components/form/FormAlert';
@@ -7,34 +8,35 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useZodForm } from '@/hooks/useZodForm';
 import { useForgotPassword, useMe, useUpdateProfile } from '@/lib/auth';
 import { applyFieldErrors, errorMessage } from '@/lib/errors';
 import { formatNumber } from '@/lib/format';
+import { initials } from '@/lib/initials';
 
 const RESET_COOLDOWN_SECONDS = 60;
 
 /**
- * One settings section: a titled card, inside a named region unless `region` is false (the Name
- * section: its field is already labelled "Name", so a region of the same name would be redundant).
- * CardTitle is an h1, so the title is an h2 here.
+ * One row of the Account card. The title and a short description sit at the start (about a third
+ * of the width from `md` up) and the value and its action at the end; on a small screen they
+ * stack. Every row has the same padding, so the divider lines sit at an even rhythm.
  */
-function ProfileSection({ id, title, description, region = true, children }) {
-  const Wrapper = region ? 'section' : 'div';
+function AccountRow({ icon: Icon, title, description, children }) {
   return (
-    <Wrapper aria-labelledby={region ? id : undefined} className="h-full">
-      <Card className="h-full">
-        <CardHeader>
-          <h2 id={id} className="text-lg font-semibold leading-none">
-            {title}
-          </h2>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent>{children}</CardContent>
-      </Card>
-    </Wrapper>
+    <div className="grid gap-4 p-6 md:grid-cols-3 md:gap-6">
+      <div className="flex min-w-0 gap-3">
+        <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h2 className="text-sm font-medium leading-none">{title}</h2>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <div className="flex min-w-0 flex-col items-start gap-3 md:col-span-2 md:items-end">
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -57,59 +59,59 @@ function NameForm({ user }) {
     updateProfile.error && !updateProfile.error.errors ? errorMessage(updateProfile.error) : null;
 
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex w-full flex-col gap-3">
       {updateProfile.isSuccess && <FormAlert tone="success">{t('profile.name.saved')}</FormAlert>}
       <FormAlert>{formError}</FormAlert>
-      <TextField
-        id="name"
-        label={t('profile.name.title')}
-        autoComplete="name"
-        error={errors.name}
-        {...register('name')}
-      />
-      <Button type="submit" className="self-start" disabled={updateProfile.isPending}>
-        {updateProfile.isPending ? t('profile.name.saving') : t('profile.name.save')}
-      </Button>
+      {/* The row already shows "Name" as its title, so the label is for screen readers only. */}
+      {/* Input and button in one row at the end; they stack on a small screen. dir="auto" aligns a
+          Persian name to the right even when the page is in English. */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-end">
+        <TextField
+          id="name"
+          label={t('profile.name.title')}
+          hideLabel
+          autoComplete="name"
+          dir="auto"
+          className="min-w-0 md:max-w-sm md:flex-1"
+          error={errors.name}
+          {...register('name')}
+        />
+        <Button type="submit" className="shrink-0 self-start" disabled={updateProfile.isPending}>
+          {updateProfile.isPending ? t('profile.name.saving') : t('profile.name.save')}
+        </Button>
+      </div>
     </form>
   );
 }
 
-function SignInMethods({ user }) {
+function EmailValue({ user }) {
   const { t } = useTranslation();
   return (
-    <dl className="flex flex-col gap-4 text-sm">
-      <div className="flex min-w-0 flex-col gap-1.5">
-        <dt className="text-muted-foreground">{t('profile.signIn.email')}</dt>
-        <dd className="flex min-w-0 flex-col items-start gap-1.5">
-          <span className="font-medium [overflow-wrap:anywhere]">{user.email}</span>
-          <StatusBadge
-            status={user.emailVerified ? 'active' : 'pending'}
-            label={
-              user.emailVerified ? t('profile.signIn.verified') : t('profile.signIn.notVerified')
-            }
-          />
-        </dd>
-      </div>
-      <div className="flex min-w-0 flex-col gap-1.5">
-        <dt className="text-muted-foreground">{t('profile.signIn.telegram')}</dt>
-        <dd className="flex min-w-0 flex-col items-start gap-1.5">
-          <StatusBadge
-            status={user.telegramConnected ? 'active' : 'inactive'}
-            label={
-              user.telegramConnected
-                ? t('profile.signIn.connected')
-                : t('profile.signIn.notConnected')
-            }
-          />
-          {user.telegramConnected && user.telegramUsername && (
-            <span className="font-medium [overflow-wrap:anywhere]">
-              {t('profile.signIn.connectedAs', { username: user.telegramUsername })}
-            </span>
-          )}
-        </dd>
-      </div>
-      {!user.telegramConnected && <ConnectTelegram />}
-    </dl>
+    <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
+      <span dir="ltr" className="text-sm font-medium [overflow-wrap:anywhere]">
+        {user.email}
+      </span>
+      <StatusBadge
+        status={user.emailVerified ? 'active' : 'pending'}
+        label={user.emailVerified ? t('profile.signIn.verified') : t('profile.signIn.notVerified')}
+      />
+    </div>
+  );
+}
+
+function TelegramValue({ user }) {
+  const { t } = useTranslation();
+  // Not connected: just the action, no status badge.
+  if (!user.telegramConnected) return <ConnectTelegram />;
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
+      {user.telegramUsername && (
+        <span dir="ltr" className="text-sm font-medium [overflow-wrap:anywhere]">
+          @{user.telegramUsername}
+        </span>
+      )}
+      <StatusBadge status="active" label={t('profile.signIn.connected')} />
+    </div>
   );
 }
 
@@ -123,7 +125,7 @@ function PasswordReset({ email }) {
     forgotPassword.mutate(email, { onSuccess: () => startCooldown(RESET_COOLDOWN_SECONDS) });
 
   return (
-    <div className="flex flex-col items-start gap-3 text-sm">
+    <>
       <Button
         type="button"
         variant="outline"
@@ -140,15 +142,8 @@ function PasswordReset({ email }) {
         <FormAlert tone="success">{t('profile.password.checkEmail', { email })}</FormAlert>
       )}
       <FormAlert>{errorMessage(forgotPassword.error)}</FormAlert>
-    </div>
+    </>
   );
-}
-
-function initials(name, email) {
-  const words = (name || email || '?').trim().split(/\s+/);
-  const letters =
-    words.length > 1 ? words[0][0] + words[words.length - 1][0] : words[0].slice(0, 2);
-  return letters.toUpperCase();
 }
 
 /** Who is signed in, at a glance: avatar, name, email, role and account status. */
@@ -161,7 +156,7 @@ function IdentityCard({ user }) {
           aria-hidden="true"
           className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground"
         >
-          {initials(user.name, user.email)}
+          {initials(user.name || user.email)}
         </div>
         <div className="flex min-w-0 flex-col gap-1.5">
           <p className="text-lg font-semibold leading-tight [overflow-wrap:anywhere]">
@@ -182,7 +177,7 @@ function IdentityCard({ user }) {
   );
 }
 
-/** Profile for pending and active users: name, sign-in methods and password reset. */
+/** Profile for pending and active users: identity, then one Account card of settings rows. */
 export function ProfilePage() {
   const { t } = useTranslation();
   const { data: user } = useMe();
@@ -190,37 +185,44 @@ export function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <PageHeader title={t('profile.title')} description={t('profile.description')} />
-      <div className="flex w-full max-w-5xl flex-col gap-6">
-        <IdentityCard user={user} />
-        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-          <div className="flex min-w-0 flex-col gap-6">
-            <ProfileSection
-              id="name-heading"
+      <IdentityCard user={user} />
+      {/* The page header already introduces the card, so it has no title of its own, only a name. */}
+      <section aria-label={t('profile.account.title')}>
+        <Card>
+          <div className="divide-y">
+            <AccountRow
+              icon={UserIcon}
               title={t('profile.name.title')}
               description={t('profile.name.description')}
-              region={false}
             >
               <NameForm user={user} />
-            </ProfileSection>
-            <ProfileSection
-              id="password-heading"
+            </AccountRow>
+            <AccountRow
+              icon={MailIcon}
+              title={t('profile.signIn.email')}
+              description={t('profile.signIn.emailDescription')}
+            >
+              <EmailValue user={user} />
+            </AccountRow>
+            <AccountRow
+              icon={SendIcon}
+              title={t('profile.signIn.telegram')}
+              description={t('profile.signIn.telegramDescription')}
+            >
+              <TelegramValue user={user} />
+            </AccountRow>
+            <AccountRow
+              icon={LockIcon}
               title={t('profile.password.title')}
               description={t('profile.password.description')}
             >
               <PasswordReset email={user.email} />
-            </ProfileSection>
+            </AccountRow>
           </div>
-          <ProfileSection
-            id="sign-in-methods-heading"
-            title={t('profile.signIn.title')}
-            description={t('profile.signIn.description')}
-          >
-            <SignInMethods user={user} />
-          </ProfileSection>
-        </div>
-      </div>
+        </Card>
+      </section>
     </div>
   );
 }

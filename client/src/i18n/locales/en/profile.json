@@ -2,6 +2,9 @@
   "title": "Profile",
   "description": "Your name and the ways you sign in.",
   "roles": { "admin": "Admin", "staff": "Staff" },
+  "account": {
+    "title": "Account"
+  },
   "name": {
     "title": "Name",
     "description": "How you appear in the app.",
@@ -10,15 +13,13 @@
     "saving": "Saving…"
   },
   "signIn": {
-    "title": "Sign-in methods",
-    "description": "How you log in to this account.",
     "email": "Email",
+    "emailDescription": "Used to log in and for account emails.",
     "telegram": "Telegram",
+    "telegramDescription": "Log in with your Telegram account.",
     "verified": "Verified",
     "notVerified": "Not verified",
-    "connected": "Connected",
-    "notConnected": "Not connected",
-    "connectedAs": "Connected as @{{username}}"
+    "connected": "Connected"
   },
   "password": {
     "title": "Password",

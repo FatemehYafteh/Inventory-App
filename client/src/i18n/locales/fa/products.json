@@ -7,8 +7,8 @@
     "empty": "هنوز کالایی وجود ندارد."
   },
   "filters": {
-    "searchLabel": "جستجوی کالاها",
-    "searchPlaceholder": "جستجوی نام کالا یا کد کالا",
+    "searchLabel": "جست‌وجوی کالاها",
+    "searchPlaceholder": "جست‌وجوی نام کالا یا کد کالا",
     "category": "دسته‌بندی",
     "allCategories": "همه دسته‌بندی‌ها",
     "supplier": "تأمین‌کننده",

@@ -234,9 +234,9 @@ describe('approval and rejection notices follow the user language', () => {
     await setStatus(app, actor, user, 'active');
     await app.locals.mailer.idle();
 
-    expect(app.locals.mailer.outbox[0].subject).toBe('حساب کاربری Inventory شما تأیید شد');
+    expect(app.locals.mailer.outbox[0].subject).toBe('حساب کاربری انبار شما تأیید شد');
     expect(app.locals.telegram.outbox[0].text).toBe(
-      'حساب کاربری Inventory شما تأیید شد. اکنون می‌توانید از طریق http://localhost:5173 وارد شوید.',
+      'حساب کاربری انبار شما تأیید شد. اکنون می‌توانید از طریق http://localhost:5173 وارد شوید.',
     );
   });
 
@@ -254,7 +254,7 @@ describe('approval and rejection notices follow the user language', () => {
     await app.locals.mailer.idle();
 
     const [mail] = app.locals.mailer.outbox;
-    expect(mail.subject).toBe('درخواست حساب کاربری Inventory شما پذیرفته نشد');
+    expect(mail.subject).toBe('درخواست حساب کاربری انبار شما پذیرفته نشد');
     expect(mail.text).toContain('Signed up by mistake');
     expect(app.locals.telegram.outbox[0].text).toMatch(PERSIAN);
     expect(app.locals.telegram.outbox[0].text).not.toContain('Signed up by mistake');
