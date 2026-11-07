@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderApp } from '@/test/render';
 import { activeUser, server } from '@/test/server';
 
@@ -136,6 +136,44 @@ describe('UsersPage access', () => {
     await user.click(await screen.findByRole('link', { name: /Users/ }));
 
     expect(await screen.findByRole('heading', { name: 'Users' })).toBeInTheDocument();
+  });
+});
+
+describe('UsersPage for the demo account', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('shows every action disabled, says why once, and sends nothing', async () => {
+    vi.stubEnv('VITE_DEMO_EMAIL', 'ANA@example.com');
+    const user = userEvent.setup();
+    const api = await open();
+    const pending = within(await waitForRow('Pat Pending'));
+
+    expect(
+      screen.getByText(/demo account can look at users but cannot approve/i),
+    ).toBeInTheDocument();
+    expect(pending.getByRole('button', { name: 'Approve' })).toBeDisabled();
+    expect(pending.getByRole('button', { name: 'Reject' })).toBeDisabled();
+    expect(pending.getByRole('button', { name: 'Approve' })).toHaveAttribute(
+      'title',
+      'Not available in the demo account.',
+    );
+
+    await user.click(pending.getByRole('button', { name: 'Approve' }));
+    expect(api.patches).toEqual([]);
+
+    await user.click(screen.getByRole('tab', { name: /Active/ }));
+    const active = within(await waitForRow('Sam Staff'));
+    expect(active.getByRole('button', { name: 'Reject' })).toBeDisabled();
+    expect(active.getByRole('button', { name: 'Make admin' })).toBeDisabled();
+  });
+
+  it('keeps the actions enabled for other admins', async () => {
+    vi.stubEnv('VITE_DEMO_EMAIL', 'someone-else@example.com');
+    await open();
+
+    const pending = within(await waitForRow('Pat Pending'));
+    expect(pending.getByRole('button', { name: 'Approve' })).toBeEnabled();
+    expect(screen.queryByText(/demo account can look at users/i)).not.toBeInTheDocument();
   });
 });
 

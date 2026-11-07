@@ -11,6 +11,7 @@ import { RejectUserDialog } from '@/components/users/RejectUserDialog';
 import { UserDrawer } from '@/components/users/UserDrawer';
 import { UsersTable } from '@/components/users/UsersTable';
 import { useMe } from '@/lib/auth';
+import { isDemoUser } from '@/lib/demo';
 import { errorMessage } from '@/lib/errors';
 import { useChangeRole, useChangeStatus, useUsers } from '@/lib/users';
 
@@ -31,6 +32,7 @@ function emptyMessage(t, { status, search, incomplete }) {
 export function UsersPage() {
   const { t } = useTranslation();
   const { data: me } = useMe();
+  const readOnly = isDemoUser(me);
   const [params, setParams] = useSearchParams();
 
   const status = TABS.includes(params.get('status')) ? params.get('status') : 'pending';
@@ -97,6 +99,11 @@ export function UsersPage() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader title={t('users.title')} />
+      {readOnly && (
+        <p role="note" className="text-sm text-muted-foreground">
+          {t('users.demoNotice')}
+        </p>
+      )}
       <FormAlert>{actionError}</FormAlert>
 
       <Tabs value={status} onValueChange={(value) => update({ status: value, incomplete: false })}>
@@ -113,6 +120,7 @@ export function UsersPage() {
             total={users.data?.total ?? 0}
             meId={me?.id}
             busy={busy}
+            readOnly={readOnly}
             pagination={pagination}
             onPaginationChange={(updater) => {
               const next = typeof updater === 'function' ? updater(pagination) : updater;
