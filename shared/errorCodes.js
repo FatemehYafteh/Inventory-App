@@ -124,6 +124,7 @@ export const MESSAGES = Object.freeze({
   LAST_ADMIN: 'There must always be at least one active admin.',
   USER_PROFILE_INCOMPLETE: 'This user has not completed their profile yet.',
   USER_NOT_ACTIVE: 'Only active users can change role.',
+  DEMO_READ_ONLY: 'The demo account cannot change other users.',
 });
 
 export const CODES = Object.freeze({
@@ -163,6 +164,7 @@ export const CODES = Object.freeze({
   CANNOT_CHANGE_SELF: 'You cannot make this change to yourself.',
   LAST_ADMIN: 'There must always be at least one active admin.',
   USER_NOT_ACTIVE: 'Only active users can do this.',
+  DEMO_READ_ONLY: 'This is not available in the demo account.',
 });
 
 /** Shorthand for schemas: `m.NAME_REQUIRED` is the English text of that message code. */

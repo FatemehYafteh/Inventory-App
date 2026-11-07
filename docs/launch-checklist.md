@@ -49,4 +49,5 @@ Record the date and who checked it here: _not done yet_.
 - [ ] `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` are long random values, different from each other.
 - [ ] `npm run seed` is not run in production (it refuses to).
 - [ ] At least one admin exists (`ADMIN_EMAILS`, `ADMIN_TELEGRAM_IDS` or `npm run user:create -w server`).
+- [ ] If `VITE_DEMO_EMAIL` shows a demo login, the same email is in `DEMO_EMAILS`, and your own admin account uses a private email and a strong password.
 - [ ] Exports open correctly in Excel: Persian text is readable and a cell such as `=SUM(A1)` shows as text.

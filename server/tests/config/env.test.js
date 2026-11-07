@@ -127,4 +127,10 @@ describe('loadConfig', () => {
   it('runs without a bot in development', () => {
     expect(loadConfig(base).telegram).toMatchObject({ botToken: undefined, mode: 'polling' });
   });
+
+  it('reads DEMO_EMAILS as a lower-case list, empty when unset', () => {
+    expect(loadConfig(base).demoEmails).toEqual([]);
+    const config = loadConfig({ ...base, DEMO_EMAILS: ' Demo@Example.com, staff@example.com ,' });
+    expect(config.demoEmails).toEqual(['demo@example.com', 'staff@example.com']);
+  });
 });
