@@ -1,6 +1,23 @@
 import { m } from '@inventory/shared/errorCodes';
 import { AppError } from '../utils/AppError.js';
 
+// Errors the MongoDB driver and Mongoose raise when the database cannot be reached.
+const DATABASE_UNAVAILABLE = new Set([
+  'MongoServerSelectionError',
+  'MongooseServerSelectionError',
+  'MongoNetworkError',
+  'MongoNetworkTimeoutError',
+  'MongoNotConnectedError',
+  'MongoPoolClearedError',
+  'MongoPoolClosedError',
+  'MongoTopologyClosedError',
+]);
+
+function isDatabaseUnavailable(err) {
+  // Mongoose queues commands while disconnected and fails them with this message after a while.
+  return DATABASE_UNAVAILABLE.has(err?.name) || /buffering timed out/i.test(err?.message ?? '');
+}
+
 export function notFound(req, _res, next) {
   next(new AppError(404, 'NOT_FOUND', m.NOT_FOUND));
 }
@@ -30,6 +47,18 @@ export function errorHandler(err, req, res, _next) {
   // A schema rule caught a value the request validation let through.
   if (err?.name === 'ValidationError') {
     return res.status(400).json({ message: m.VALIDATION_FAILED, code: 'VALIDATION_ERROR' });
+  }
+
+  // The database cannot be reached (down, restarting, network drop): the user did nothing wrong
+  // and a retry will work once it is back, so 503 rather than a generic 500.
+  if (isDatabaseUnavailable(err)) {
+    if (process.env.NODE_ENV !== 'test') {
+      console.error(
+        `[db] unavailable on ${req?.method ?? ''} ${req?.originalUrl ?? ''}: ${err.name}`,
+      );
+    }
+    res.set('Retry-After', '5');
+    return res.status(503).json({ message: m.SERVICE_UNAVAILABLE, code: 'SERVICE_UNAVAILABLE' });
   }
 
   if (process.env.NODE_ENV !== 'test') {

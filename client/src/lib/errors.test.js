@@ -73,6 +73,21 @@ describe('errorMessage', () => {
     );
     expect(errorMessage(null)).toBeNull();
   });
+
+  it('tells the user the service is temporarily unavailable on a 503, in English and Persian', async () => {
+    const outage = apiError(503, { message: 'Service unavailable', code: 'SERVICE_UNAVAILABLE' });
+
+    expect(errorMessage(outage)).toBe(
+      'The service is temporarily unavailable. Please try again in a moment.',
+    );
+    expect(errorMessage(outage)).not.toBe(i18n.t('common.somethingWrong'));
+
+    await i18n.changeLanguage('fa');
+    expect(errorMessage(outage)).toBe(fa.codes.SERVICE_UNAVAILABLE);
+    expect(errorMessage(apiError(500, { message: 'Boom', code: 'INTERNAL_ERROR' }))).toBe(
+      i18n.t('common.somethingWrong'),
+    );
+  });
 });
 
 describe('applyFieldErrors', () => {

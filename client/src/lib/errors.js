@@ -41,6 +41,10 @@ export function translateNotice(text) {
 export function errorMessage(error) {
   if (!error) return null;
   if (error.status === 429) return i18n.t('common.tooManyAttempts');
+  // The database is unreachable: say so, and that trying again will work, instead of the generic text.
+  if (error.status === 503) {
+    return translateCode('SERVICE_UNAVAILABLE') ?? i18n.t('common.somethingWrong');
+  }
   if (error.status >= 500 || !error.status) return i18n.t('common.somethingWrong');
   if (i18n.language === 'en') return error.message;
   const messageCode = error.messageCode ?? codeForMessage(error.message);
