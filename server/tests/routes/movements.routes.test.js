@@ -318,6 +318,61 @@ describe('GET /api/movements/performers', () => {
     expect(asStaff.body.items).toEqual([{ id: sam.id, name: 'Sam Staff' }]);
   });
 
+  it("shows the name on a person's newest movement, so a renamed person appears under the new name", async () => {
+    const app = buildApp();
+    const ada = await admin();
+    const sam = await staff();
+    const item = await product();
+    await movement(item, sam, { performedByName: 'Sam Old', createdAt: new Date('2026-01-01') });
+    await movement(item, sam, {
+      performedByName: 'Samantha New',
+      createdAt: new Date('2026-02-01'),
+    });
+
+    const res = await get(app, ada, '/api/movements/performers');
+
+    expect(res.body.items).toEqual([{ id: sam.id, name: 'Samantha New' }]);
+  });
+
+  it('lists people in name order, whatever order they acted in', async () => {
+    const app = buildApp();
+    const ada = await admin();
+    const item = await product();
+    for (const name of ['Zed Zulu', 'Amy Alpha', 'Bob Bravo']) {
+      await movement(item, await staff({ name }));
+    }
+
+    const res = await get(app, ada, '/api/movements/performers');
+
+    expect(res.body.items.map((row) => row.name)).toEqual(['Amy Alpha', 'Bob Bravo', 'Zed Zulu']);
+  });
+
+  it("for staff, takes each person's name from their newest movement staff can see", async () => {
+    const app = buildApp();
+    const sam = await staff();
+    const live = await product();
+    const archived = await product({ isArchived: true, archivedAt: new Date() });
+    await movement(live, sam, {
+      performedByName: 'Visible Name',
+      createdAt: new Date('2026-01-01'),
+    });
+    await movement(archived, sam, {
+      performedByName: 'Hidden Name',
+      createdAt: new Date('2026-03-01'),
+    });
+
+    const res = await get(app, sam, '/api/movements/performers');
+
+    expect(res.body.items).toEqual([{ id: sam.id, name: 'Visible Name' }]);
+    expect(res.text).not.toContain('Hidden Name');
+  });
+
+  it('answers with an empty list when nothing has moved', async () => {
+    const res = await get(buildApp(), await admin(), '/api/movements/performers');
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual([]);
+  });
+
   it('refuses a pending user', async () => {
     const pending = await staff({ status: 'pending' });
     expect((await get(buildApp(), pending, '/api/movements/performers')).status).toBe(403);

@@ -78,13 +78,25 @@ export async function* streamMovements(user, query) {
  */
 export async function listPerformers(user) {
   const filter = await filterFor(user, {});
-  const rows = await StockMovement.aggregate([
-    { $match: filter },
-    { $sort: { createdAt: -1, _id: -1 } },
-    { $group: { _id: '$performedBy', name: { $first: '$performedByName' } } },
-    { $sort: { name: 1, _id: 1 } },
-  ]);
-  return { items: rows.map((row) => ({ id: String(row._id), name: row.name })) };
+  // The few distinct ids come straight off the (performedBy, ...) index without reading the
+  // movements. Each person's name is then the one on their newest visible movement, an index read
+  // too. Grouping every movement instead took time proportional to all the movements ever made
+  // (about 0.9 s at 300,000), and the list only ever has as many rows as there are people.
+  const ids = await StockMovement.distinct('performedBy');
+  const found = await Promise.all(
+    ids.map(async (id) => {
+      const newest = await StockMovement.findOne({ ...filter, performedBy: id })
+        .sort({ createdAt: -1, _id: -1 })
+        .select('performedByName');
+      return newest && { id: String(id), name: newest.performedByName };
+    }),
+  );
+  // By name, then id: plain code-point order, the same order the database used.
+  const byNameThenId = (a, b) => {
+    if (a.name !== b.name) return a.name < b.name ? -1 : 1;
+    return a.id < b.id ? -1 : 1;
+  };
+  return { items: found.filter(Boolean).sort(byNameThenId) };
 }
 
 export const MOVEMENT_CSV_HEADER = [

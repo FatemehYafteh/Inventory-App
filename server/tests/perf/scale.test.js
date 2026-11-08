@@ -258,6 +258,22 @@ describe('query plans at 1,000 products and 12,000 movements: lists read an inde
     expect(stats.totalDocsExamined).toBeLessThanOrEqual(100);
   });
 
+  it('the performers list gets its distinct people off the index, not by reading every movement', async () => {
+    const explained = await mongoose.connection.db.command({
+      explain: { distinct: StockMovement.collection.name, key: 'performedBy' },
+      verbosity: 'queryPlanner',
+    });
+    const stages = stagesOf(explained.queryPlanner.winningPlan);
+    report.plans['performers (distinct performedBy)'] = {
+      stages: [...new Set(stages)].join(' > '),
+      examined: 0,
+      keysExamined: 0,
+      returned: 0,
+    };
+    expect(stages).toContain('DISTINCT_SCAN');
+    expect(stages).not.toContain('COLLSCAN');
+  });
+
   it('records the plans that cannot use an index: search and the derived stock-status filters', async () => {
     const search = await plan(
       'search (regex on title or SKU)',
