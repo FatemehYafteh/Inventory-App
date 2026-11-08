@@ -102,6 +102,31 @@ describe('Suppliers page', () => {
     }
   });
 
+  it('links the email, the phone and the product count, keeping contacts left to right', async () => {
+    suppliersApi([acme]);
+    renderApp({ route: '/suppliers' });
+
+    const acmeRow = within(await row('Acme Tools'));
+    const email = acmeRow.getByRole('link', { name: 'rita@acme.test' });
+    expect(email).toHaveAttribute('href', 'mailto:rita@acme.test');
+    expect(email).toHaveAttribute('dir', 'ltr');
+    const phone = acmeRow.getByRole('link', { name: '555-0100' });
+    expect(phone).toHaveAttribute('href', 'tel:5550100');
+    expect(phone).toHaveAttribute('dir', 'ltr');
+    expect(acmeRow.getByRole('link', { name: '2' })).toHaveAttribute(
+      'href',
+      '/products?supplier=p1',
+    );
+  });
+
+  it('describes the page under its title', async () => {
+    suppliersApi([acme]);
+    renderApp({ route: '/suppliers' });
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Suppliers' })).toBeInTheDocument();
+    expect(screen.getByText('Suppliers and their contact details.')).toBeInTheDocument();
+  });
+
   it('is in the navigation for admins and staff', async () => {
     for (const me of [admin, staff]) {
       suppliersApi([acme], { me });
@@ -222,6 +247,21 @@ describe('Suppliers page', () => {
 });
 
 describe('Suppliers page, admin', () => {
+  it('sets the direction of each form input by what it holds', async () => {
+    suppliersApi([acme]);
+    const user = userEvent.setup();
+    renderApp({ route: '/suppliers' });
+
+    await user.click(await screen.findByRole('button', { name: 'Add supplier' }));
+    const dialog = within(await screen.findByRole('dialog'));
+    for (const label of ['Name', 'Contact person', 'Address', 'Notes']) {
+      expect(dialog.getByLabelText(label)).toHaveAttribute('dir', 'auto');
+    }
+    for (const label of ['Phone', 'Email']) {
+      expect(dialog.getByLabelText(label)).toHaveAttribute('dir', 'ltr');
+    }
+  });
+
   it('adds a supplier from the form and shows it in the table', async () => {
     const state = suppliersApi([acme]);
     const user = userEvent.setup();
@@ -440,5 +480,19 @@ describe('Suppliers page, admin', () => {
     expect(
       await screen.findByRole('menuitem', { name: 'Delete Northwind Freight' }),
     ).toHaveAttribute('aria-disabled', 'true');
+  });
+});
+
+describe('Moving between pages', () => {
+  it('puts the focus on the new page heading after following a navigation link', async () => {
+    suppliersApi([northwind]);
+    const user = userEvent.setup();
+    renderApp({ route: '/' });
+    await screen.findByRole('heading', { level: 1, name: 'Dashboard' });
+
+    await user.click(screen.getByRole('link', { name: /Suppliers/ }));
+
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Suppliers' });
+    await waitFor(() => expect(heading).toHaveFocus());
   });
 });

@@ -16,17 +16,17 @@ const TONES = {
 function SummaryCard({ label, value, Icon, tone = 'neutral', highlight = false, children }) {
   const colours = TONES[tone];
   return (
-    <Card className="flex min-w-0 flex-col gap-2 p-4">
+    <Card className="flex min-w-0 flex-col gap-1.5 p-3 sm:gap-2 sm:p-4">
       <div className="flex items-center gap-2">
-        <span className={cn('shrink-0 rounded-md p-1.5', colours.tile)}>
-          <Icon className="size-4" aria-hidden="true" />
+        <span className={cn('shrink-0 rounded-md p-1 sm:p-1.5', colours.tile)}>
+          <Icon className="size-3.5 sm:size-4" aria-hidden="true" />
         </span>
-        <dt className="min-w-0 text-sm text-muted-foreground">{label}</dt>
+        <dt className="min-w-0 text-xs text-muted-foreground sm:text-sm">{label}</dt>
       </div>
       {/* `anywhere` lets a very large figure wrap inside the card instead of overflowing it. */}
       <dd
         className={cn(
-          'text-2xl font-semibold tabular-nums [overflow-wrap:anywhere]',
+          'text-lg font-semibold leading-tight tabular-nums [overflow-wrap:anywhere] sm:text-2xl',
           highlight && colours.value,
         )}
       >
@@ -47,7 +47,7 @@ export function SummaryCards({ summary, pending }) {
   return (
     <dl
       aria-label={t('dashboard.summaryLabel')}
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6"
+      className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-6"
     >
       <SummaryCard
         label={t('dashboard.cards.activeProducts')}

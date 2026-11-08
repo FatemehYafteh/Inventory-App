@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/data-table/DataTable';
+import { renderCell } from '@/components/data-table/renderCell';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -135,6 +136,7 @@ export function UsersTable({
   onPaginationChange,
   isLoading,
   error,
+  onRetry,
   emptyMessage,
   toolbar,
   onApprove,
@@ -259,6 +261,24 @@ export function UsersTable({
     [t, meId, busy, readOnly, onApprove, onReject, onReactivate, onChangeRole, onOpen],
   );
 
+  // Below md each user is a card: name, email, role and status, and the row actions.
+  const renderCard = (user) => {
+    const cell = (id) => renderCell(columns, id, user);
+    return (
+      <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex flex-col gap-0.5 [overflow-wrap:anywhere]">
+          {cell('name')}
+          {cell('email')}
+        </div>
+        <div className="flex flex-wrap items-start gap-2">
+          {cell('role')}
+          {cell('status')}
+        </div>
+        {cell('actions')}
+      </div>
+    );
+  };
+
   return (
     <DataTable
       columns={columns}
@@ -270,8 +290,10 @@ export function UsersTable({
       onPaginationChange={onPaginationChange}
       isLoading={isLoading}
       error={error}
+      onRetry={onRetry}
       emptyMessage={emptyMessage}
       toolbar={toolbar}
+      renderCard={renderCard}
     />
   );
 }

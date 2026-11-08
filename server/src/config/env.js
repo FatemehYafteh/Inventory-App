@@ -37,6 +37,12 @@ const envSchema = z
       (value) => (value === '' ? undefined : value),
       z.coerce.number().int().min(0).optional(),
     ),
+    // Where rate-limit counters live. Unset: mongo in production (shared by every serverless
+    // instance), memory elsewhere.
+    RATE_LIMIT_STORE: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.enum(['memory', 'mongo']).optional(),
+    ),
     // Set by Vercel on every deployment.
     VERCEL: optional,
     TELEGRAM_BOT_TOKEN: optional,
@@ -135,6 +141,7 @@ export function loadConfig(source = process.env) {
     clientOrigin: new URL(env.CLIENT_ORIGIN).origin,
     appUrl: env.APP_URL.replace(/\/$/, ''),
     trustProxy: env.TRUST_PROXY ?? (env.VERCEL ? 1 : 0),
+    rateLimitStore: env.RATE_LIMIT_STORE ?? (isProduction ? 'mongo' : 'memory'),
     telegram: {
       botToken: env.TELEGRAM_BOT_TOKEN,
       botUsername: env.TELEGRAM_BOT_USERNAME,

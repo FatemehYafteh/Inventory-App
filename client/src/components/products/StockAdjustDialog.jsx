@@ -96,8 +96,24 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
               {t('products.adjust.title')}
             </DialogTitle>
             <DialogDescription className="[overflow-wrap:anywhere]">
-              {product.title} ({product.sku})
+              <bdi>{product.title}</bdi> (<bdi>{product.sku}</bdi>)
             </DialogDescription>
+            {/* The current stock, and while an amount is typed, what it would leave. */}
+            <p className="text-sm tabular-nums" aria-live="polite">
+              {after === null ? (
+                <Trans
+                  i18nKey="products.adjust.stock"
+                  values={{ n: formatNumber(current) }}
+                  components={{ value: <span className="font-medium" /> }}
+                />
+              ) : (
+                <Trans
+                  i18nKey="products.adjust.stockChange"
+                  values={{ from: formatNumber(current), to: formatNumber(after) }}
+                  components={{ value: <span className="font-medium" /> }}
+                />
+              )}
+            </p>
           </DialogHeader>
           <FormAlert>{formError}</FormAlert>
           <Tabs value={mode} onValueChange={chooseMode}>
@@ -109,7 +125,25 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
               ))}
             </TabsList>
           </Tabs>
-          <p className="text-sm text-muted-foreground">{t(`products.adjust.${mode}Hint`)}</p>
+          <p className="text-sm text-muted-foreground">
+            {mode === 'receive' ? (
+              product.supplier ? (
+                <Trans
+                  i18nKey="products.adjust.receiveHint"
+                  // A name that already ends with a full stop ("Co.") does not get a second one.
+                  values={{
+                    supplier: product.supplier.name,
+                    end: product.supplier.name.endsWith('.') ? '' : '.',
+                  }}
+                  components={{ name: <bdi className="font-medium text-foreground" /> }}
+                />
+              ) : (
+                t('products.adjust.receiveHintNoSupplier')
+              )
+            ) : (
+              t(`products.adjust.${mode}Hint`)
+            )}
+          </p>
           <TextField
             id="stock-quantity"
             label={t(`products.adjust.${mode}Quantity`)}
@@ -122,6 +156,7 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
             <Label htmlFor="stock-note">{t('products.adjust.note')}</Label>
             <Textarea
               id="stock-note"
+              dir="auto"
               aria-invalid={Boolean(errors.note)}
               aria-describedby={errors.note ? 'stock-note-error' : undefined}
               {...register('note')}
@@ -132,23 +167,6 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
               </p>
             )}
           </div>
-          <p className="text-sm tabular-nums" aria-live="polite">
-            <Trans
-              i18nKey="products.adjust.currentQuantity"
-              values={{ n: formatNumber(current) }}
-              components={{ value: <span className="font-medium" /> }}
-            />
-            {after !== null && (
-              <>
-                {' '}
-                <Trans
-                  i18nKey="products.adjust.newQuantity"
-                  values={{ n: formatNumber(after) }}
-                  components={{ value: <span className="font-medium" /> }}
-                />
-              </>
-            )}
-          </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onCancel}>
               {t('products.adjust.cancel')}

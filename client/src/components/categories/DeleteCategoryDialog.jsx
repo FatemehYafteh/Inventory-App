@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { TBdi } from '@/components/BidiText';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,7 @@ export function DeleteCategoryDialog({ category, onConfirm, onCancel, onCloseAut
       <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {t('categories.delete.title', { title: category.title })}
+            <TBdi i18nKey="categories.delete.title" values={{ title: category.title }} />
           </AlertDialogTitle>
           <AlertDialogDescription>{t('categories.delete.description')}</AlertDialogDescription>
         </AlertDialogHeader>

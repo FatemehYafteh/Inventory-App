@@ -101,11 +101,17 @@ export const PRODUCT_CSV_HEADER = [
 ];
 
 /**
- * Every product matching the list filters (search, category, supplier, status, archived) in the
- * list's sort order, as CSV cells, read from a database cursor. Same rule as the list: only
- * admins may include archived products.
+ * The most rows one export holds. The export streams from a cursor, but it runs inside a
+ * serverless function with a 30 s limit (vercel.json), so it stops here instead of timing out.
  */
-export async function* productCsvRows(user, query) {
+export const MAX_CSV_ROWS = 10_000;
+
+/**
+ * Every product matching the list filters (search, category, supplier, status, archived) in the
+ * list's sort order, as CSV cells, read from a database cursor, up to `maxRows`. Same rule as
+ * the list: only admins may include archived products.
+ */
+export async function* productCsvRows(user, query, { maxRows = MAX_CSV_ROWS } = {}) {
   const { sortBy, order } = query;
   if (query.archived && user.role !== 'admin') {
     throw new AppError(403, 'FORBIDDEN', m.NO_ACCESS);
@@ -113,6 +119,7 @@ export async function* productCsvRows(user, query) {
   const find = Product.find(filterFor(query));
   if (sortBy === 'title') find.collation(CASE_INSENSITIVE);
   const cursor = withRelations(find.sort({ [sortBy]: order === 'desc' ? -1 : 1, _id: 1 }))
+    .limit(maxRows)
     .batchSize(500)
     .cursor();
   for await (const product of cursor) {

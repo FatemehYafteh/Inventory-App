@@ -41,8 +41,15 @@ describe('Suppliers page in Persian', () => {
     expect(screen.getByRole('heading', { name: 'تأمین‌کنندگان' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'افزودن تأمین‌کننده' })).toBeInTheDocument();
     expect(screen.getByRole('searchbox', { name: 'جست‌وجوی تأمین‌کنندگان' })).toBeInTheDocument();
-    expect(screen.getByText('فرد رابط')).toBeInTheDocument();
+    expect(screen.getByText('شخص رابط')).toBeInTheDocument();
     expect(screen.getByText('تعداد کالاها')).toBeInTheDocument();
+    expect(screen.getByText('فهرست تأمین‌کنندگان و اطلاعات تماس آن‌ها.')).toBeInTheDocument();
+    // The count uses Persian digits and links to that supplier's products.
+    expect(screen.getByRole('link', { name: '۲' })).toHaveAttribute(
+      'href',
+      '/products?supplier=p1',
+    );
+    expect(screen.getByRole('link', { name: 'rita@acme.test' })).toHaveAttribute('dir', 'ltr');
     expect(screen.getByRole('button', { name: 'ویرایش Acme Tools' })).toBeInTheDocument();
     await openRowMenu(userEvent.setup(), 'عملیات بیشتر برای Acme Tools');
     expect(

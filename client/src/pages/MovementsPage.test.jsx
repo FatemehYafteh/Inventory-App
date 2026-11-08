@@ -1,7 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { mockMobile } from '@/test/mobile';
 import { renderApp } from '@/test/render';
 import { activeUser, server } from '@/test/server';
 
@@ -207,10 +208,32 @@ describe('MovementsPage', () => {
     expect(screen.getByRole('button', { name: 'Dates' })).toHaveTextContent(
       'Oct 14, 2026 to Oct 20, 2026',
     );
+    // Picking the end date closes the calendar.
+    expect(screen.queryByRole('button', { name: 'Clear dates' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Clear dates' }));
+    await user.click(screen.getByRole('button', { name: 'Dates' }));
+    await user.click(await screen.findByRole('button', { name: 'Clear dates' }));
     await waitFor(() => expect(lastQuery(state).from).toBeUndefined());
     expect(lastQuery(state).to).toBeUndefined();
+  });
+
+  it('closes the calendar with Apply when only one day was picked', async () => {
+    const user = userEvent.setup();
+    const state = movementsApi([received]);
+    const start = new Date(2026, 9, 14).toISOString();
+    renderApp({ route: `/movements?from=${encodeURIComponent(start)}` });
+    await screen.findByText('Claw Hammer');
+
+    await user.click(screen.getByRole('button', { name: 'Dates' }));
+    await user.click(await screen.findByRole('button', { name: /October 14th, 2026/ }));
+    // One day is not a finished range, so the calendar stays open.
+    await waitFor(() =>
+      expect(lastQuery(state)).toMatchObject({ from: new Date(2026, 9, 14).toISOString() }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    expect(screen.queryByRole('button', { name: 'Clear dates' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dates' })).toHaveTextContent('Oct 14, 2026');
   });
 
   it('asks the API for the next page', async () => {
@@ -261,5 +284,88 @@ describe('MovementsPage', () => {
     expect(await screen.findByText('Wood Glue')).toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('link', { name: 'Movements' })).toBeInTheDocument();
+  });
+});
+
+describe('Movements page on a phone', () => {
+  let restore = () => {};
+  beforeEach(() => {
+    restore = mockMobile();
+  });
+  afterEach(() => restore());
+
+  it('shows each movement as a card with its change, before to after, user and date', async () => {
+    movementsApi([received, shipped]);
+    renderApp({ route: '/movements' });
+
+    const card = within((await screen.findByText('Claw Hammer')).closest('li'));
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(card.getByText('HAM-001')).toBeInTheDocument();
+    expect(card.getByText('Receive')).toHaveClass('text-success');
+    expect(card.getByText('+40')).toBeInTheDocument();
+    expect(card.getByText('0 → 40')).toBeInTheDocument();
+    expect(card.getByText('Ana Admin')).toBeInTheDocument();
+    expect(card.getByText(/Oct 14, 2026/)).toBeInTheDocument();
+  });
+
+  it('puts the filters in a sheet with their count, and keeps Export in the header', async () => {
+    movementsApi([received]);
+    const user = userEvent.setup();
+    renderApp({ route: `/movements?user=${SAM_ID}&type=ship` });
+
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Stock movements' });
+    expect(
+      within(heading.closest('div').parentElement).getByRole('button', { name: 'Export to Excel' }),
+    ).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /^Filters/ });
+    expect(button).toHaveTextContent('2');
+    expect(screen.queryByRole('combobox', { name: 'Type' })).not.toBeInTheDocument();
+
+    await user.click(button);
+    const sheet = within(await screen.findByRole('dialog', { name: 'Filters' }));
+    expect(sheet.getByRole('combobox', { name: 'Type' })).toBeInTheDocument();
+    expect(sheet.getByRole('button', { name: 'Clear filters' })).toBeEnabled();
+  });
+});
+
+describe('Movements date range in the phone filters sheet', () => {
+  let restore = () => {};
+  beforeEach(() => {
+    restore = mockMobile();
+  });
+  afterEach(() => restore());
+
+  it('opens the calendar inline in the sheet, closes it after the end date, and Apply is one tap', async () => {
+    const user = userEvent.setup();
+    const state = movementsApi([received]);
+    const start = new Date(2026, 9, 14).toISOString();
+    renderApp({ route: `/movements?from=${encodeURIComponent(start)}` });
+    await screen.findByText('Claw Hammer');
+
+    await user.click(screen.getByRole('button', { name: /^Filters/ }));
+    const sheet = within(await screen.findByRole('dialog', { name: 'Filters' }));
+    const dates = sheet.getByRole('button', { name: 'Dates' });
+    expect(dates).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(dates);
+    // Inline: the calendar is inside the sheet itself, not in a floating popover layer.
+    expect(dates).toHaveAttribute('aria-expanded', 'true');
+    const day = await sheet.findByRole('button', { name: /October 20th, 2026/ });
+    expect(document.querySelector('[data-radix-popper-content-wrapper]')).toBeNull();
+
+    await user.click(day);
+    await waitFor(() =>
+      expect(lastQuery(state)).toMatchObject({ to: new Date(2026, 9, 21).toISOString() }),
+    );
+    // The end date closes the calendar again; the field shows the range.
+    await waitFor(() => expect(dates).toHaveAttribute('aria-expanded', 'false'));
+    expect(dates).toHaveTextContent('Oct 14, 2026 to Oct 20, 2026');
+
+    // With the calendar open, one tap on the sheet's Apply closes the sheet.
+    await user.click(dates);
+    expect(await sheet.findByRole('button', { name: 'Clear dates' })).toBeInTheDocument();
+    const applyButtons = sheet.getAllByRole('button', { name: 'Apply' });
+    await user.click(applyButtons.at(-1));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });

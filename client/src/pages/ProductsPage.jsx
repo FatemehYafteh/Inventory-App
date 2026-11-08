@@ -227,6 +227,7 @@ export function ProductsPage() {
         onRestore={restore}
         isLoading={products.isPending}
         error={products.error}
+        onRetry={() => products.refetch()}
         emptyMessage={filtered ? t('products.page.emptyFiltered') : t('products.page.empty')}
         toolbar={
           <ProductFilters

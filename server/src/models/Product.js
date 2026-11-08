@@ -41,11 +41,14 @@ productSchema.virtual('stockStatus').get(function getStockStatus() {
 
 // SKUs are stored uppercase, so a plain unique index is case-insensitive.
 productSchema.index({ sku: 1 }, { unique: true });
-productSchema.index({ category: 1 });
-productSchema.index({ supplier: 1 });
-productSchema.index({ title: 1 });
-productSchema.index({ quantity: 1 });
-productSchema.index({ price: 1 });
-productSchema.index({ isArchived: 1 });
+// The list always filters on isArchived and sorts by one column, so each sort has a compound
+// index that starts with isArchived. The title sort is case-insensitive (the collation the list
+// uses), and an index only serves a sort with the same collation. _id breaks ties.
+const LIST_COLLATION = { locale: 'en', strength: 2 };
+productSchema.index({ isArchived: 1, title: 1, _id: 1 }, { collation: LIST_COLLATION });
+productSchema.index({ isArchived: 1, quantity: 1, _id: 1 });
+productSchema.index({ isArchived: 1, price: 1, _id: 1 });
+productSchema.index({ category: 1, isArchived: 1 });
+productSchema.index({ supplier: 1, isArchived: 1 });
 
 export const Product = mongoose.model('Product', productSchema);

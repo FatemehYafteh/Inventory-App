@@ -137,6 +137,7 @@ export function SuppliersPage() {
       <PageHeader
         ref={headingRef}
         title={t('suppliers.title')}
+        description={t('suppliers.description')}
         actions={canManage && <Button onClick={() => onEdit(null)}>{t('suppliers.add')}</Button>}
       />
       <FormAlert>{actionError}</FormAlert>
@@ -161,10 +162,12 @@ export function SuppliersPage() {
         }}
         isLoading={suppliers.isPending}
         error={suppliers.error}
+        onRetry={() => suppliers.refetch()}
         emptyMessage={search ? t('suppliers.emptySearch') : t('suppliers.empty')}
         toolbar={
           <Input
             type="search"
+            dir="auto"
             aria-label={t('suppliers.searchLabel')}
             placeholder={t('suppliers.searchPlaceholder')}
             className="max-w-sm"

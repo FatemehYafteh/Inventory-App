@@ -56,12 +56,14 @@ export function CategoryForm({ category, onSubmit, onCancel, onCloseAutoFocus })
           <FormAlert>{formError}</FormAlert>
           <TextField
             id="category-title"
+            dir="auto"
             label={t('categories.form.titleLabel')}
             error={errors.title}
             {...register('title')}
           />
           <TextField
             id="category-description"
+            dir="auto"
             label={t('categories.form.descriptionLabel')}
             error={errors.description}
             {...register('description')}

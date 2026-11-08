@@ -131,11 +131,13 @@ export function UsersPage() {
             }}
             isLoading={users.isPending}
             error={users.error}
+            onRetry={() => users.refetch()}
             emptyMessage={emptyMessage(t, { status, search, incomplete })}
             toolbar={
               <div className="flex flex-wrap items-center gap-4">
                 <Input
                   type="search"
+                  dir="auto"
                   aria-label={t('users.toolbar.searchLabel')}
                   placeholder={t('users.toolbar.searchPlaceholder')}
                   className="max-w-xs"

@@ -110,7 +110,13 @@ export function UserDrawer({ userId, onClose }) {
     <Sheet open={Boolean(userId)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="overflow-y-auto sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>{detail.data?.user.name ?? t('users.drawer.defaultTitle')}</SheetTitle>
+          <SheetTitle>
+            {detail.data?.user.name ? (
+              <bdi>{detail.data.user.name}</bdi>
+            ) : (
+              t('users.drawer.defaultTitle')
+            )}
+          </SheetTitle>
           <SheetDescription>{t('users.drawer.description')}</SheetDescription>
         </SheetHeader>
         {detail.isPending && !detail.error && (

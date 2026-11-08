@@ -2,6 +2,7 @@ import { Minus, Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/data-table/DataTable';
+import { renderCell } from '@/components/data-table/renderCell';
 import { RowActionsMenu } from '@/components/data-table/RowActionsMenu';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ export function ProductTable({
   onPaginationChange,
   isLoading,
   error,
+  onRetry,
   emptyMessage,
   toolbar,
   onEdit,
@@ -109,12 +111,13 @@ export function ProductTable({
         header: t('products.table.quantity'),
         cell: ({ row }) => {
           const { title, quantity, isArchived } = row.original;
+          // 40px targets on touch screens (cards, below lg), 32px in the desktop table.
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 lg:gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="w-8 px-0"
+                className="h-10 w-10 px-0 lg:h-8 lg:w-8"
                 aria-label={t('products.table.decreaseQuantity', { title })}
                 disabled={isArchived || quantity <= 0}
                 onClick={() => onStep(row.original, -1)}
@@ -125,7 +128,7 @@ export function ProductTable({
               <Button
                 variant="outline"
                 size="sm"
-                className="w-8 px-0"
+                className="h-10 w-10 px-0 lg:h-8 lg:w-8"
                 aria-label={t('products.table.increaseQuantity', { title })}
                 disabled={isArchived}
                 onClick={() => onStep(row.original, 1)}
@@ -199,6 +202,44 @@ export function ProductTable({
     [t, onEdit, onStep, onAdjust, onHistory, canArchive, showArchived, onArchive, onRestore],
   );
 
+  // Below md each product is a card that reuses the table's own cells, so behaviour is shared.
+  const renderCard = (product) => {
+    const cell = (id) => renderCell(columns, id, product);
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="font-medium [overflow-wrap:anywhere]">
+              <bdi>{product.title}</bdi>
+            </span>
+            <span className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
+              <bdi>{product.sku}</bdi>
+            </span>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            {cell('stockStatus')}
+            {product.isArchived && <StatusBadge status="archived" />}
+          </div>
+        </div>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('products.table.quantity')}</dt>
+            <dd>{cell('quantity')}</dd>
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('products.table.price')}</dt>
+            <dd>{cell('price')}</dd>
+          </div>
+          <div className="col-span-2 flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('products.table.category')}</dt>
+            <dd>{cell('category')}</dd>
+          </div>
+        </dl>
+        {cell('actions')}
+      </div>
+    );
+  };
+
   return (
     <DataTable
       columns={columns}
@@ -210,8 +251,10 @@ export function ProductTable({
       onPaginationChange={onPaginationChange}
       isLoading={isLoading}
       error={error}
+      onRetry={onRetry}
       emptyMessage={emptyMessage}
       toolbar={toolbar}
+      renderCard={renderCard}
     />
   );
 }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { productCountLabel } from '@/components/categories/CategoryCard';
 import { DataTable } from '@/components/data-table/DataTable';
+import { renderCell } from '@/components/data-table/renderCell';
 import { RowActionsMenu } from '@/components/data-table/RowActionsMenu';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,12 @@ export function inUseReason({ productCount, movementCount }) {
 }
 
 const dash = <span className="text-muted-foreground">—</span>;
+
+const linkClass =
+  'rounded-sm text-primary-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50';
+
+// Emails and phone numbers read left to right in every language, isolated from the text around.
+const ltr = '[unicode-bidi:isolate] [overflow-wrap:anywhere]';
 
 function Actions({ supplier, busy, onEdit, onToggleActive, onDelete }) {
   const { t } = useTranslation();
@@ -94,6 +101,7 @@ export function SupplierTable({
   onPaginationChange,
   isLoading,
   error,
+  onRetry,
   emptyMessage,
   toolbar,
   onEdit,
@@ -129,19 +137,44 @@ export function SupplierTable({
         id: 'phone',
         header: t('suppliers.table.phone'),
         enableSorting: false,
-        cell: ({ row }) => (row.original.phone ? <bdi>{row.original.phone}</bdi> : dash),
+        cell: ({ row }) =>
+          row.original.phone ? (
+            <a
+              href={`tel:${row.original.phone.replace(/[^\d+]/g, '')}`}
+              dir="ltr"
+              className={`${linkClass} ${ltr}`}
+            >
+              {row.original.phone}
+            </a>
+          ) : (
+            dash
+          ),
       },
       {
         id: 'email',
         header: t('suppliers.table.email'),
         enableSorting: false,
-        cell: ({ row }) => (row.original.email ? <bdi>{row.original.email}</bdi> : dash),
+        cell: ({ row }) =>
+          row.original.email ? (
+            <a href={`mailto:${row.original.email}`} dir="ltr" className={`${linkClass} ${ltr}`}>
+              {row.original.email}
+            </a>
+          ) : (
+            dash
+          ),
       },
       {
         id: 'productCount',
         header: t('suppliers.table.productCount'),
         enableSorting: false,
-        cell: ({ row }) => row.original.productCount,
+        cell: ({ row }) => (
+          <Link
+            to={`/products?supplier=${encodeURIComponent(row.original.id)}`}
+            className={`${linkClass} tabular-nums`}
+          >
+            {formatNumber(row.original.productCount)}
+          </Link>
+        ),
       },
       ...(canManage
         ? [
@@ -165,6 +198,57 @@ export function SupplierTable({
     [t, canManage, busy, onEdit, onToggleActive, onDelete],
   );
 
+  // Below md each supplier is a card. Phone and email are links, always left to right.
+  const renderCard = (supplier) => {
+    const cell = (id) => renderCell(columns, id, supplier);
+    const linkClass =
+      'rounded-sm text-primary-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [unicode-bidi:isolate] [overflow-wrap:anywhere]';
+    return (
+      <div className="flex flex-col gap-3">
+        {cell('name')}
+        <dl className="grid grid-cols-1 gap-y-2 text-sm">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('suppliers.table.contactPerson')}</dt>
+            <dd>{cell('contactPerson')}</dd>
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('suppliers.table.phone')}</dt>
+            <dd>
+              {supplier.phone ? (
+                <a
+                  href={`tel:${supplier.phone.replace(/[^\d+]/g, '')}`}
+                  dir="ltr"
+                  className={linkClass}
+                >
+                  {supplier.phone}
+                </a>
+              ) : (
+                dash
+              )}
+            </dd>
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('suppliers.table.email')}</dt>
+            <dd>
+              {supplier.email ? (
+                <a href={`mailto:${supplier.email}`} dir="ltr" className={linkClass}>
+                  {supplier.email}
+                </a>
+              ) : (
+                dash
+              )}
+            </dd>
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('suppliers.table.productCount')}</dt>
+            <dd>{cell('productCount')}</dd>
+          </div>
+        </dl>
+        {canManage && cell('actions')}
+      </div>
+    );
+  };
+
   return (
     <DataTable
       columns={columns}
@@ -176,8 +260,10 @@ export function SupplierTable({
       onPaginationChange={onPaginationChange}
       isLoading={isLoading}
       error={error}
+      onRetry={onRetry}
       emptyMessage={emptyMessage}
       toolbar={toolbar}
+      renderCard={renderCard}
     />
   );
 }

@@ -56,6 +56,7 @@ function ProfileForm({ user, onSent, onCancel }) {
         <FormAlert>{formError}</FormAlert>
         <TextField
           id="name"
+          dir="auto"
           label={t('auth.common.name')}
           autoComplete="name"
           error={errors.name}
@@ -63,6 +64,7 @@ function ProfileForm({ user, onSent, onCancel }) {
         />
         <TextField
           id="email"
+          dir="ltr"
           label={t('auth.common.email')}
           type="email"
           autoComplete="email"

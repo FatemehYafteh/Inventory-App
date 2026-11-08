@@ -1,0 +1,43 @@
+# Runs lint and every test suite on each pull request and on main, so a PR (including the
+# Dependabot updates) shows a green check or a red cross before it is merged.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # mongodb-memory-server downloads a MongoDB binary for the server tests; keep it between runs.
+      - name: Cache the MongoDB binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests (shared, server, client)
+        run: npm test
