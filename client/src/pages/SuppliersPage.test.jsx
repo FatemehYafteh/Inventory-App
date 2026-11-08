@@ -102,6 +102,31 @@ describe('Suppliers page', () => {
     }
   });
 
+  it('links the email, the phone and the product count, keeping contacts left to right', async () => {
+    suppliersApi([acme]);
+    renderApp({ route: '/suppliers' });
+
+    const acmeRow = within(await row('Acme Tools'));
+    const email = acmeRow.getByRole('link', { name: 'rita@acme.test' });
+    expect(email).toHaveAttribute('href', 'mailto:rita@acme.test');
+    expect(email).toHaveAttribute('dir', 'ltr');
+    const phone = acmeRow.getByRole('link', { name: '555-0100' });
+    expect(phone).toHaveAttribute('href', 'tel:5550100');
+    expect(phone).toHaveAttribute('dir', 'ltr');
+    expect(acmeRow.getByRole('link', { name: '2' })).toHaveAttribute(
+      'href',
+      '/products?supplier=p1',
+    );
+  });
+
+  it('describes the page under its title', async () => {
+    suppliersApi([acme]);
+    renderApp({ route: '/suppliers' });
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Suppliers' })).toBeInTheDocument();
+    expect(screen.getByText('Suppliers and their contact details.')).toBeInTheDocument();
+  });
+
   it('is in the navigation for admins and staff', async () => {
     for (const me of [admin, staff]) {
       suppliersApi([acme], { me });
