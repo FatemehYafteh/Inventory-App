@@ -381,6 +381,14 @@ describe('live server: the database goes down and comes back', () => {
     expect(res.status).toBe(200);
   });
 
+  it('the readiness check reports the outage with a 503', async () => {
+    const res = await call('get', '/api/health/ready');
+    const note = `status ${res.status} after ${res.ms} ms: ${res.text.slice(0, 160)}`;
+    expect(res.status, note).toBe(503);
+    expect(res.json?.database, note).toBe('down');
+    expect(res.ms, note).toBeLessThan(10_000);
+  }, 60_000);
+
   it('the server process survives the outage', () => {
     expect(child.exitCode).toBeNull();
   });
@@ -398,6 +406,9 @@ describe('live server: the database goes down and comes back', () => {
 
     expect(recovered.status).toBe(200);
     expect(child.exitCode).toBeNull();
+    const ready = await call('get', '/api/health/ready');
+    expect(ready.status).toBe(200);
+    expect(ready.json).toEqual({ status: 'ok', database: 'up' });
     // The write attempted during the outage did not land.
     expect(
       await mongoose.connection.db

@@ -7,6 +7,7 @@ import { errorHandler, notFound } from './middleware/error.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { categoriesRoutes } from './routes/categories.routes.js';
 import { dashboardRoutes } from './routes/dashboard.routes.js';
+import { healthRoutes } from './routes/health.routes.js';
 import { movementsRoutes } from './routes/movements.routes.js';
 import { productsRoutes } from './routes/products.routes.js';
 import { suppliersRoutes } from './routes/suppliers.routes.js';
@@ -53,7 +54,7 @@ export function createApp(
     );
   }
   api.use(csrf(config));
-  api.get('/health', (_req, res) => res.json({ status: 'ok' }));
+  api.use('/health', healthRoutes());
   api.use('/auth', authRoutes(config));
   api.use('/users', usersRoutes(config));
   api.use('/categories', categoriesRoutes(config));
