@@ -41,7 +41,9 @@ export function useLanguageSync() {
     if (isDemoUser(user)) return;
 
     if (before === null) {
-      if (savesLanguage(user) && user.language !== i18n.language) {
+      // Only an account with a saved language is updated; without one there is nothing that
+      // could switch the app away from what the person was using.
+      if (savesLanguage(user) && user.language && user.language !== i18n.language) {
         const language = i18n.language;
         // Shown at once, so a refetch of the session before the save answers cannot switch back.
         queryClient.setQueryData(ME_QUERY_KEY, { ...user, language });
