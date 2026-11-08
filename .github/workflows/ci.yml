@@ -39,5 +39,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # The same command Vercel runs (vercel.json buildCommand), so a change that breaks the
+      # production build fails here, on the pull request, and not on the deploy.
+      - name: Production build (client)
+        run: npm run build -w client
+
       - name: Tests (shared, server, client)
         run: npm test
