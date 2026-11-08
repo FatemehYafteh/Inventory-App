@@ -37,3 +37,7 @@ server/.dev-db*/
 
 # Vite dependency cache
 client/.vite/
+
+# Working notes from the pre-delivery review (not part of the project)
+/REVIEW.md
+/REVIEW-PROGRESS.md
