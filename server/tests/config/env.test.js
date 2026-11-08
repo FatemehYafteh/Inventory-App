@@ -165,4 +165,13 @@ describe('loadConfig', () => {
     expect(custom.mongo).toEqual({ serverSelectionTimeoutMS: 8000, maxPoolSize: 3 });
     expect(() => loadConfig({ ...base, MONGO_MAX_POOL_SIZE: '0' })).toThrow(/MONGO_MAX_POOL_SIZE/);
   });
+
+  it('keeps rate-limit counters in MongoDB in production, in memory elsewhere, unless set', () => {
+    expect(loadConfig(base).rateLimitStore).toBe('memory');
+    expect(loadConfig({ ...base, RATE_LIMIT_STORE: '' }).rateLimitStore).toBe('memory');
+    expect(loadConfig(production).rateLimitStore).toBe('mongo');
+    expect(loadConfig({ ...production, RATE_LIMIT_STORE: 'memory' }).rateLimitStore).toBe('memory');
+    expect(loadConfig({ ...base, RATE_LIMIT_STORE: 'mongo' }).rateLimitStore).toBe('mongo');
+    expect(() => loadConfig({ ...base, RATE_LIMIT_STORE: 'redis' })).toThrow(/RATE_LIMIT_STORE/);
+  });
 });
