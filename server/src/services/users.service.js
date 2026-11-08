@@ -11,7 +11,7 @@ function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function filterFor({ status, search, incomplete }) {
+function filterFor({ status, search, incomplete }, { searchContact }) {
   const filter = {};
   if (status) filter.status = status;
   // The Pending tab is the approval queue: only complete profiles, unless the unfinished
@@ -22,18 +22,21 @@ function filterFor({ status, search, incomplete }) {
   }
   if (search) {
     const pattern = new RegExp(escapeRegex(search), 'i');
-    filter.$or = [{ name: pattern }, { email: pattern }, { telegramUsername: pattern }];
+    filter.$or = searchContact
+      ? [{ name: pattern }, { email: pattern }, { telegramUsername: pattern }]
+      : [{ name: pattern }];
   }
   return filter;
 }
 
 /**
  * One page of users for the Users page. Pending: oldest signup first (first in, first out);
- * everything else by name.
+ * everything else by name. `searchContact: false` (the demo account, which sees contact details
+ * hidden) searches names only, so a search cannot reveal an email or Telegram username.
  */
-export async function listUsers(query) {
+export async function listUsers(query, { searchContact = true } = {}) {
   const { page, limit, status } = query;
-  const filter = filterFor(query);
+  const filter = filterFor(query, { searchContact });
   const sort = status === 'pending' ? { createdAt: 1, _id: 1 } : { name: 1, _id: 1 };
 
   const [users, total] = await Promise.all([
