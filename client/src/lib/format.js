@@ -28,6 +28,13 @@ export function formatPrice(value) {
   ).format(value);
 }
 
+/** A day of the month in the current calendar and digits: `14`, or `۲۲` (Mehr) in Persian. */
+export function formatDay(value) {
+  return formatter('day', (locale) => new Intl.DateTimeFormat(locale, { day: 'numeric' })).format(
+    new Date(value),
+  );
+}
+
 /** An ISO timestamp as a short date, e.g. `Oct 14, 2026` or `۲۲ مهر ۱۴۰۵`. */
 export function formatDate(value) {
   return value

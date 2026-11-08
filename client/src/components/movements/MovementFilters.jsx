@@ -1,12 +1,17 @@
 import { useTranslation } from 'react-i18next';
+import { MobileFilters } from '@/components/data-table/MobileFilters';
 import { DateRangePicker } from '@/components/movements/DateRangePicker';
 import { ProductPicker } from '@/components/movements/ProductPicker';
 import { FilterSelect } from '@/components/products/ProductFilters';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export const TYPE_OPTIONS = ['receive', 'ship', 'adjust', 'increment', 'decrement'];
 
-/** The filters above the movements table. The page owns every value (they live in the URL). */
+/**
+ * The filters above the movements table. The page owns every value (they live in the URL).
+ * Below `md` they move into a "Filters" bottom sheet.
+ */
 export function MovementFilters({
   product,
   type,
@@ -22,8 +27,10 @@ export function MovementFilters({
   onClear,
 }) {
   const { t } = useTranslation();
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+  const isMobile = useIsMobile();
+
+  const controls = (
+    <>
       <ProductPicker
         value={product}
         includeArchived={includeArchived}
@@ -51,6 +58,25 @@ export function MovementFilters({
         onChange={(value) => onChange({ user: value })}
       />
       <DateRangePicker from={from} to={to} onChange={onChange} />
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <MobileFilters
+        activeCount={[product, type, supplier, user, from || to].filter(Boolean).length}
+        canClear={canClear}
+        onClear={onClear}
+        clearLabel={t('movements.filters.clear')}
+      >
+        {controls}
+      </MobileFilters>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      {controls}
       <Button variant="outline" size="sm" disabled={!canClear} onClick={onClear}>
         {t('movements.filters.clear')}
       </Button>

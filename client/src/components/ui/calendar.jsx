@@ -3,6 +3,7 @@ import { DayPicker } from '@daypicker/react';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { buttonVariants } from '@/components/ui/button';
+import { formatDay } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 function Chevron({ orientation, className }) {
@@ -51,6 +52,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
         ...classNames,
       }}
       components={{ Chevron }}
+      // Every day number, selected or not, in the current language's digits and calendar.
+      formatters={{ formatDay: (date) => formatDay(date), ...props.formatters }}
       {...props}
     />
   );

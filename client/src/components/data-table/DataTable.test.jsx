@@ -1,8 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DataTable } from '@/components/data-table/DataTable';
+import { mockMobile } from '@/test/mobile';
 
 const columns = [
   { accessorKey: 'title', header: 'Title' },
@@ -130,5 +131,75 @@ describe('DataTable', () => {
 
     rerender(<Harness data={noRows} rowCount={0} error={new Error('Could not load products.')} />);
     expect(screen.getByRole('alert')).toHaveTextContent('Could not load products.');
+  });
+});
+
+describe('DataTable on a phone', () => {
+  let restore = () => {};
+  afterEach(() => restore());
+  const card = (row) => (
+    <p>
+      {row.title} / {row.sku}
+    </p>
+  );
+
+  it('renders each row as a card instead of a table', () => {
+    restore = mockMobile();
+    render(<Harness renderCard={card} />);
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    const items = screen.getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent('Desk lamp / LAMP-01');
+    expect(screen.getByText('45 results')).toBeInTheDocument();
+  });
+
+  it('sorts from a "Sort by" select, since the cards have no column headers', async () => {
+    restore = mockMobile();
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Harness renderCard={card} onChange={onChange} />);
+
+    const select = screen.getByLabelText('Sort by');
+    // Only the sortable columns are offered (SKU is not), each both ways.
+    expect(
+      within(select)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual([
+      '',
+      'Title (ascending)',
+      'Title (descending)',
+      'Quantity (ascending)',
+      'Quantity (descending)',
+    ]);
+    await user.selectOptions(select, 'quantity:desc');
+    expect(onChange).toHaveBeenLastCalledWith({ sorting: [{ id: 'quantity', desc: true }] });
+    expect(select).toHaveValue('quantity:desc');
+  });
+
+  it('says so in a card-sized box when there are no rows', () => {
+    restore = mockMobile();
+    render(<Harness renderCard={card} data={noRows} rowCount={0} emptyMessage="Nothing here." />);
+
+    expect(screen.getByText('Nothing here.')).toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+  });
+
+  it('keeps the table on a large screen even when cards are offered', () => {
+    render(<Harness renderCard={card} />);
+
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Sort by')).not.toBeInTheDocument();
+  });
+
+  it('keeps the paging bar compact: rows per page is for large screens only', () => {
+    restore = mockMobile();
+    render(<Harness renderCard={card} />);
+
+    expect(screen.getByLabelText('Rows per page').parentElement).toHaveClass('hidden', 'md:flex');
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeInTheDocument();
+    expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument();
   });
 });

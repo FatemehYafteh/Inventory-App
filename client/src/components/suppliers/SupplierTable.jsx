@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { productCountLabel } from '@/components/categories/CategoryCard';
 import { DataTable } from '@/components/data-table/DataTable';
+import { renderCell } from '@/components/data-table/renderCell';
 import { RowActionsMenu } from '@/components/data-table/RowActionsMenu';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -196,6 +197,57 @@ export function SupplierTable({
     [t, canManage, busy, onEdit, onToggleActive, onDelete],
   );
 
+  // Below md each supplier is a card. Phone and email are links, always left to right.
+  const renderCard = (supplier) => {
+    const cell = (id) => renderCell(columns, id, supplier);
+    const linkClass =
+      'rounded-sm text-primary-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [unicode-bidi:isolate] [overflow-wrap:anywhere]';
+    return (
+      <div className="flex flex-col gap-3">
+        {cell('name')}
+        <dl className="grid grid-cols-1 gap-y-2 text-sm">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('suppliers.table.contactPerson')}</dt>
+            <dd>{cell('contactPerson')}</dd>
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('suppliers.table.phone')}</dt>
+            <dd>
+              {supplier.phone ? (
+                <a
+                  href={`tel:${supplier.phone.replace(/[^\d+]/g, '')}`}
+                  dir="ltr"
+                  className={linkClass}
+                >
+                  {supplier.phone}
+                </a>
+              ) : (
+                dash
+              )}
+            </dd>
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('suppliers.table.email')}</dt>
+            <dd>
+              {supplier.email ? (
+                <a href={`mailto:${supplier.email}`} dir="ltr" className={linkClass}>
+                  {supplier.email}
+                </a>
+              ) : (
+                dash
+              )}
+            </dd>
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <dt className="text-muted-foreground">{t('suppliers.table.productCount')}</dt>
+            <dd>{cell('productCount')}</dd>
+          </div>
+        </dl>
+        {canManage && cell('actions')}
+      </div>
+    );
+  };
+
   return (
     <DataTable
       columns={columns}
@@ -209,6 +261,7 @@ export function SupplierTable({
       error={error}
       emptyMessage={emptyMessage}
       toolbar={toolbar}
+      renderCard={renderCard}
     />
   );
 }
