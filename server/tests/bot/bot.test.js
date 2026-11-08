@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
-import { startBot } from '../../src/bot/bot.js';
+import { registerWebhook, startBot } from '../../src/bot/bot.js';
+import { startBotSafely } from '../../src/bot/startSafely.js';
 import { AuthRequest } from '../../src/models/AuthRequest.js';
 import { START_REPLIES } from '../../src/services/telegramAuth.service.js';
 import { ORIGIN, buildApp, createUser, useTestDatabase } from '../helpers/setup.js';
@@ -96,6 +97,37 @@ describe('startBot', () => {
       /TELEGRAM_BOT_USERNAME is @other_bot, but the token belongs to @test_bot/,
     );
     expect(calls).toEqual([]);
+  });
+});
+
+describe('Webhook registration on Vercel', () => {
+  const env = {
+    APP_URL: 'https://inventory.example.com',
+    TELEGRAM_WEBHOOK_SECRET: 'webhook-secret',
+    BOT_MODE: 'webhook',
+    TELEGRAM_BOT_USERNAME: 'test_bot',
+  };
+  const quiet = () => ({ info: vi.fn(), error: vi.fn() });
+
+  it('only checks the bot on a cold start, without calling setWebhook', async () => {
+    const config = botConfig(env);
+    const { bot, calls } = fakeBot(config);
+
+    await expect(startBotSafely(bot, config, { logger: quiet() })).resolves.toBe(true);
+
+    expect(calls.map((call) => call.method)).not.toContain('setWebhook');
+  });
+
+  it('registers the webhook once with the script helper', async () => {
+    const config = botConfig(env);
+    const { bot, calls } = fakeBot(config);
+
+    const url = await registerWebhook(bot, config, { logger: quiet() });
+
+    expect(url).toBe('https://inventory.example.com/api/telegram/webhook');
+    expect(calls).toEqual([
+      { method: 'setWebhook', payload: { url, secret_token: 'webhook-secret' } },
+    ]);
   });
 });
 

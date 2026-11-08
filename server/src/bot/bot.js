@@ -38,15 +38,11 @@ export function createBot(config, { botInfo, logger = console } = {}) {
 }
 
 /**
- * Starts receiving updates. `polling`: long polling, for development. `webhook`: registers
- * APP_URL/api/telegram/webhook with Telegram (the route itself is in `app.js`); a failure
- * to register is logged, and the API keeps serving.
- * Throws (so startup fails) when the token is bad or belongs to another bot than
- * TELEGRAM_BOT_USERNAME.
+ * Fetches the bot's own info (getMe) and checks it against TELEGRAM_BOT_USERNAME, so deep links
+ * never name a bot other than the one that receives the start token. Throws on a bad token or a
+ * mismatch. Makes no change at Telegram.
  */
-export async function startBot(bot, config, { logger = console } = {}) {
-  // getMe, so a bad token fails startup instead of every webhook call, and deep links never
-  // name a bot other than the one that receives the start token.
+export async function initBot(bot, config) {
   await bot.init();
   const actual = bot.botInfo.username;
   const configured = config.telegram.botUsername;
@@ -55,14 +51,42 @@ export async function startBot(bot, config, { logger = console } = {}) {
       `TELEGRAM_BOT_USERNAME is @${configured ?? '(not set)'}, but the token belongs to @${actual}`,
     );
   }
+}
+
+/** The URL Telegram sends updates to in webhook mode. */
+export function webhookUrl(config) {
+  return `${config.appUrl}/api/telegram/webhook`;
+}
+
+/**
+ * Tells Telegram to send updates to APP_URL/api/telegram/webhook with the secret token. The
+ * registration stays at Telegram until changed, so it is needed once per address (see
+ * `npm run tg:webhook -w server`). Throws when Telegram refuses.
+ */
+export async function registerWebhook(bot, config, { logger = console } = {}) {
+  const url = webhookUrl(config);
+  await bot.api.setWebhook(url, { secret_token: config.telegram.webhookSecret });
+  logger.info(`[telegram] Webhook registered at ${url}`);
+  return url;
+}
+
+/**
+ * Starts receiving updates on a long-running server (`index.js`). `polling`: long polling, for
+ * development. `webhook`: registers the webhook; a failure to register is logged, and the API
+ * keeps serving.
+ * Throws (so startup fails) when the token is bad or belongs to another bot than
+ * TELEGRAM_BOT_USERNAME.
+ */
+export async function startBot(bot, config, { logger = console } = {}) {
+  await initBot(bot, config);
 
   if (config.telegram.mode === 'webhook') {
-    const url = `${config.appUrl}/api/telegram/webhook`;
     try {
-      await bot.api.setWebhook(url, { secret_token: config.telegram.webhookSecret });
-      logger.info(`[telegram] Webhook registered at ${url}`);
+      await registerWebhook(bot, config, { logger });
     } catch (err) {
-      logger.error(`[telegram] Could not register the webhook at ${url}: ${err.message}`);
+      logger.error(
+        `[telegram] Could not register the webhook at ${webhookUrl(config)}: ${err.message}`,
+      );
     }
     return;
   }

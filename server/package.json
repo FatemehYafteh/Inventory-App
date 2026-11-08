@@ -14,6 +14,9 @@
     "seed:reset": "node --env-file=.env scripts/seed.js --reset",
     "seed:demo-reset": "node --env-file=.env scripts/seed-demo-reset.js",
     "tg:start": "node --env-file=.env scripts/tg-start.js",
+    "tg:webhook": "node --env-file=.env scripts/telegram-webhook.js",
+    "db:migrate-initial-reason": "node --env-file=.env scripts/db-maintenance.js migrate-initial-reason",
+    "db:sync-indexes": "node --env-file=.env scripts/db-maintenance.js sync-indexes",
     "secret:generate": "node scripts/generate-secret.js"
   },
   "dependencies": {

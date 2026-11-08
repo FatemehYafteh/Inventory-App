@@ -8,7 +8,8 @@ export const MOVEMENT_TYPES = ['receive', 'ship', 'adjust', 'increment', 'decrem
 export const MOVEMENT_REASONS = ['initial'];
 
 // Before `reason` existed, the initial movement stored this English text as its note.
-const LEGACY_INITIAL_NOTE = 'Initial stock';
+// `npm run db:migrate-initial-reason -w server` rewrites those, after which this can go.
+export const LEGACY_INITIAL_NOTE = 'Initial stock';
 
 /** The `reason` and `note` to send for a movement, mapping the legacy English note to `initial`. */
 export function reasonAndNote(movement) {
