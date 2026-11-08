@@ -136,6 +136,7 @@ export function UsersPage() {
               <div className="flex flex-wrap items-center gap-4">
                 <Input
                   type="search"
+                  dir="auto"
                   aria-label={t('users.toolbar.searchLabel')}
                   placeholder={t('users.toolbar.searchPlaceholder')}
                   className="max-w-xs"

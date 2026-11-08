@@ -56,24 +56,28 @@ export function SupplierForm({ supplier, onSubmit, onCancel, onCloseAutoFocus })
           <FormAlert>{formError}</FormAlert>
           <TextField
             id="supplier-name"
+            dir="auto"
             label={t('suppliers.form.name')}
             error={errors.name}
             {...register('name')}
           />
           <TextField
             id="supplier-contact"
+            dir="auto"
             label={t('suppliers.form.contactPerson')}
             error={errors.contactPerson}
             {...register('contactPerson')}
           />
           <TextField
             id="supplier-phone"
+            dir="ltr"
             label={t('suppliers.form.phone')}
             error={errors.phone}
             {...register('phone')}
           />
           <TextField
             id="supplier-email"
+            dir="ltr"
             label={t('suppliers.form.email')}
             type="email"
             error={errors.email}
@@ -81,12 +85,14 @@ export function SupplierForm({ supplier, onSubmit, onCancel, onCloseAutoFocus })
           />
           <TextField
             id="supplier-address"
+            dir="auto"
             label={t('suppliers.form.address')}
             error={errors.address}
             {...register('address')}
           />
           <TextField
             id="supplier-notes"
+            dir="auto"
             label={t('suppliers.form.notes')}
             error={errors.notes}
             {...register('notes')}

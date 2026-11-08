@@ -156,6 +156,7 @@ export function StockAdjustDialog({ product, onSubmit, onCancel, onCloseAutoFocu
             <Label htmlFor="stock-note">{t('products.adjust.note')}</Label>
             <Textarea
               id="stock-note"
+              dir="auto"
               aria-invalid={Boolean(errors.note)}
               aria-describedby={errors.note ? 'stock-note-error' : undefined}
               {...register('note')}

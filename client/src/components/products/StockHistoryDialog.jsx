@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { TBdi } from '@/components/BidiText';
 import { DataTable } from '@/components/data-table/DataTable';
 import { MovementTypeBadge } from '@/components/movements/MovementTypeBadge';
 import { movementNote } from '@/components/movements/movementNote';
@@ -117,7 +118,10 @@ export function StockHistoryDialog({ product, onClose, onCloseAutoFocus }) {
         <DialogHeader>
           <DialogTitle>{t('products.history.title')}</DialogTitle>
           <DialogDescription className="[overflow-wrap:anywhere]">
-            {t('products.history.description', { title: product.title, sku: product.sku })}
+            <TBdi
+              i18nKey="products.history.description"
+              values={{ title: product.title, sku: product.sku }}
+            />
           </DialogDescription>
         </DialogHeader>
         {/* min-w-0 lets the table scroll inside the dialog instead of widening it. */}
