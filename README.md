@@ -86,6 +86,38 @@ Everything is served from one address, so the `SameSite=Strict` cookies and the 
 - Health checks: `GET /api/health` says the process is up and never touches the database. `GET /api/health/ready` also pings MongoDB (3 s limit) and answers `503` when it is down, so point an uptime monitor or load balancer at `/api/health/ready` to catch a database outage. Both are public and cheap; the ready check is limited to 120 a minute per IP.
 - If the database is unreachable the API answers `503 SERVICE_UNAVAILABLE` (with `Retry-After`) and recovers by itself when it returns, with no restart.
 
+## Known limitations
+What a careful reviewer would still point out, in plain words, and what would fix it. None of them
+stops the app from working today.
+
+1. **Nothing protects the production data yet.**
+   - The "Reset demo data" workflow deletes every product, stock movement, category and supplier.
+     It now refuses unless the repository variable `DEMO_MODE` is `true`, but if real stock and
+     demo data share one database, a reset run on purpose still erases the real stock.
+   - There is no written backup or restore plan (the free Atlas tier may not include automated
+     backups: check), and nothing watches the app or reports its errors.
+   - Email is off (see the note at the top), so password reset and email sign-up cannot finish.
+   - **What would fix it:** keep demo data and real data in separate databases (or remove
+     `DEMO_MODE` once real data arrives); turn on backups (a paid Atlas tier, or a scheduled
+     export) and try one restore; point an uptime checker at `/api/health/ready` and add error
+     tracking; set up an email provider.
+2. **The tests prove less than their number suggests.**
+   - About 1,500 tests check the screens and the server separately. The screen tests answer
+     from pretend (mocked) server replies, so they cannot notice if the real server changes.
+   - A small browser test now covers one main flow (sign in, add a product, receive and ship
+     stock, sign out) against the real server, and CI runs the production build.
+   - **What would fix it:** grow the browser tests to the other flows (register and approval,
+     editing and archiving, Persian and right-to-left, the phone layout), and check that the
+     mocked replies match what the real API sends.
+3. **Some reads get slower as the data grows.**
+   - With 100,000 products, search and the stock-status filters take about 0.2 to 0.5 seconds and
+     the dashboard about 0.3 seconds, because they read every product. Stock movements only ever
+     grow. The supplier list on the product form shows only the first 100 suppliers.
+   - That is fine for a small business. It was measured with one user, never with many at once.
+   - **What would fix it:** faster search (a text index or a stored search field), a stored and
+     indexed stock status, cached dashboard totals, a supplier picker you can search, archiving
+     old movements, and a test with many users at the same time.
+
 ## Git workflow
 - `main` is always working. Do not commit to it directly.
 - Branch per sub-PRD or task: `feat/<area>-<short-name>`, `fix/...`, `docs/...`, `chore/...`.
