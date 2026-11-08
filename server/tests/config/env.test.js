@@ -149,14 +149,18 @@ describe('loadConfig', () => {
     expect(loadConfig({ ...base, VERCEL: '1', TRUST_PROXY: '0' }).trustProxy).toBe(0);
   });
 
-  it('uses short database timeouts and a small pool unless set', () => {
-    expect(loadConfig(base).mongo).toEqual({ serverSelectionTimeoutMS: 5000, maxPoolSize: 10 });
+  it('waits 5 s for the database on Vercel, 30 s elsewhere, with a small pool', () => {
+    expect(loadConfig({ ...base, VERCEL: '1' }).mongo).toEqual({
+      serverSelectionTimeoutMS: 5000,
+      maxPoolSize: 10,
+    });
+    expect(loadConfig(base).mongo).toEqual({ serverSelectionTimeoutMS: 30000, maxPoolSize: 10 });
     const empty = loadConfig({
       ...base,
       MONGO_SERVER_SELECTION_TIMEOUT_MS: '',
       MONGO_MAX_POOL_SIZE: '',
     });
-    expect(empty.mongo).toEqual({ serverSelectionTimeoutMS: 5000, maxPoolSize: 10 });
+    expect(empty.mongo).toEqual({ serverSelectionTimeoutMS: 30000, maxPoolSize: 10 });
     const custom = loadConfig({
       ...base,
       MONGO_SERVER_SELECTION_TIMEOUT_MS: '8000',

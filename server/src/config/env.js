@@ -24,7 +24,12 @@ const envSchema = z
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().positive().default(4000),
     MONGODB_URI: z.string().trim().min(1, 'is required'),
-    MONGO_SERVER_SELECTION_TIMEOUT_MS: intWithDefault(z.coerce.number().int().min(500), 5000),
+    // Unset: 5 s on Vercel (fail fast inside the 30 s function limit), 30 s elsewhere, so a
+    // local database that is still starting (npm run dev) is waited for.
+    MONGO_SERVER_SELECTION_TIMEOUT_MS: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.coerce.number().int().min(500).optional(),
+    ),
     MONGO_MAX_POOL_SIZE: intWithDefault(z.coerce.number().int().min(1).max(100), 10),
     JWT_ACCESS_SECRET: z.string().min(32, 'must be at least 32 characters'),
     JWT_REFRESH_SECRET: z.string().min(32, 'must be at least 32 characters'),
@@ -127,7 +132,8 @@ export function loadConfig(source = process.env) {
     port: env.PORT,
     mongoUri: env.MONGODB_URI,
     mongo: {
-      serverSelectionTimeoutMS: env.MONGO_SERVER_SELECTION_TIMEOUT_MS,
+      serverSelectionTimeoutMS:
+        env.MONGO_SERVER_SELECTION_TIMEOUT_MS ?? (env.VERCEL ? 5000 : 30000),
       maxPoolSize: env.MONGO_MAX_POOL_SIZE,
     },
     jwt: { accessSecret: env.JWT_ACCESS_SECRET, refreshSecret: env.JWT_REFRESH_SECRET },
