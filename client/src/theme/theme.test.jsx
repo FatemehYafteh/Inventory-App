@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LANGUAGE_STORAGE_KEY } from '@/i18n';
 import { THEME_COLORS, THEME_STORAGE_KEY, applyTheme, readTheme, resolveTheme } from './theme';
 import { useTheme, useThemeSync } from './useTheme';
 
@@ -164,5 +165,10 @@ describe('the three copies of the theme facts agree', () => {
     expect(themeInit).toContain(`getItem('${THEME_STORAGE_KEY}')`);
     expect(themeInit).toContain(THEME_COLORS.light);
     expect(themeInit).toContain(THEME_COLORS.dark);
+  });
+
+  it('sets the page language and direction before the first paint', () => {
+    expect(themeInit).toContain(`getItem('${LANGUAGE_STORAGE_KEY}')`);
+    expect(themeInit).toContain("dir = language === 'fa' ? 'rtl' : 'ltr'");
   });
 });

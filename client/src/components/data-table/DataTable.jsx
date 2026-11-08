@@ -65,6 +65,16 @@ function MobileSort({ table, sorting }) {
   );
 }
 
+const SKELETON_ROWS = ['s1', 's2', 's3', 's4', 's5'];
+const SKELETON_CARDS = ['c1', 'c2', 'c3'];
+
+/** A grey placeholder bar while a list loads. Still for people who ask for reduced motion. */
+function Skeleton({ className = 'w-full' }) {
+  return (
+    <div className={`h-4 animate-pulse rounded bg-muted motion-reduce:animate-none ${className}`} />
+  );
+}
+
 /**
  * Server-driven table. The caller owns `sorting` and `pagination` (kept in the URL), fetches the
  * matching page with TanStack Query, and passes that page as `data` with the total as `rowCount`.
@@ -108,12 +118,17 @@ export function DataTable({
   const rows = table.getRowModel().rows;
   const columnCount = table.getAllLeafColumns().length;
 
-  let status = null;
-  if (isLoading) status = <span role="status">{t('common.loading')}</span>;
-  else if (!rows.length) status = emptyMessage ?? t('table.empty');
+  // While loading: placeholder rows (or cards) for the layout, and one status message for
+  // screen readers. Otherwise the empty message when there are no rows.
+  const status = !isLoading && !rows.length ? (emptyMessage ?? t('table.empty')) : null;
 
   return (
     <div className="flex flex-col gap-3">
+      {isLoading && (
+        <span role="status" className="sr-only">
+          {t('common.loading')}
+        </span>
+      )}
       {toolbar}
       {error && (
         <div className="flex flex-col gap-2">
@@ -128,7 +143,17 @@ export function DataTable({
       {showCards ? (
         <div className="flex flex-col gap-3">
           <MobileSort table={table} sorting={sorting} />
-          {status ? (
+          {isLoading ? (
+            <ul aria-hidden="true" className="grid gap-3 md:grid-cols-2">
+              {SKELETON_CARDS.map((key) => (
+                <li key={key} className="flex flex-col gap-3 rounded-lg border bg-card p-4">
+                  <Skeleton className="w-2/3" />
+                  <Skeleton className="w-1/3" />
+                  <Skeleton className="w-1/2" />
+                </li>
+              ))}
+            </ul>
+          ) : status ? (
             <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
               {status}
             </div>
@@ -168,7 +193,17 @@ export function DataTable({
               ))}
             </TableHeader>
             <TableBody>
-              {status ? (
+              {isLoading ? (
+                SKELETON_ROWS.map((key) => (
+                  <TableRow key={key} data-static aria-hidden="true">
+                    {table.getAllLeafColumns().map((column) => (
+                      <TableCell key={column.id}>
+                        <Skeleton />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : status ? (
                 <TableRow data-static>
                   <TableCell
                     colSpan={columnCount}
