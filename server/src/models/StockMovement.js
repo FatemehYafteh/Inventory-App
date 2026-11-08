@@ -38,10 +38,15 @@ const stockMovementSchema = new mongoose.Schema(
   { timestamps: { createdAt: true, updatedAt: false } },
 );
 
-stockMovementSchema.index({ product: 1, createdAt: -1 });
-stockMovementSchema.index({ type: 1 });
-stockMovementSchema.index({ supplier: 1 });
-stockMovementSchema.index({ performedBy: 1, createdAt: -1 });
-stockMovementSchema.index({ createdAt: -1 });
+// Every movement list is newest first with the id as tie-break (`createdAt: -1, _id: -1`), so each
+// index ends with that pair and the database reads the first page straight off the index. Without
+// the `_id`, the unfiltered page scanned and sorted the whole collection on every request, and a
+// filtered one sorted everything that matched. (An older index on the same prefix can stay in an
+// existing database; it only costs a little write time and can be dropped by hand.)
+stockMovementSchema.index({ product: 1, createdAt: -1, _id: -1 });
+stockMovementSchema.index({ type: 1, createdAt: -1, _id: -1 });
+stockMovementSchema.index({ supplier: 1, createdAt: -1, _id: -1 });
+stockMovementSchema.index({ performedBy: 1, createdAt: -1, _id: -1 });
+stockMovementSchema.index({ createdAt: -1, _id: -1 });
 
 export const StockMovement = mongoose.model('StockMovement', stockMovementSchema);

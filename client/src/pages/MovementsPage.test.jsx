@@ -103,6 +103,7 @@ describe('MovementsPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Stock movements' }),
     ).toBeInTheDocument();
+    await screen.findAllByText('Claw Hammer'); // the rows first show as placeholders
     const rows = await screen.findAllByRole('row');
     const first = within(rows[1]);
     expect(first.getByText('Claw Hammer')).toBeInTheDocument();

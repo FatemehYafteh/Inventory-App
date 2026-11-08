@@ -89,6 +89,8 @@ describe('LoginPage', () => {
     server.use(
       http.post('*/api/auth/login', async ({ request }) => {
         sent = await request.json();
+        // The real server sets the session cookies here; from now on /me knows the user.
+        server.use(http.get('*/api/auth/me', () => HttpResponse.json({ user: activeUser })));
         return HttpResponse.json({ user: activeUser });
       }),
     );

@@ -70,6 +70,7 @@ describe('Movements page texts in Persian', () => {
     expect(screen.getByRole('button', { name: 'پاک کردن فیلترها' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'ثبت‌کننده' })).toBeInTheDocument();
 
+    await screen.findAllByText('+۴۰'); // the rows first show as placeholders
     const row = within((await screen.findAllByRole('row'))[1]);
     expect(row.getByText('ورود')).toBeInTheDocument();
     expect(row.getByText('+۴۰')).toBeInTheDocument();

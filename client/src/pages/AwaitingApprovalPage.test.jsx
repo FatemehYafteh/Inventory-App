@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { screen } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -8,6 +9,11 @@ const pendingUser = { ...activeUser, name: 'Pat Pending', role: 'staff', status:
 
 afterEach(() => vi.useRealTimers());
 
+// The app keeps the session fresh for 30 s, so mounting the page does not refetch it. The test default
+// (0) would add a fetch the real app never makes, and this test counts fetches.
+const appQueryClient = () =>
+  new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 30_000 } } });
+
 describe('AwaitingApprovalPage', () => {
   it('opens the app on its own once an admin approves the account', async () => {
     let user = pendingUser;
@@ -15,7 +21,7 @@ describe('AwaitingApprovalPage', () => {
     server.use(http.get('*/api/auth/me', me));
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
-    renderApp({ route: '/awaiting-approval' });
+    renderApp({ route: '/awaiting-approval', queryClient: appQueryClient() });
     expect(await screen.findByRole('heading', { name: 'Awaiting approval' })).toBeInTheDocument();
     const initialLoads = me.mock.calls.length;
 
@@ -33,7 +39,7 @@ describe('AwaitingApprovalPage', () => {
     server.use(http.get('*/api/auth/me', me));
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
-    renderApp({ route: '/awaiting-approval' });
+    renderApp({ route: '/awaiting-approval', queryClient: appQueryClient() });
     await screen.findByRole('heading', { name: 'Awaiting approval' });
     const initialLoads = me.mock.calls.length;
 
