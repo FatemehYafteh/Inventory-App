@@ -79,6 +79,16 @@ const envSchema = z
       });
     }
 
+    // NODE_ENV=test turns on the `x-test-user` header, which signs in as any user id. A hosted
+    // deployment must never run in that mode, so a mistyped NODE_ENV stops the app instead.
+    if (env.NODE_ENV === 'test' && env.VERCEL) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['NODE_ENV'],
+        message: 'must not be "test" on Vercel',
+      });
+    }
+
     if (env.NODE_ENV !== 'production') return;
     // With 0 behind Vercel's proxy, req.ip is the proxy: every user shares one rate-limit bucket.
     if (env.VERCEL && env.TRUST_PROXY === 0) {
@@ -151,17 +161,19 @@ export function loadConfig(source = process.env) {
     admins: { telegramIds: env.ADMIN_TELEGRAM_IDS, emails: env.ADMIN_EMAILS },
     demoEmails: env.DEMO_EMAILS.map((email) => email.toLowerCase()),
     emailDelivery: env.EMAIL_DELIVERY,
-    brevo: env.EMAIL_DELIVERY === 'send' && env.BREVO_API_KEY
-      ? { apiKey: env.BREVO_API_KEY, from: env.EMAIL_FROM ?? 'Inventory <no-reply@localhost>' }
-      : null,
-    smtp: env.EMAIL_DELIVERY === 'send' && env.SMTP_HOST
-      ? {
-          host: env.SMTP_HOST,
-          port: env.SMTP_PORT,
-          user: env.SMTP_USER,
-          pass: env.SMTP_PASS,
-          from: env.EMAIL_FROM,
-        }
-      : null,
+    brevo:
+      env.EMAIL_DELIVERY === 'send' && env.BREVO_API_KEY
+        ? { apiKey: env.BREVO_API_KEY, from: env.EMAIL_FROM ?? 'Inventory <no-reply@localhost>' }
+        : null,
+    smtp:
+      env.EMAIL_DELIVERY === 'send' && env.SMTP_HOST
+        ? {
+            host: env.SMTP_HOST,
+            port: env.SMTP_PORT,
+            user: env.SMTP_USER,
+            pass: env.SMTP_PASS,
+            from: env.EMAIL_FROM,
+          }
+        : null,
   });
 }
