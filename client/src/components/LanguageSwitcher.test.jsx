@@ -1,10 +1,10 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import i18n, { LANGUAGE_STORAGE_KEY, initialLanguage } from '@/i18n';
 import { renderApp } from '@/test/render';
-import { activeUser, server } from '@/test/server';
+import { activeUser, notAuthenticated, server } from '@/test/server';
 
 const english = () => screen.getByRole('button', { name: 'English' });
 const persian = () => screen.getByRole('button', { name: 'فارسی' });
@@ -89,3 +89,80 @@ describe('Language switcher', () => {
     expect(initialLanguage()).toBe('en');
   });
 });
+
+describe('Language when signing in', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  /** No session until POST /auth/login answers with `account`. Records profile PATCH bodies. */
+  function signInApi(account) {
+    const patches = [];
+    let signedIn = false;
+    server.use(
+      http.get('*/api/auth/me', () =>
+        signedIn ? HttpResponse.json({ user: account }) : notAuthenticated(),
+      ),
+      http.post('*/api/auth/login', () => {
+        signedIn = true;
+        return HttpResponse.json({ user: account });
+      }),
+      http.patch('*/api/auth/profile', async ({ request }) => {
+        patches.push(await request.json());
+        return HttpResponse.json({ user: { ...account, ...patches.at(-1) } });
+      }),
+    );
+    return patches;
+  }
+
+  async function chooseEnglishAndSignIn() {
+    await i18n.changeLanguage('fa');
+    const user = userEvent.setup();
+    renderApp({ route: '/login' });
+    await user.click(await screen.findByRole('button', { name: 'English' }));
+    await user.type(screen.getByLabelText('Email'), 'ana@example.com');
+    await user.type(screen.getByLabelText('Password'), 'a-long-password');
+    await user.click(screen.getByRole('button', { name: 'Log in' }));
+  }
+
+  it('keeps the language chosen on the login page and saves it on the account', async () => {
+    const patches = signInApi({ ...activeUser, language: 'fa' });
+
+    await chooseEnglishAndSignIn();
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(i18n.language).toBe('en');
+    await waitFor(() => expect(patches).toEqual([{ language: 'en' }]));
+  });
+
+  it('saves nothing when the account already has that language', async () => {
+    const patches = signInApi({ ...activeUser, language: 'en' });
+
+    await chooseEnglishAndSignIn();
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(patches).toEqual([]);
+  });
+
+  it('keeps the browser language for the shared demo account and never saves it', async () => {
+    vi.stubEnv('VITE_DEMO_EMAIL', activeUser.email);
+    const patches = signInApi({ ...activeUser, language: 'fa' });
+
+    await chooseEnglishAndSignIn();
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(i18n.language).toBe('en');
+
+    await userEvent.setup().click(persian());
+    expect(i18n.language).toBe('fa');
+    expect(patches).toEqual([]);
+  });
+
+  it('does not follow the language saved on the demo account when the app opens', async () => {
+    vi.stubEnv('VITE_DEMO_EMAIL', activeUser.email);
+    profileApi({ ...activeUser, language: 'fa' });
+    renderApp({ route: '/profile' });
+
+    expect(await screen.findByRole('heading', { name: 'Profile' })).toBeInTheDocument();
+    expect(i18n.language).toBe('en');
+  });
+});
+
