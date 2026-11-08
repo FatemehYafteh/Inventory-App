@@ -15,18 +15,30 @@ const csv = optional.transform((value) =>
     : [],
 );
 
+/** A whole number with a default; an empty value (`NAME=` in .env) means the default. */
+const intWithDefault = (schema, fallback) =>
+  z.preprocess((value) => (value === '' ? undefined : value), schema.default(fallback));
+
 const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().positive().default(4000),
     MONGODB_URI: z.string().trim().min(1, 'is required'),
+    MONGO_SERVER_SELECTION_TIMEOUT_MS: intWithDefault(z.coerce.number().int().min(500), 5000),
+    MONGO_MAX_POOL_SIZE: intWithDefault(z.coerce.number().int().min(1).max(100), 10),
     JWT_ACCESS_SECRET: z.string().min(32, 'must be at least 32 characters'),
     JWT_REFRESH_SECRET: z.string().min(32, 'must be at least 32 characters'),
     COOKIE_SECURE: z.enum(['true', 'false']).default('false'),
     CLIENT_ORIGIN: z.string().trim().url('must be a URL'),
     APP_URL: z.string().trim().url('must be a URL'),
     // Reverse proxies in front of the API (0 = none), so req.ip is the client, not the proxy.
-    TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+    // Unset: 1 on Vercel (one proxy in front of every function), otherwise 0.
+    TRUST_PROXY: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.coerce.number().int().min(0).optional(),
+    ),
+    // Set by Vercel on every deployment.
+    VERCEL: optional,
     TELEGRAM_BOT_TOKEN: optional,
     TELEGRAM_BOT_USERNAME: optional,
     // Telegram's rule for secret_token: 1-256 characters of A-Z, a-z, 0-9, _ and -.
@@ -62,6 +74,14 @@ const envSchema = z
     }
 
     if (env.NODE_ENV !== 'production') return;
+    // With 0 behind Vercel's proxy, req.ip is the proxy: every user shares one rate-limit bucket.
+    if (env.VERCEL && env.TRUST_PROXY === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['TRUST_PROXY'],
+        message: 'must be 1 on Vercel (or leave it unset)',
+      });
+    }
     if (env.BOT_MODE !== 'webhook') {
       ctx.addIssue({
         code: 'custom',
@@ -106,11 +126,15 @@ export function loadConfig(source = process.env) {
     isTest: env.NODE_ENV === 'test',
     port: env.PORT,
     mongoUri: env.MONGODB_URI,
+    mongo: {
+      serverSelectionTimeoutMS: env.MONGO_SERVER_SELECTION_TIMEOUT_MS,
+      maxPoolSize: env.MONGO_MAX_POOL_SIZE,
+    },
     jwt: { accessSecret: env.JWT_ACCESS_SECRET, refreshSecret: env.JWT_REFRESH_SECRET },
     cookieSecure: isProduction || env.COOKIE_SECURE === 'true',
     clientOrigin: new URL(env.CLIENT_ORIGIN).origin,
     appUrl: env.APP_URL.replace(/\/$/, ''),
-    trustProxy: env.TRUST_PROXY,
+    trustProxy: env.TRUST_PROXY ?? (env.VERCEL ? 1 : 0),
     telegram: {
       botToken: env.TELEGRAM_BOT_TOKEN,
       botUsername: env.TELEGRAM_BOT_USERNAME,
