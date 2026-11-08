@@ -56,7 +56,11 @@ describe('Tables as cards on a phone', () => {
     const email = card.getByRole('link', { name: 'orders@oldmill.example.com' });
     expect(email).toHaveAttribute('href', 'mailto:orders@oldmill.example.com');
     expect(email).toHaveAttribute('dir', 'ltr');
-    expect(card.getByText('1234')).toBeInTheDocument();
+    // The count is grouped and links to the supplier's products (from the suppliers polish).
+    expect(card.getByRole('link', { name: '1,234' })).toHaveAttribute(
+      'href',
+      '/products?supplier=s1',
+    );
     expect(card.getByRole('button', { name: 'Edit Old Mill Paper Co.' })).toBeInTheDocument();
     expect(
       card.getByRole('button', { name: 'More actions for Old Mill Paper Co.' }),
