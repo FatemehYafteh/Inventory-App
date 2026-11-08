@@ -22,20 +22,20 @@ import { validate } from '../middleware/validate.js';
 export function authRoutes(config) {
   const router = Router();
 
-  const login = authLimits.login();
+  const login = authLimits.login(config);
   router.post('/login', login.ip, validate(loginSchema), login.email, auth.login);
 
-  const register = authLimits.register();
+  const register = authLimits.register(config);
   router.post('/register', register.ip, validate(registerSchema), register.email, auth.register);
 
   router.post(
     '/verify-email',
-    authLimits.verifyEmail(),
+    authLimits.verifyEmail(config),
     validate(verifyEmailSchema),
     auth.verifyEmail,
   );
 
-  const resend = authLimits.resendVerification();
+  const resend = authLimits.resendVerification(config);
   router.post(
     '/resend-verification',
     resend.ip,
@@ -45,7 +45,7 @@ export function authRoutes(config) {
   );
 
   // Also serves as "resend": the service skips sending within the 60 s cooldown.
-  const forgot = authLimits.forgotPassword();
+  const forgot = authLimits.forgotPassword(config);
   router.post(
     '/forgot-password',
     forgot.ip,
@@ -56,33 +56,33 @@ export function authRoutes(config) {
 
   router.post(
     '/reset-password',
-    authLimits.resetPassword(),
+    authLimits.resetPassword(config),
     validate(resetPasswordSchema),
     auth.resetPassword,
   );
 
   router.post(
     '/telegram/start',
-    authLimits.telegramStart(),
+    authLimits.telegramStart(config),
     validate(telegramStartSchema),
     auth.telegramStart,
   );
   // Shared by sign-in and Connect Telegram; a connect request is visible only to its user.
   router.get(
     '/telegram/status',
-    authLimits.telegramStatus(),
+    authLimits.telegramStatus(config),
     identify(config),
     auth.telegramStatus,
   );
   router.post(
     '/telegram/verify',
-    authLimits.telegramVerify(),
+    authLimits.telegramVerify(config),
     validate(telegramVerifySchema),
     auth.telegramVerify,
   );
   router.post(
     '/telegram/resend',
-    authLimits.telegramResend(),
+    authLimits.telegramResend(config),
     identify(config),
     validate(telegramResendSchema),
     auth.telegramResend,
@@ -91,27 +91,27 @@ export function authRoutes(config) {
   // Connect Telegram (Profile page): the signed-in user adds a Telegram account.
   router.post(
     '/telegram/connect/start',
-    authLimits.telegramConnectStart(),
+    authLimits.telegramConnectStart(config),
     authenticate(config),
     requireProfile,
     auth.telegramConnectStart,
   );
   router.post(
     '/telegram/connect/verify',
-    authLimits.telegramConnectVerify(),
+    authLimits.telegramConnectVerify(config),
     authenticate(config),
     requireProfile,
     validate(telegramVerifySchema),
     auth.telegramConnectVerify,
   );
 
-  router.post('/refresh', authLimits.refresh(), auth.refresh);
+  router.post('/refresh', authLimits.refresh(config), auth.refresh);
   // Logout works with only the refresh cookie, so an expired access token never blocks it.
   router.post('/logout', auth.logout);
   router.get('/me', authenticate(config), auth.me);
 
   // Complete profile (Telegram signups): allowed while the profile is incomplete.
-  const profileEmails = authLimits.completeProfile();
+  const profileEmails = authLimits.completeProfile(config);
   router.post(
     '/profile/complete',
     profileEmails,
@@ -141,7 +141,7 @@ export function authRoutes(config) {
   // Opened from the link-confirmation email; signs no one in.
   router.post(
     '/link-telegram/confirm',
-    authLimits.accountLinkConfirm(),
+    authLimits.accountLinkConfirm(config),
     validate(accountLinkConfirmSchema),
     auth.confirmAccountLink,
   );
