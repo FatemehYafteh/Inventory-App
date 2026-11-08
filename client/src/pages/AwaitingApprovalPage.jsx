@@ -17,7 +17,7 @@ export function AwaitingApprovalPage() {
   const logout = useLogout();
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
+    <main className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{t('auth.awaiting.title')}</CardTitle>
@@ -41,6 +41,6 @@ export function AwaitingApprovalPage() {
           </Button>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

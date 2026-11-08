@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 export function NotFoundPage() {
   const { t } = useTranslation();
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-4 text-center">
+    <main className="flex min-h-svh flex-col items-center justify-center gap-4 p-4 text-center">
       <Brand />
       <PageHeader
         title={t('layout.notFound.title')}
@@ -17,6 +17,6 @@ export function NotFoundPage() {
       <Button asChild variant="outline">
         <Link to="/">{t('layout.notFound.goHome')}</Link>
       </Button>
-    </div>
+    </main>
   );
 }

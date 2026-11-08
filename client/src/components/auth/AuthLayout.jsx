@@ -8,8 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
  * introduction sits beside it, at the start side of the page, and above it on a small screen.
  */
 export function AuthLayout({ title, description, children, footer, intro = false }) {
+  // The page's one <main> landmark: the form itself, or (with the intro) the whole two-column page.
+  const Form = intro ? 'div' : 'main';
   const form = (
-    <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
+    <Form className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
       <div className="flex w-full max-w-sm flex-col gap-4">
         <div className="flex items-start justify-between gap-2">
           <ThemeSwitcher />
@@ -24,13 +26,13 @@ export function AuthLayout({ title, description, children, footer, intro = false
         </Card>
         {footer && <div className="text-center text-sm text-muted-foreground">{footer}</div>}
       </div>
-    </div>
+    </Form>
   );
   if (!intro) return form;
   return (
-    <div className="min-h-svh lg:grid lg:grid-cols-[1fr_2fr]">
+    <main className="min-h-svh lg:grid lg:grid-cols-[1fr_2fr]">
       <AuthIntro />
       {form}
-    </div>
+    </main>
   );
 }
