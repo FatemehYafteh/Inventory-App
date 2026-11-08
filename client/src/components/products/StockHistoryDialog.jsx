@@ -138,6 +138,7 @@ export function StockHistoryDialog({ product, onClose, onCloseAutoFocus }) {
             pageSizeOptions={PAGE_SIZE_OPTIONS}
             isLoading={movements.isPending}
             error={movements.error}
+            onRetry={() => movements.refetch()}
             emptyMessage={t('products.history.empty')}
             renderCard={(movement) => <MovementCard movement={movement} showProduct={false} />}
           />

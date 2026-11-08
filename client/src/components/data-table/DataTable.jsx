@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '@/components/data-table/DataTableColumnHeader';
 import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { Button } from '@/components/ui/button';
 import { FormAlert } from '@/components/form/FormAlert';
 import { useIsCompact } from '@/hooks/useMediaQuery';
 import { translateMessage } from '@/lib/errors';
@@ -88,6 +89,7 @@ export function DataTable({
   toolbar = null,
   pageSizeOptions,
   renderCard,
+  onRetry,
 }) {
   const { t } = useTranslation();
   const showCards = useIsCompact() && Boolean(renderCard);
@@ -114,7 +116,14 @@ export function DataTable({
     <div className="flex flex-col gap-3">
       {toolbar}
       {error && (
-        <FormAlert>{translateMessage(error.message) ?? t('common.somethingWrong')}</FormAlert>
+        <div className="flex flex-col gap-2">
+          <FormAlert>{translateMessage(error.message) ?? t('common.somethingWrong')}</FormAlert>
+          {onRetry && (
+            <Button variant="outline" size="sm" className="self-start" onClick={onRetry}>
+              {t('common.tryAgain')}
+            </Button>
+          )}
+        </div>
       )}
       {showCards ? (
         <div className="flex flex-col gap-3">

@@ -27,6 +27,7 @@ export function ProductTable({
   onPaginationChange,
   isLoading,
   error,
+  onRetry,
   emptyMessage,
   toolbar,
   onEdit,
@@ -110,12 +111,13 @@ export function ProductTable({
         header: t('products.table.quantity'),
         cell: ({ row }) => {
           const { title, quantity, isArchived } = row.original;
+          // 40px targets on touch screens (cards, below lg), 32px in the desktop table.
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 lg:gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="w-8 px-0"
+                className="h-10 w-10 px-0 lg:h-8 lg:w-8"
                 aria-label={t('products.table.decreaseQuantity', { title })}
                 disabled={isArchived || quantity <= 0}
                 onClick={() => onStep(row.original, -1)}
@@ -126,7 +128,7 @@ export function ProductTable({
               <Button
                 variant="outline"
                 size="sm"
-                className="w-8 px-0"
+                className="h-10 w-10 px-0 lg:h-8 lg:w-8"
                 aria-label={t('products.table.increaseQuantity', { title })}
                 disabled={isArchived}
                 onClick={() => onStep(row.original, 1)}
@@ -249,6 +251,7 @@ export function ProductTable({
       onPaginationChange={onPaginationChange}
       isLoading={isLoading}
       error={error}
+      onRetry={onRetry}
       emptyMessage={emptyMessage}
       toolbar={toolbar}
       renderCard={renderCard}

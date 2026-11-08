@@ -8,9 +8,9 @@ import {
   TruckIcon,
   UsersIcon,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -43,6 +43,18 @@ export function AppLayout() {
   const items = NAV_ITEMS.filter((item) => isAdmin || !item.adminOnly);
   const [menuOpen, setMenuOpen] = useState(false);
   const mainRef = useRef(null);
+  const { pathname } = useLocation();
+  const firstPath = useRef(pathname);
+
+  // After moving to another page, keyboard and screen-reader users start at its heading (h1s
+  // are focusable by code) instead of staying on the link they used. Not on first load.
+  useEffect(() => {
+    if (firstPath.current === pathname) return;
+    firstPath.current = null;
+    const main = mainRef.current;
+    if (!main || main.contains(document.activeElement)) return;
+    (main.querySelector('h1') ?? main).focus({ preventScroll: false });
+  }, [pathname]);
 
   const navProps = {
     items,

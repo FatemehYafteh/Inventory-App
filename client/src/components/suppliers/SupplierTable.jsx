@@ -101,6 +101,7 @@ export function SupplierTable({
   onPaginationChange,
   isLoading,
   error,
+  onRetry,
   emptyMessage,
   toolbar,
   onEdit,
@@ -259,6 +260,7 @@ export function SupplierTable({
       onPaginationChange={onPaginationChange}
       isLoading={isLoading}
       error={error}
+      onRetry={onRetry}
       emptyMessage={emptyMessage}
       toolbar={toolbar}
       renderCard={renderCard}

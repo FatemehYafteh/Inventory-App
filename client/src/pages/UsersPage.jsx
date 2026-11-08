@@ -131,6 +131,7 @@ export function UsersPage() {
             }}
             isLoading={users.isPending}
             error={users.error}
+            onRetry={() => users.refetch()}
             emptyMessage={emptyMessage(t, { status, search, incomplete })}
             toolbar={
               <div className="flex flex-wrap items-center gap-4">
