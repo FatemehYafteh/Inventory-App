@@ -21,9 +21,18 @@ export function perIp(windowMs, limit) {
   return limiter({ windowMs, limit });
 }
 
-/** Per-email limit. Put it after validation, which normalizes `req.body.email`. */
+/** The key of the per-email limit: the email, or the IP when a request carries none. */
+export function emailKey(req) {
+  const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  return email ? `email:${email}` : `ip:${req.ip}`;
+}
+
+/**
+ * Per-email limit. Put it after validation, which normalizes `req.body.email`. A request with
+ * no email falls back to its IP, so such requests never share one `email:undefined` bucket.
+ */
 export function perEmail(windowMs, limit) {
-  return limiter({ windowMs, limit, keyGenerator: (req) => `email:${req.body.email}` });
+  return limiter({ windowMs, limit, keyGenerator: emailKey });
 }
 
 export const authLimits = {
