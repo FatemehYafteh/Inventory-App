@@ -48,7 +48,7 @@ npm run lint
 ```
 
 ## Deployment
-Free tier only, no credit card: the web app **and** the API on **Vercel**, the database on **MongoDB Atlas** (`M0`, already a replica set). Email is off for now (`EMAIL_DELIVERY=log`): verification and reset emails, with their links, are written to the Vercel function logs. Brevo's HTTPS API is supported for when a provider is available.
+Free tier only, no credit card: the web app **and** the API on **Vercel**, the database on **MongoDB Atlas** (`M0`, already a replica set). Email is off for now (`EMAIL_DELIVERY=log`): in production the server logs only that an email was held back (recipient and subject), **never its body**, because the body holds one-time reset and verification links that would let anyone with log access take over an account. So with no provider, email sign-up verification and password reset cannot complete: use the seeded accounts (or Telegram sign-in) for a demo, and set `BREVO_API_KEY` (or SMTP) with `EMAIL_DELIVERY=send` before real users sign up. In development the full email, links included, is still logged.
 
 ```
 browser  ──> Vercel ── static files (client/dist)
