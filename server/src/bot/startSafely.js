@@ -1,9 +1,10 @@
 import { waitUntil } from '../utils/waitUntil.js';
-import { startBot } from './bot.js';
+import { initBot } from './bot.js';
 
 /**
  * Sets the bot up on a serverless instance (Vercel) without ever taking the API down.
- * - Runs in the background: the cold start does not wait for Telegram (getMe, setWebhook).
+ * - Only getMe and the TELEGRAM_BOT_USERNAME check, in the background. The webhook is
+ *   registered once per address with `npm run tg:webhook -w server`, not on every cold start.
  * - A failure (Telegram unreachable, a bad token, a token for another bot than
  *   TELEGRAM_BOT_USERNAME) is logged as an error and the rest of the API keeps serving.
  *   Webhook calls then retry `bot.init()` on their own (grammY does this for an uninitialised
@@ -12,7 +13,7 @@ import { startBot } from './bot.js';
  *   the bot is not started.
  * Resolves to true when the bot is set up, false otherwise. Never rejects.
  */
-export function startBotSafely(bot, config, { logger = console, start = startBot } = {}) {
+export function startBotSafely(bot, config, { logger = console, start = initBot } = {}) {
   if (config.telegram.mode !== 'webhook') {
     logger.error(
       '[telegram] BOT_MODE=polling cannot work in a serverless function. Set ' +
