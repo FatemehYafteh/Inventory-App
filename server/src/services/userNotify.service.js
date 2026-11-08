@@ -1,4 +1,5 @@
 import { translate } from '../i18n/index.js';
+import { waitUntil } from '../utils/waitUntil.js';
 import { accountApprovedTemplate, accountRejectedTemplate } from './mail.templates.js';
 
 // What a user is told for the status they were moved to. Pending has no entry: moving a user
@@ -21,12 +22,15 @@ const NOTICES = {
   },
 };
 
-/** Runs one delivery; a failure (thrown or rejected) is logged and never reaches the caller. */
+/**
+ * Runs one delivery; a failure (thrown or rejected) is logged and never reaches the caller.
+ * The delivery outlives the response, so it is kept alive on Vercel with `waitUntil`.
+ */
 function deliver(logger, userId, channel, send) {
   const failed = (err) =>
     logger.error(`[notify] ${channel} to user ${userId} failed: ${err.message}`);
   try {
-    Promise.resolve(send()).catch(failed);
+    waitUntil(Promise.resolve(send()).catch(failed));
   } catch (err) {
     failed(err);
   }
