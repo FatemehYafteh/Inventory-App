@@ -14,6 +14,9 @@ import { usersRoutes } from './routes/users.routes.js';
 import { createMailer } from './services/mail.service.js';
 import { createTelegramMessenger } from './services/telegram.service.js';
 
+/** How long the Telegram webhook waits for an update; below the 30 s Vercel maxDuration. */
+const TELEGRAM_WEBHOOK_TIMEOUT_MS = 25_000;
+
 /**
  * Builds the Express app. No CORS middleware on purpose: the client is served from the same
  * site, so cross-origin requests get no CORS headers and browsers block them.
@@ -41,7 +44,10 @@ export function createApp(
       '/telegram/webhook',
       webhookCallback(bot, 'express', {
         secretToken: config.telegram.webhookSecret,
-        // A slow update still finishes; answering 200 stops Telegram delivering it again.
+        // Wait for the update to be handled before answering, so the work is not frozen with the
+        // Vercel Function after the response (maxDuration is 30 s in vercel.json). An update
+        // slower than that still gets a 200, which stops Telegram delivering it again.
+        timeoutMilliseconds: TELEGRAM_WEBHOOK_TIMEOUT_MS,
         onTimeout: 'return',
       }),
     );

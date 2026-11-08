@@ -13,8 +13,9 @@ import { products } from './data/products.js';
 import { statusChanges } from './data/statusChanges.js';
 import { suppliers } from './data/suppliers.js';
 import { users } from './data/users.js';
+import { DEFAULT_SEED_PASSWORD } from './seedPassword.js';
 
-export const DEFAULT_SEED_PASSWORD = 'inventory-demo-2026';
+export { DEFAULT_SEED_PASSWORD };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const HISTORY_DAYS = 30;

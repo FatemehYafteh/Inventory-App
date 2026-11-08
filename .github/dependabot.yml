@@ -1,0 +1,21 @@
+# Dependabot opens pull requests that update dependencies, so known vulnerabilities (npm audit)
+# get fixed without running `npm audit fix` by hand. One root entry covers every workspace
+# (client, server, shared) because they share the root package-lock.json.
+# Also turn on Settings > Code security > Dependabot alerts and Dependabot security updates.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Patch and minor updates arrive as one PR; each major update (such as zod 4) gets its
+      # own PR, because it can need code changes.
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -8,6 +8,7 @@ import { useTheme, useThemeSync } from './useTheme';
 // css: false in the Vitest config empties CSS imports, so read the files directly.
 const css = readFileSync(resolve(import.meta.dirname, '../index.css'), 'utf8');
 const html = readFileSync(resolve(import.meta.dirname, '../../index.html'), 'utf8');
+const themeInit = readFileSync(resolve(import.meta.dirname, '../../public/theme-init.js'), 'utf8');
 
 /** A controllable stand-in for the OS colour-scheme query. */
 function mockSystem(initialDark) {
@@ -157,9 +158,11 @@ describe('the three copies of the theme facts agree', () => {
     expect(THEME_COLORS.dark.toLowerCase()).toBe(dark.toLowerCase());
   });
 
-  it('uses the same storage key and colours in the inline script of index.html', () => {
-    expect(html).toContain(`getItem('${THEME_STORAGE_KEY}')`);
+  it('uses the same storage key and colours in the first-paint script loaded by index.html', () => {
+    expect(html).toContain('<script src="/theme-init.js"></script>');
     expect(html).toContain(THEME_COLORS.light);
-    expect(html).toContain(THEME_COLORS.dark);
+    expect(themeInit).toContain(`getItem('${THEME_STORAGE_KEY}')`);
+    expect(themeInit).toContain(THEME_COLORS.light);
+    expect(themeInit).toContain(THEME_COLORS.dark);
   });
 });

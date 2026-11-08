@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { waitUntil } from '../utils/waitUntil.js';
 import { createBrevoTransport } from './brevo.transport.js';
 
 const DEFAULT_RETRY_DELAYS_MS = [500, 2000];
@@ -19,7 +20,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * - No SMTP in development: writes the email (with its links) to the log.
  * - Tests: keeps messages in `outbox`.
  * `sendInBackground` never throws and never delays the HTTP response, so a delivery
- * problem cannot reveal whether an account exists.
+ * problem cannot reveal whether an account exists. On Vercel it asks the platform to keep the
+ * function alive until the send (and its retries) has finished.
  */
 export function createMailer(
   config,
@@ -66,6 +68,7 @@ export function createMailer(
       .catch((err) => logger.error(`[mail] Delivery to ${message.to} failed: ${err.message}`))
       .finally(() => pending.delete(job));
     pending.add(job);
+    waitUntil(job);
   }
 
   /** Resolves when all background sends have finished. Used by tests and shutdown. */
