@@ -1,11 +1,19 @@
 # Adds the demo data to the production database (Atlas), from GitHub's servers.
 # Run it from the Actions tab: "Seed demo data" > Run workflow.
-# Needs the repository secret MONGODB_URI (Settings > Secrets and variables > Actions).
+# Needs the repository secrets MONGODB_URI and SEED_PASSWORD (Settings > Secrets and variables >
+# Actions). SEED_PASSWORD is the password of the seeded accounts: at least 12 characters and NOT
+# the default one from the README, because this repository is public and the seed creates an
+# admin account. The seed itself also refuses the default password for a database that is not
+# on the machine running it.
 # Only adds what is missing, like `npm run seed -w server`: existing users and data are kept.
 name: Seed demo data
 
 on:
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type SEED to add the demo accounts and data to the production database'
+        required: true
 
 permissions:
   contents: read
@@ -19,6 +27,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Check the confirmation
+        if: ${{ inputs.confirm != 'SEED' }}
+        run: |
+          echo "Type SEED in the confirm field to run this workflow."
+          exit 1
+
+      - name: Check that SEED_PASSWORD is set
+        env:
+          SEED_PASSWORD: ${{ secrets.SEED_PASSWORD }}
+        run: |
+          if [ -z "$SEED_PASSWORD" ]; then
+            echo "Add the repository secret SEED_PASSWORD (a long, private password) first."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -35,6 +58,7 @@ jobs:
         env:
           NODE_ENV: development
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          SEED_PASSWORD: ${{ secrets.SEED_PASSWORD }}
           # The seed never signs tokens or builds links; loadConfig only needs valid values.
           JWT_ACCESS_SECRET: seed-only-placeholder-not-used-anywhere-000
           JWT_REFRESH_SECRET: seed-only-placeholder-not-used-anywhere-111

@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { GlobalLoading } from '@/components/GlobalLoading';
+import { PageMeta } from '@/components/PageMeta';
 import { AppLayout } from '@/components/layout/AppLayout';
 import {
   RequireActive,
@@ -40,6 +41,7 @@ export function App() {
     // Radix primitives (menus, selects, tabs, dialogs) need the direction for keyboard and placement.
     <DirectionProvider dir={directionOf(i18n.language)}>
       <GlobalLoading />
+      <PageMeta />
       <Routes>
         <Route element={<RequireGuest />}>
           <Route path="/login" element={<LoginPage />} />

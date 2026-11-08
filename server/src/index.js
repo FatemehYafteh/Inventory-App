@@ -16,7 +16,7 @@ async function main() {
   if (config.isProduction && config.emailDelivery === 'log') {
     console.warn('[mail] EMAIL_DELIVERY=log: emails are written to this log, not sent.');
   }
-  await connectDatabase(config.mongoUri);
+  await connectDatabase(config.mongoUri, config.mongo);
   // Without a token (development only) the server logs start tokens and codes instead,
   // and `npm run tg:start` stands in for pressing Start.
   const bot = config.telegram.botToken ? createBot(config) : undefined;

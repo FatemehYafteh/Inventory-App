@@ -133,4 +133,36 @@ describe('loadConfig', () => {
     const config = loadConfig({ ...base, DEMO_EMAILS: ' Demo@Example.com, staff@example.com ,' });
     expect(config.demoEmails).toEqual(['demo@example.com', 'staff@example.com']);
   });
+
+  it('trusts one proxy on Vercel when TRUST_PROXY is unset, and keeps an explicit value', () => {
+    expect(loadConfig({ ...base, VERCEL: '1' }).trustProxy).toBe(1);
+    expect(loadConfig({ ...base, VERCEL: '1', TRUST_PROXY: '2' }).trustProxy).toBe(2);
+    expect(loadConfig({ ...base, TRUST_PROXY: '' }).trustProxy).toBe(0);
+    expect(loadConfig({ ...production, VERCEL: '1' }).trustProxy).toBe(1);
+  });
+
+  it('refuses TRUST_PROXY=0 in production on Vercel, where every user would share one IP', () => {
+    expect(() => loadConfig({ ...production, VERCEL: '1', TRUST_PROXY: '0' })).toThrow(
+      /TRUST_PROXY: must be 1 on Vercel/,
+    );
+    expect(loadConfig({ ...production, TRUST_PROXY: '0' }).trustProxy).toBe(0);
+    expect(loadConfig({ ...base, VERCEL: '1', TRUST_PROXY: '0' }).trustProxy).toBe(0);
+  });
+
+  it('uses short database timeouts and a small pool unless set', () => {
+    expect(loadConfig(base).mongo).toEqual({ serverSelectionTimeoutMS: 5000, maxPoolSize: 10 });
+    const empty = loadConfig({
+      ...base,
+      MONGO_SERVER_SELECTION_TIMEOUT_MS: '',
+      MONGO_MAX_POOL_SIZE: '',
+    });
+    expect(empty.mongo).toEqual({ serverSelectionTimeoutMS: 5000, maxPoolSize: 10 });
+    const custom = loadConfig({
+      ...base,
+      MONGO_SERVER_SELECTION_TIMEOUT_MS: '8000',
+      MONGO_MAX_POOL_SIZE: '3',
+    });
+    expect(custom.mongo).toEqual({ serverSelectionTimeoutMS: 8000, maxPoolSize: 3 });
+    expect(() => loadConfig({ ...base, MONGO_MAX_POOL_SIZE: '0' })).toThrow(/MONGO_MAX_POOL_SIZE/);
+  });
 });

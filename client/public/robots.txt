@@ -1,0 +1,8 @@
+# Only the sign-in and sign-up pages are public. The API and the pages opened from email links
+# (which carry one-time tokens in the URL) are never crawled. Every other page is private and
+# also says noindex in its robots meta tag.
+User-agent: *
+Disallow: /api/
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /confirm-link
