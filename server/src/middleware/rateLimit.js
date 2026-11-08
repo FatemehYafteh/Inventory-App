@@ -1,5 +1,5 @@
 import { m } from '@inventory/shared/errorCodes';
-import { rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import { AppError } from '../utils/AppError.js';
 
 const MINUTE = 60 * 1000;
@@ -24,7 +24,9 @@ export function perIp(windowMs, limit) {
 /** The key of the per-email limit: the email, or the IP when a request carries none. */
 export function emailKey(req) {
   const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-  return email ? `email:${email}` : `ip:${req.ip}`;
+  // ipKeyGenerator groups an IPv6 address by its /56 subnet, so one user cannot dodge the
+  // limit by rotating addresses (express-rate-limit 8 checks custom key generators for this).
+  return email ? `email:${email}` : `ip:${ipKeyGenerator(req.ip ?? '')}`;
 }
 
 /**
