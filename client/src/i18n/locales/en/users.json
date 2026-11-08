@@ -1,5 +1,6 @@
 {
   "title": "Users",
+  "demoNotice": "The demo account can look at users but cannot approve, reject or change roles.",
   "tabs": {
     "pending": "Pending",
     "active": "Active",
@@ -54,7 +55,8 @@
     "moveToPending": "Move to pending",
     "pendingIncompleteNote": "They must finish their profile before they can be approved.",
     "selfNote": "You cannot reject or demote yourself.",
-    "rejectedIncompleteNote": "They must finish their profile before they can be reactivated."
+    "rejectedIncompleteNote": "They must finish their profile before they can be reactivated.",
+    "demoNote": "Not available in the demo account."
   },
   "drawer": {
     "defaultTitle": "User details",

@@ -110,7 +110,8 @@
     "CANNOT_CHANGE_SELF": "You cannot reject or demote yourself.",
     "LAST_ADMIN": "There must always be at least one active admin.",
     "USER_PROFILE_INCOMPLETE": "This user has not completed their profile yet.",
-    "USER_NOT_ACTIVE": "Only active users can change role."
+    "USER_NOT_ACTIVE": "Only active users can change role.",
+    "DEMO_READ_ONLY": "The demo account cannot change other users."
   },
   "codes": {
     "BAD_REQUEST": "The request could not be understood.",
@@ -148,6 +149,7 @@
     "INVALID_TRANSITION": "This change is not allowed.",
     "CANNOT_CHANGE_SELF": "You cannot make this change to yourself.",
     "LAST_ADMIN": "There must always be at least one active admin.",
-    "USER_NOT_ACTIVE": "Only active users can do this."
+    "USER_NOT_ACTIVE": "Only active users can do this.",
+    "DEMO_READ_ONLY": "This is not available in the demo account."
   }
 }

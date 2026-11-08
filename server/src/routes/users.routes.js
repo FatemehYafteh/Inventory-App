@@ -5,19 +5,30 @@ import {
   listUsersQuerySchema,
 } from '@inventory/shared/schemas';
 import * as users from '../controllers/users.controller.js';
+import { denyDemo } from '../middleware/denyDemo.js';
 import { protect } from '../middleware/protect.js';
 import { validate, validateQuery } from '../middleware/validate.js';
 
-/** Admin only: every route sits behind the full gate chain with the admin role. */
+/**
+ * Admin only: every route sits behind the full gate chain with the admin role. Demo accounts
+ * (DEMO_EMAILS) may read but not change status or role.
+ */
 export function usersRoutes(config) {
   const router = Router();
   const adminOnly = protect(config, 'admin');
+  const notDemo = denyDemo(config);
 
   router.get('/', ...adminOnly, validateQuery(listUsersQuerySchema), users.list);
   router.get('/pending-count', ...adminOnly, users.pendingCount);
   router.get('/:id', ...adminOnly, users.detail);
-  router.patch('/:id/status', ...adminOnly, validate(changeStatusSchema), users.changeStatus);
-  router.patch('/:id/role', ...adminOnly, validate(changeRoleSchema), users.changeRole);
+  router.patch(
+    '/:id/status',
+    ...adminOnly,
+    notDemo,
+    validate(changeStatusSchema),
+    users.changeStatus,
+  );
+  router.patch('/:id/role', ...adminOnly, notDemo, validate(changeRoleSchema), users.changeRole);
 
   return router;
 }

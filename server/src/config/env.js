@@ -37,6 +37,9 @@ const envSchema = z
     BOT_MODE: z.enum(['polling', 'webhook']).default('polling'),
     ADMIN_TELEGRAM_IDS: csv,
     ADMIN_EMAILS: csv,
+    // Demo accounts (shown on the login page): they may use the app, but never change another
+    // user's status or role.
+    DEMO_EMAILS: csv,
     SMTP_HOST: optional,
     SMTP_PORT: z.coerce.number().int().positive().default(587),
     SMTP_USER: optional,
@@ -115,6 +118,7 @@ export function loadConfig(source = process.env) {
       mode: env.BOT_MODE,
     },
     admins: { telegramIds: env.ADMIN_TELEGRAM_IDS, emails: env.ADMIN_EMAILS },
+    demoEmails: env.DEMO_EMAILS.map((email) => email.toLowerCase()),
     emailDelivery: env.EMAIL_DELIVERY,
     brevo: env.EMAIL_DELIVERY === 'send' && env.BREVO_API_KEY
       ? { apiKey: env.BREVO_API_KEY, from: env.EMAIL_FROM ?? 'Inventory <no-reply@localhost>' }

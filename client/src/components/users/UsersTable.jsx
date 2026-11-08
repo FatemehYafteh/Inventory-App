@@ -15,7 +15,16 @@ function NoWrapOnRejected({ user, children }) {
   );
 }
 
-function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChangeRole }) {
+function Actions({
+  user,
+  isYou,
+  busy,
+  readOnly,
+  onApprove,
+  onReject,
+  onReactivate,
+  onChangeRole,
+}) {
   const { t } = useTranslation();
   const buttons = [];
   // Why the buttons the rules disable are disabled: a tooltip on them, and a note under them.
@@ -25,14 +34,17 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
       active: isYou && t('users.actions.selfNote'),
       rejected: !user.profileComplete && t('users.actions.rejectedIncompleteNote'),
     }[user.status] || null;
-  const title = note || undefined;
+  // A demo account sees every action, all disabled; the page says why once, above the table.
+  const demoTitle = readOnly ? t('users.actions.demoNote') : undefined;
+  const title = demoTitle || note || undefined;
+  const locked = busy || readOnly;
 
   if (user.status === 'pending') {
     buttons.push(
       <Button
         key="approve"
         size="sm"
-        disabled={busy || !user.profileComplete}
+        disabled={locked || !user.profileComplete}
         title={title}
         onClick={() => onApprove(user)}
       >
@@ -42,7 +54,8 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         key="reject"
         size="sm"
         variant="outline"
-        disabled={busy}
+        disabled={locked}
+        title={demoTitle}
         onClick={() => onReject(user)}
       >
         {t('users.actions.reject')}
@@ -54,7 +67,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         key="reject"
         size="sm"
         variant="outline"
-        disabled={busy || isYou}
+        disabled={locked || isYou}
         title={title}
         onClick={() => onReject(user)}
       >
@@ -64,7 +77,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         key="role"
         size="sm"
         variant="outline"
-        disabled={busy || isYou}
+        disabled={locked || isYou}
         title={title}
         onClick={() => onChangeRole(user)}
       >
@@ -76,7 +89,7 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
       <Button
         key="active"
         size="sm"
-        disabled={busy || !user.profileComplete}
+        disabled={locked || !user.profileComplete}
         title={title}
         onClick={() => onReactivate(user, 'active')}
       >
@@ -86,7 +99,8 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
         key="pending"
         size="sm"
         variant="outline"
-        disabled={busy}
+        disabled={locked}
+        title={demoTitle}
         onClick={() => onReactivate(user, 'pending')}
       >
         {t('users.actions.moveToPending')}
@@ -101,20 +115,22 @@ function Actions({ user, isYou, busy, onApprove, onReject, onReactivate, onChang
       >
         {buttons}
       </div>
-      {note && <p className="text-xs text-muted-foreground">{note}</p>}
+      {note && !readOnly && <p className="text-xs text-muted-foreground">{note}</p>}
     </div>
   );
 }
 
 /**
  * The users table. The server filters and pages; `pagination` is { pageIndex, pageSize }.
- * Row actions call the handlers; `busy` disables them while a change is being saved.
+ * Row actions call the handlers; `busy` disables them while a change is being saved, and
+ * `readOnly` (the demo account) disables them all.
  */
 export function UsersTable({
   users,
   total,
   meId,
   busy,
+  readOnly = false,
   pagination,
   onPaginationChange,
   isLoading,
@@ -231,6 +247,7 @@ export function UsersTable({
             user={row.original}
             isYou={row.original.id === meId}
             busy={busy}
+            readOnly={readOnly}
             onApprove={onApprove}
             onReject={onReject}
             onReactivate={onReactivate}
@@ -239,7 +256,7 @@ export function UsersTable({
         ),
       },
     ],
-    [t, meId, busy, onApprove, onReject, onReactivate, onChangeRole, onOpen],
+    [t, meId, busy, readOnly, onApprove, onReject, onReactivate, onChangeRole, onOpen],
   );
 
   return (
