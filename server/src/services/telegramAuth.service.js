@@ -61,12 +61,15 @@ function invalidCode() {
   return new AppError(400, 'INVALID_CODE', m.TELEGRAM_CODE_INVALID_OR_EXPIRED);
 }
 
+// One static catalogue message per count, so the client can translate it. The tries are 3, so a
+// wrong code leaves 2 or 1; any other count (if MAX_OTP_ATTEMPTS changes) gets the plain message.
+const WRONG_CODE_MESSAGES = {
+  2: m.TELEGRAM_WRONG_CODE_2_LEFT,
+  1: m.TELEGRAM_WRONG_CODE_1_LEFT,
+};
+
 function wrongCode(left) {
-  return new AppError(
-    400,
-    'INVALID_CODE',
-    `Wrong code. ${left} ${left === 1 ? 'try' : 'tries'} left.`,
-  );
+  return new AppError(400, 'INVALID_CODE', WRONG_CODE_MESSAGES[left] ?? m.TELEGRAM_WRONG_CODE);
 }
 
 function tooManyWrongCodes() {

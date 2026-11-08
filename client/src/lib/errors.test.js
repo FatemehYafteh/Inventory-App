@@ -74,6 +74,22 @@ describe('errorMessage', () => {
     expect(errorMessage(null)).toBeNull();
   });
 
+  it('shows "Wrong code. N tries left." in Persian, and unchanged in English', async () => {
+    const two = apiError(400, { message: 'Wrong code. 2 tries left.', code: 'INVALID_CODE' });
+    const one = apiError(400, { message: 'Wrong code. 1 try left.', code: 'INVALID_CODE' });
+
+    expect(errorMessage(two)).toBe('Wrong code. 2 tries left.');
+    expect(translateMessage('Wrong code. 1 try left.')).toBe('Wrong code. 1 try left.');
+
+    await i18n.changeLanguage('fa');
+    expect(errorMessage(two)).toBe(fa.messages.TELEGRAM_WRONG_CODE_2_LEFT);
+    expect(errorMessage(one)).toBe(fa.messages.TELEGRAM_WRONG_CODE_1_LEFT);
+    expect(translateMessage('Wrong code. 2 tries left.')).toBe(
+      fa.messages.TELEGRAM_WRONG_CODE_2_LEFT,
+    );
+    expect(errorMessage(two)).not.toMatch(/Wrong code|tries/);
+  });
+
   it('tells the user the service is temporarily unavailable on a 503, in English and Persian', async () => {
     const outage = apiError(503, { message: 'Service unavailable', code: 'SERVICE_UNAVAILABLE' });
 
