@@ -9,6 +9,19 @@ shared/   Zod schemas used by both (added in milestone 1)
 docs/     PRD and sub-PRDs (start at docs/prds/README.md)
 ```
 
+> **Email is not set up yet.** The deployed app runs with `EMAIL_DELIVERY=log`, which sends nothing.
+> Until an email provider is configured (`BREVO_API_KEY` with `EMAIL_FROM`, or `SMTP_*`) and
+> `EMAIL_DELIVERY` is set to `send`:
+>
+> - a new email sign-up cannot verify its address, so it cannot log in;
+> - "Forgot password" emails never arrive, so a forgotten password cannot be reset by the user;
+> - the verification and account-link emails of Telegram sign-ups never arrive.
+>
+> Signing in with Telegram, and the seeded accounts, work. In production the server also **never
+> writes an email's link to the log**, on purpose: the link would let anyone who can read the logs
+> take over that account. In development the full email (link included) is still logged.
+> Set the provider before real users sign up. See "Vercel environment variables" below.
+
 ## Run locally
 Requires Node 22 (the version CI and Vercel use; see `engines` in `package.json`).
 
