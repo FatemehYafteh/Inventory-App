@@ -10,7 +10,7 @@ docs/     PRD and sub-PRDs (start at docs/prds/README.md)
 ```
 
 ## Run locally
-Requires Node 20.6+.
+Requires Node 22 (the version CI and Vercel use; see `engines` in `package.json`).
 
 ```sh
 npm install
@@ -63,7 +63,8 @@ Everything is served from one address, so the `SameSite=Strict` cookies and the 
   `NODE_ENV=production`, `BOT_MODE=webhook`, `TRUST_PROXY=1`, `COOKIE_SECURE=true`, `EMAIL_DELIVERY=log`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (`npm run secret:generate -w server`), `CLIENT_ORIGIN` and `APP_URL` (the Vercel address), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `ADMIN_EMAILS`. Optional: `VITE_DEMO_EMAIL` and `VITE_DEMO_PASSWORD` show a demo account box on the login page. Put the same email in `DEMO_EMAILS`, so visitors using the demo account cannot reject or demote real users (the server refuses it, and the Users page shows those actions disabled). The demo account also sees other users' emails and Telegram usernames masked, and its search matches names only. Redeploy after changing any of them.
 - Demo data: in GitHub, Actions > **Seed demo data** > Run workflow, and type `SEED` in the confirm field (needs the repository secrets `MONGODB_URI` and `SEED_PASSWORD`). It runs `server/scripts/seed.js` on GitHub's servers and only adds what is missing. Running it from your own machine also works (`npm run seed -w server` with `MONGODB_URI` pointing at Atlas) where DNS answers SRV lookups. `npm run seed:reset -w server` wipes every seeded collection, **users included**: do not point it at a database with real accounts.
 - Reset demo data: Actions > **Reset demo data** > Run workflow, and type `RESET` in the confirm field (same `MONGODB_URI` secret). It runs `npm run seed:demo-reset` logic (`server/scripts/seed-demo-reset.js`) on GitHub's servers: products, movements, categories and suppliers are deleted and reseeded, and **all users and their sessions are kept**.
-- Rate limits are kept in memory, so on serverless each instance counts on its own; they are looser than on a single server.
+- Health checks: `GET /api/health` says the process is up and never touches the database. `GET /api/health/ready` also pings MongoDB (3 s limit) and answers `503` when it is down, so point an uptime monitor or load balancer at `/api/health/ready` to catch a database outage. Both are public and cheap; the ready check is limited to 120 a minute per IP.
+- If the database is unreachable the API answers `503 SERVICE_UNAVAILABLE` (with `Retry-After`) and recovers by itself when it returns, with no restart.
 
 ## Git workflow
 - `main` is always working. Do not commit to it directly.
