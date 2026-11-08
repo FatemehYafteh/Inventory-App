@@ -162,6 +162,7 @@ export function SuppliersPage() {
         }}
         isLoading={suppliers.isPending}
         error={suppliers.error}
+        onRetry={() => suppliers.refetch()}
         emptyMessage={search ? t('suppliers.emptySearch') : t('suppliers.empty')}
         toolbar={
           <Input

@@ -91,6 +91,7 @@ export function MovementsPage() {
         }}
         isLoading={movements.isPending}
         error={movements.error}
+        onRetry={() => movements.refetch()}
         emptyMessage={filtered ? t('movements.page.emptyFiltered') : t('movements.page.empty')}
         toolbar={
           <MovementFilters

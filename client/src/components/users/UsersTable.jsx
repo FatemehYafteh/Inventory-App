@@ -136,6 +136,7 @@ export function UsersTable({
   onPaginationChange,
   isLoading,
   error,
+  onRetry,
   emptyMessage,
   toolbar,
   onApprove,
@@ -289,6 +290,7 @@ export function UsersTable({
       onPaginationChange={onPaginationChange}
       isLoading={isLoading}
       error={error}
+      onRetry={onRetry}
       emptyMessage={emptyMessage}
       toolbar={toolbar}
       renderCard={renderCard}

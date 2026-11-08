@@ -90,6 +90,7 @@ export function MovementTable({
   onPaginationChange,
   isLoading,
   error,
+  onRetry,
   emptyMessage,
   toolbar,
 }) {
@@ -106,6 +107,7 @@ export function MovementTable({
       onPaginationChange={onPaginationChange}
       isLoading={isLoading}
       error={error}
+      onRetry={onRetry}
       emptyMessage={emptyMessage}
       toolbar={toolbar}
       renderCard={(movement) => <MovementCard movement={movement} />}

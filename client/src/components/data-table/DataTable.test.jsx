@@ -132,6 +132,19 @@ describe('DataTable', () => {
     rerender(<Harness data={noRows} rowCount={0} error={new Error('Could not load products.')} />);
     expect(screen.getByRole('alert')).toHaveTextContent('Could not load products.');
   });
+
+  it('offers Try again on an error when the page can reload the list', async () => {
+    const user = userEvent.setup();
+    const onRetry = vi.fn();
+    const error = new Error('Could not load products.');
+    const { rerender } = render(<Harness data={noRows} rowCount={0} error={error} />);
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+
+    rerender(<Harness data={noRows} rowCount={0} error={error} onRetry={onRetry} />);
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('DataTable on a phone', () => {

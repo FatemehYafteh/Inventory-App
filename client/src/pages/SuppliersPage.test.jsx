@@ -482,3 +482,17 @@ describe('Suppliers page, admin', () => {
     ).toHaveAttribute('aria-disabled', 'true');
   });
 });
+
+describe('Moving between pages', () => {
+  it('puts the focus on the new page heading after following a navigation link', async () => {
+    suppliersApi([northwind]);
+    const user = userEvent.setup();
+    renderApp({ route: '/' });
+    await screen.findByRole('heading', { level: 1, name: 'Dashboard' });
+
+    await user.click(screen.getByRole('link', { name: /Suppliers/ }));
+
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Suppliers' });
+    await waitFor(() => expect(heading).toHaveFocus());
+  });
+});
