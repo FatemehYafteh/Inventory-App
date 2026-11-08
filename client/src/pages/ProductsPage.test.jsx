@@ -450,13 +450,16 @@ describe('Products page', () => {
     expect(state.lists.every((list) => list.archived === undefined)).toBe(true);
   });
 
-  it('shows how many products there are and pages through them', async () => {
+  it('shows how many products there are, with no paging when they fit on one page', async () => {
     const state = productsApi([hammer, glue]);
     renderApp({ route: '/products' });
 
     await row('Claw Hammer');
     expect(lastList(state)).toMatchObject({ page: '1', limit: '20' });
-    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    // Both products fit on one page: the count stays, the paging controls go.
+    expect(screen.getByText('2 results')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Rows per page')).not.toBeInTheDocument();
   });
 
   it('clears every filter at once', async () => {
@@ -645,9 +648,11 @@ describe('Products page', () => {
       renderApp({ route: '/products' });
       await openAdjust(user);
 
-      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('Current quantity: 40');
+      // The current stock sits under the product name; the old bottom line is gone.
+      expect(dialog().getByText(/^Stock:/)).toHaveTextContent('Stock: 40');
+      expect(dialog().queryByText(/Current quantity/)).not.toBeInTheDocument();
       await user.type(dialog().getByLabelText('Quantity to add'), '12');
-      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('New quantity: 52');
+      expect(dialog().getByText(/^Stock:/)).toHaveTextContent('Stock: 40 → 52');
       await user.type(dialog().getByLabelText(/^Note/), 'Truck 7');
       await user.click(dialog().getByRole('button', { name: 'Save' }));
 
@@ -663,6 +668,37 @@ describe('Products page', () => {
       expect(within(await row('Claw Hammer')).getByText('52')).toBeInTheDocument();
     });
 
+    it('names the supplier on the Receive tab, or says the product has none', async () => {
+      productsApi([hammer, glue]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+
+      await openAdjust(user);
+      expect(dialog().getByText(/Recorded against/)).toHaveTextContent(
+        'Stock that arrived. Recorded against Acme Tools.',
+      );
+      expect(dialog().getByText('Acme Tools').tagName).toBe('BDI');
+      await user.click(dialog().getByRole('button', { name: 'Cancel' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+      await openAdjust(user, 'Wood Glue');
+      expect(dialog().getByText(/no supplier/)).toHaveTextContent(
+        'This product has no supplier, so none is recorded.',
+      );
+      expect(dialog().queryByText(/Recorded against/)).not.toBeInTheDocument();
+    });
+
+    it('does not double the full stop when the supplier name ends with one', async () => {
+      productsApi([{ ...hammer, supplier: { id: ACME_ID, name: 'Old Mill Paper Co.' } }]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+
+      await openAdjust(user);
+      expect(dialog().getByText(/Recorded against/).textContent).toBe(
+        'Stock that arrived. Recorded against Old Mill Paper Co.',
+      );
+    });
+
     it('accepts Persian digits and sends them as Latin ones', async () => {
       const state = productsApi([hammer], { me: staff });
       const user = userEvent.setup();
@@ -671,7 +707,7 @@ describe('Products page', () => {
 
       await user.type(dialog().getByLabelText('Quantity to add'), '۱۲');
 
-      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('New quantity: 52');
+      expect(dialog().getByText(/^Stock:/)).toHaveTextContent('Stock: 40 → 52');
       await user.click(dialog().getByRole('button', { name: 'Save' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       expect(state.writes[0].body).toEqual({ type: 'receive', quantity: 12 });
@@ -685,7 +721,7 @@ describe('Products page', () => {
 
       await user.click(dialog().getByRole('tab', { name: 'Ship' }));
       await user.type(dialog().getByLabelText('Quantity to remove'), '5');
-      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('New quantity: 35');
+      expect(dialog().getByText(/^Stock:/)).toHaveTextContent('Stock: 40 → 35');
       await user.click(dialog().getByRole('button', { name: 'Save' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
@@ -806,6 +842,33 @@ describe('Products page', () => {
       expect(oldest.getByText('Sam Staff')).toBeInTheDocument();
       expect(oldest.getByText(/Oct 14, 2026/)).toBeInTheDocument();
       expect(state.movementQueries[0]).toEqual({ page: '1', limit: '10' });
+    });
+
+    it('shows Before → After in one column and the supplier under the note', async () => {
+      const state = productsApi([hammer], { me: staff });
+      state.movements = [
+        movement(1, {
+          quantityBefore: 10,
+          quantityAfter: 6,
+          quantityChange: -4,
+          type: 'ship',
+          note: 'Order 9',
+          supplier: { id: ACME_ID, name: 'Acme Tools' },
+        }),
+      ];
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openHistory(user);
+
+      const headers = (await dialog().findAllByRole('columnheader')).map((h) => h.textContent);
+      expect(headers).toEqual(['Date', 'Type', 'Change', 'Before → After', 'Note', 'Performed by']);
+      const [, only] = (await dialog().findAllByRole('row')).map((r) => within(r));
+      expect(only.getByText('10 → 6')).toBeInTheDocument();
+      const note = only.getByText('Order 9');
+      expect(note.closest('div')).toContainElement(only.getByText('Acme Tools'));
+      // Everything fits on one page: only the count, no paging controls.
+      expect(dialog().getByText('1 result')).toBeInTheDocument();
+      expect(dialog().queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
     });
 
     it('pages through a long history', async () => {
@@ -1102,6 +1165,6 @@ describe('Products page in Persian', () => {
     const hammerRow = within(await row('Claw Hammer'));
     expect(hammerRow.getByText('۴۰')).toBeInTheDocument();
     expect(hammerRow.getByText(/۱۲٫۵۰/)).toBeInTheDocument();
-    expect(screen.getByText(/صفحه ۱ از ۱/)).toBeInTheDocument();
+    expect(screen.getByText(/۱ نتیجه/)).toBeInTheDocument();
   });
 });
