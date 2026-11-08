@@ -58,7 +58,14 @@ Locally, seeded accounts share the password `inventory-demo-2026` (override with
 ```sh
 npm test        # server (in-memory replica set) and client tests
 npm run lint
+npm run test:e2e   # a real browser: sign in, add a product, receive and ship stock, sign out
 ```
+
+`npm run test:e2e` builds the client and runs it, with the real API and an in-memory MongoDB, in
+Chromium (see `e2e/`). Install the browser once with `npx playwright install chromium`. It needs
+ports 4000 and 5173 free (stop `npm run dev` first) and refuses to reuse a server already running
+there, so it can never touch your own development database. After a failed run, open the report with
+`npx playwright show-report e2e/playwright-report`.
 
 ## Deployment
 Free tier only, no credit card: the web app **and** the API on **Vercel**, the database on **MongoDB Atlas** (`M0`, already a replica set). Email is off for now (`EMAIL_DELIVERY=log`): in production the server logs only that an email was held back (recipient and subject), **never its body**, because the body holds one-time reset and verification links that would let anyone with log access take over an account. So with no provider, email sign-up verification and password reset cannot complete: use the seeded accounts (or Telegram sign-in) for a demo, and set `BREVO_API_KEY` (or SMTP) with `EMAIL_DELIVERY=send` before real users sign up. In development the full email, links included, is still logged.
