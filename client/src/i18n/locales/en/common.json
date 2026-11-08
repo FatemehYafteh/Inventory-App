@@ -45,5 +45,8 @@
     "title": "Something went wrong",
     "description": "This page could not be shown. Reload to try again. If it keeps happening, try again later.",
     "reload": "Reload"
+  },
+  "currency": {
+    "unit": "Rial"
   }
 }

@@ -1,4 +1,4 @@
-import { Boxes, CircleDollarSign, Clock, Package, PackageX, TriangleAlert } from 'lucide-react';
+import { Banknote, Boxes, Clock, Package, PackageX, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -66,7 +66,7 @@ export function SummaryCards({ summary, pending }) {
       <SummaryCard
         label={t('dashboard.cards.inventoryValue')}
         value={formatPrice(summary.inventoryValue)}
-        Icon={CircleDollarSign}
+        Icon={Banknote}
       />
       <SummaryCard
         label={t('dashboard.cards.lowStock')}

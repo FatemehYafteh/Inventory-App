@@ -32,7 +32,7 @@ const hammer = product({
   id: 'p1',
   title: 'Claw Hammer',
   sku: 'HAM-001',
-  price: 12.5,
+  price: 12500,
   quantity: 40,
   supplier: { id: ACME_ID, name: 'Acme Tools' },
 });
@@ -170,7 +170,7 @@ describe('Products page', () => {
     expect(within(hammerRow).getByText('HAM-001')).toBeInTheDocument();
     expect(within(hammerRow).getByText('Tools')).toBeInTheDocument();
     expect(within(hammerRow).getByText('Acme Tools')).toBeInTheDocument();
-    expect(within(hammerRow).getByText('$12.50')).toBeInTheDocument();
+    expect(within(hammerRow).getByText('12,500 Rial')).toBeInTheDocument();
     expect(within(hammerRow).getByText('40')).toBeInTheDocument();
     expect(within(hammerRow).getByText('In stock')).toBeInTheDocument();
     expect(within(hammerRow).queryByText('Oct 14, 2026')).not.toBeInTheDocument();
@@ -927,18 +927,18 @@ describe('Products page', () => {
     async function fillRequired(user) {
       await user.type(sheet().getByLabelText('Title'), 'Cable Ties');
       await user.type(sheet().getByLabelText('SKU'), 'cab-010');
-      await user.type(sheet().getByLabelText('Price'), '4.5');
+      await user.type(sheet().getByLabelText('Price (Rial)'), '4.5');
       await user.click(sheet().getByRole('combobox', { name: 'Category' }));
       await user.click(await screen.findByRole('option', { name: 'Tools' }));
     }
 
-    it('marks the optional fields, helps with two of them and prefixes the price', async () => {
+    it('marks the optional fields, helps with two of them and puts the unit in the price label', async () => {
       productsApi([hammer]);
       const user = userEvent.setup();
       renderApp({ route: '/products' });
       await openAdd(user);
 
-      for (const label of ['Title', 'SKU', 'Price']) {
+      for (const label of ['Title', 'SKU', 'Price (Rial)']) {
         expect(sheet().getByLabelText(label)).toBeInTheDocument();
       }
       for (const label of ['Description', 'Reorder level', 'Initial quantity']) {
@@ -957,10 +957,12 @@ describe('Products page', () => {
       // That sentence moved out of the sheet description.
       expect(sheet().getByText('SKUs are unique, ignoring letter case.')).toBeInTheDocument();
 
-      // A dollar sign inside the price field, which stays left to right.
-      const price = sheet().getByLabelText('Price');
+      // The unit is in the label; there is no currency sign in the field. It stays left to right
+      // and opens the numeric keypad (a Rial price has no decimals).
+      const price = sheet().getByLabelText('Price (Rial)');
       expect(price).toHaveAttribute('dir', 'ltr');
-      expect(price.previousElementSibling).toHaveTextContent('$');
+      expect(price).toHaveAttribute('inputmode', 'numeric');
+      expect(sheet().queryByText('$')).not.toBeInTheDocument();
     });
 
     it('sets the text direction of each input by what it holds', async () => {
@@ -972,7 +974,7 @@ describe('Products page', () => {
       expect(sheet().getByLabelText('Title')).toHaveAttribute('dir', 'auto');
       expect(sheet().getByLabelText(/^Description/)).toHaveAttribute('dir', 'auto');
       expect(sheet().getByLabelText('SKU')).toHaveAttribute('dir', 'ltr');
-      expect(sheet().getByLabelText('Price')).toHaveAttribute('dir', 'ltr');
+      expect(sheet().getByLabelText('Price (Rial)')).toHaveAttribute('dir', 'ltr');
     });
 
     it('shows the fields, with an initial quantity of 0', async () => {
@@ -1139,7 +1141,7 @@ describe('Products page', () => {
       await screen.findByRole('dialog', { name: 'Edit product' });
       expect(sheet().getByLabelText('Title')).toHaveValue('Claw Hammer');
       expect(sheet().getByLabelText('SKU')).toHaveValue('HAM-001');
-      expect(sheet().getByLabelText('Price')).toHaveValue('12.5');
+      expect(sheet().getByLabelText('Price (Rial)')).toHaveValue('12500');
       expect(sheet().queryByLabelText(/^Initial quantity/)).not.toBeInTheDocument();
       expect(sheet().getByRole('combobox', { name: 'Category' })).toHaveTextContent('Tools');
       expect(sheet().getByRole('combobox', { name: /^Supplier/ })).toHaveTextContent('Acme Tools');
@@ -1159,7 +1161,7 @@ describe('Products page', () => {
             description: '',
             category: TOOLS_ID,
             supplier: ACME_ID,
-            price: 12.5,
+            price: 12500,
             reorderLevel: 2,
           },
         },
@@ -1212,7 +1214,9 @@ describe('Products page in Persian', () => {
 
     const hammerRow = within(await row('Claw Hammer'));
     expect(hammerRow.getByText('۴۰')).toBeInTheDocument();
-    expect(hammerRow.getByText(/۱۲٫۵۰/)).toBeInTheDocument();
+    // Persian digits and separators, whole Rial, and the Persian unit after the number.
+    expect(hammerRow.getByText('۱۲٬۵۰۰ ریال')).toBeInTheDocument();
+    expect(hammerRow.queryByText(/Rial|\$/)).not.toBeInTheDocument();
     expect(screen.getByText(/۱ نتیجه/)).toBeInTheDocument();
   });
 });
@@ -1232,7 +1236,7 @@ describe('Products page on a phone', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(card.getByText('HAM-001')).toBeInTheDocument();
     expect(card.getByText('In stock')).toBeInTheDocument();
-    expect(card.getByText('$12.50')).toBeInTheDocument();
+    expect(card.getByText('12,500 Rial')).toBeInTheDocument();
     expect(card.getByText('Tools')).toBeInTheDocument();
     expect(card.getByText('40')).toBeInTheDocument();
     expect(
