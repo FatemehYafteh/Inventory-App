@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DataTable } from '@/components/data-table/DataTable';
-import { mockMobile } from '@/test/mobile';
+import { mockMobile, mockTablet } from '@/test/mobile';
 
 const columns = [
   { accessorKey: 'title', header: 'Title' },
@@ -184,6 +184,15 @@ describe('DataTable on a phone', () => {
 
     expect(screen.getByText('Nothing here.')).toBeInTheDocument();
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+  });
+
+  it('shows cards on a tablet too, two per row, where the wide table would scroll', () => {
+    restore = mockTablet();
+    render(<Harness renderCard={card} />);
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getByRole('list')).toHaveClass('md:grid-cols-2');
   });
 
   it('keeps the table on a large screen even when cards are offered', () => {
