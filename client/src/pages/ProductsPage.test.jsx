@@ -1,8 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import i18n from '@/i18n';
+import { mockMobile } from '@/test/mobile';
 import { renderApp } from '@/test/render';
 import { chooseRowAction, openRowMenu } from '@/test/rowMenu';
 import { activeUser, server } from '@/test/server';
@@ -232,7 +233,11 @@ describe('Products page', () => {
 
       await row('Claw Hammer');
       await chooseRowAction(user, 'More actions for Claw Hammer', 'Archive Claw Hammer');
-      const dialog = await screen.findByRole('alertdialog', { name: 'Archive Claw Hammer?' });
+      const dialog = await screen.findByRole('alertdialog', {
+        name: /^Archive\s+Claw Hammer\s*\?$/,
+      });
+      // The product name in the title keeps its own direction.
+      expect(within(dialog).getByText('Claw Hammer').tagName).toBe('BDI');
       expect(state.writes).toEqual([]);
 
       const listsBefore = state.lists.length;
@@ -450,13 +455,16 @@ describe('Products page', () => {
     expect(state.lists.every((list) => list.archived === undefined)).toBe(true);
   });
 
-  it('shows how many products there are and pages through them', async () => {
+  it('shows how many products there are, with no paging when they fit on one page', async () => {
     const state = productsApi([hammer, glue]);
     renderApp({ route: '/products' });
 
     await row('Claw Hammer');
     expect(lastList(state)).toMatchObject({ page: '1', limit: '20' });
-    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    // Both products fit on one page: the count stays, the paging controls go.
+    expect(screen.getByText('2 results')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Rows per page')).not.toBeInTheDocument();
   });
 
   it('clears every filter at once', async () => {
@@ -645,9 +653,11 @@ describe('Products page', () => {
       renderApp({ route: '/products' });
       await openAdjust(user);
 
-      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('Current quantity: 40');
+      // The current stock sits under the product name; the old bottom line is gone.
+      expect(dialog().getByText(/^Stock:/)).toHaveTextContent('Stock: 40');
+      expect(dialog().queryByText(/Current quantity/)).not.toBeInTheDocument();
       await user.type(dialog().getByLabelText('Quantity to add'), '12');
-      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('New quantity: 52');
+      expect(dialog().getByText(/^Stock:/)).toHaveTextContent('Stock: 40 → 52');
       await user.type(dialog().getByLabelText(/^Note/), 'Truck 7');
       await user.click(dialog().getByRole('button', { name: 'Save' }));
 
@@ -663,6 +673,37 @@ describe('Products page', () => {
       expect(within(await row('Claw Hammer')).getByText('52')).toBeInTheDocument();
     });
 
+    it('names the supplier on the Receive tab, or says the product has none', async () => {
+      productsApi([hammer, glue]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+
+      await openAdjust(user);
+      expect(dialog().getByText(/Recorded against/)).toHaveTextContent(
+        'Stock that arrived. Recorded against Acme Tools.',
+      );
+      expect(dialog().getByText('Acme Tools').tagName).toBe('BDI');
+      await user.click(dialog().getByRole('button', { name: 'Cancel' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+      await openAdjust(user, 'Wood Glue');
+      expect(dialog().getByText(/no supplier/)).toHaveTextContent(
+        'This product has no supplier, so none is recorded.',
+      );
+      expect(dialog().queryByText(/Recorded against/)).not.toBeInTheDocument();
+    });
+
+    it('does not double the full stop when the supplier name ends with one', async () => {
+      productsApi([{ ...hammer, supplier: { id: ACME_ID, name: 'Old Mill Paper Co.' } }]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+
+      await openAdjust(user);
+      expect(dialog().getByText(/Recorded against/).textContent).toBe(
+        'Stock that arrived. Recorded against Old Mill Paper Co.',
+      );
+    });
+
     it('accepts Persian digits and sends them as Latin ones', async () => {
       const state = productsApi([hammer], { me: staff });
       const user = userEvent.setup();
@@ -671,7 +712,7 @@ describe('Products page', () => {
 
       await user.type(dialog().getByLabelText('Quantity to add'), '۱۲');
 
-      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('New quantity: 52');
+      expect(dialog().getByText(/^Stock:/)).toHaveTextContent('Stock: 40 → 52');
       await user.click(dialog().getByRole('button', { name: 'Save' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       expect(state.writes[0].body).toEqual({ type: 'receive', quantity: 12 });
@@ -685,7 +726,7 @@ describe('Products page', () => {
 
       await user.click(dialog().getByRole('tab', { name: 'Ship' }));
       await user.type(dialog().getByLabelText('Quantity to remove'), '5');
-      expect(dialog().getByText(/Current quantity/)).toHaveTextContent('New quantity: 35');
+      expect(dialog().getByText(/^Stock:/)).toHaveTextContent('Stock: 40 → 35');
       await user.click(dialog().getByRole('button', { name: 'Save' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
@@ -808,6 +849,33 @@ describe('Products page', () => {
       expect(state.movementQueries[0]).toEqual({ page: '1', limit: '10' });
     });
 
+    it('shows Before → After in one column and the supplier under the note', async () => {
+      const state = productsApi([hammer], { me: staff });
+      state.movements = [
+        movement(1, {
+          quantityBefore: 10,
+          quantityAfter: 6,
+          quantityChange: -4,
+          type: 'ship',
+          note: 'Order 9',
+          supplier: { id: ACME_ID, name: 'Acme Tools' },
+        }),
+      ];
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openHistory(user);
+
+      const headers = (await dialog().findAllByRole('columnheader')).map((h) => h.textContent);
+      expect(headers).toEqual(['Date', 'Type', 'Change', 'Before → After', 'Note', 'Performed by']);
+      const [, only] = (await dialog().findAllByRole('row')).map((r) => within(r));
+      expect(only.getByText('10 → 6')).toBeInTheDocument();
+      const note = only.getByText('Order 9');
+      expect(note.closest('div')).toContainElement(only.getByText('Acme Tools'));
+      // Everything fits on one page: only the count, no paging controls.
+      expect(dialog().getByText('1 result')).toBeInTheDocument();
+      expect(dialog().queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+    });
+
     it('pages through a long history', async () => {
       const state = productsApi([hammer]);
       state.movements = Array.from({ length: 12 }, (_, i) =>
@@ -864,6 +932,49 @@ describe('Products page', () => {
       await user.click(await screen.findByRole('option', { name: 'Tools' }));
     }
 
+    it('marks the optional fields, helps with two of them and prefixes the price', async () => {
+      productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      for (const label of ['Title', 'SKU', 'Price']) {
+        expect(sheet().getByLabelText(label)).toBeInTheDocument();
+      }
+      for (const label of ['Description', 'Reorder level', 'Initial quantity']) {
+        expect(sheet().getByLabelText(`${label} (optional)`)).toBeInTheDocument();
+      }
+      expect(sheet().getByRole('combobox', { name: 'Supplier (optional)' })).toBeInTheDocument();
+      expect(sheet().getByRole('combobox', { name: 'Category' })).toBeInTheDocument();
+
+      // Help text is tied to its input.
+      expect(sheet().getByLabelText(/^Reorder level/)).toHaveAccessibleDescription(
+        'Low stock is shown when the quantity is at or below this.',
+      );
+      expect(sheet().getByLabelText(/^Initial quantity/)).toHaveAccessibleDescription(
+        'Set an initial quantity to record it as the first stock receipt.',
+      );
+      // That sentence moved out of the sheet description.
+      expect(sheet().getByText('SKUs are unique, ignoring letter case.')).toBeInTheDocument();
+
+      // A dollar sign inside the price field, which stays left to right.
+      const price = sheet().getByLabelText('Price');
+      expect(price).toHaveAttribute('dir', 'ltr');
+      expect(price.previousElementSibling).toHaveTextContent('$');
+    });
+
+    it('sets the text direction of each input by what it holds', async () => {
+      productsApi([hammer]);
+      const user = userEvent.setup();
+      renderApp({ route: '/products' });
+      await openAdd(user);
+
+      expect(sheet().getByLabelText('Title')).toHaveAttribute('dir', 'auto');
+      expect(sheet().getByLabelText(/^Description/)).toHaveAttribute('dir', 'auto');
+      expect(sheet().getByLabelText('SKU')).toHaveAttribute('dir', 'ltr');
+      expect(sheet().getByLabelText('Price')).toHaveAttribute('dir', 'ltr');
+    });
+
     it('shows the fields, with an initial quantity of 0', async () => {
       productsApi([hammer]);
       const user = userEvent.setup();
@@ -878,11 +989,11 @@ describe('Products page', () => {
         'Reorder level',
         'Initial quantity',
       ]) {
-        expect(sheet().getByLabelText(label)).toBeInTheDocument();
+        expect(sheet().getByLabelText(new RegExp(`^${label}`))).toBeInTheDocument();
       }
       expect(sheet().getByRole('combobox', { name: 'Category' })).toBeInTheDocument();
-      expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('No supplier');
-      expect(sheet().getByLabelText('Initial quantity')).toHaveValue('0');
+      expect(sheet().getByRole('combobox', { name: /^Supplier/ })).toHaveTextContent('No supplier');
+      expect(sheet().getByLabelText(/^Initial quantity/)).toHaveValue('0');
     });
 
     it('validates before sending anything', async () => {
@@ -912,7 +1023,7 @@ describe('Products page', () => {
       const listsBefore = state.lists.length;
 
       await fillRequired(user);
-      await user.click(sheet().getByRole('combobox', { name: 'Supplier' }));
+      await user.click(sheet().getByRole('combobox', { name: /^Supplier/ }));
       await user.click(await screen.findByRole('option', { name: 'Acme Tools' }));
       await user.click(sheet().getByRole('button', { name: 'Save' }));
 
@@ -942,16 +1053,16 @@ describe('Products page', () => {
       await openAdd(user);
 
       await fillRequired(user);
-      await user.clear(sheet().getByLabelText('Initial quantity'));
-      await user.type(sheet().getByLabelText('Initial quantity'), '-3');
+      await user.clear(sheet().getByLabelText(/^Initial quantity/));
+      await user.type(sheet().getByLabelText(/^Initial quantity/), '-3');
       await user.click(sheet().getByRole('button', { name: 'Save' }));
       expect(
         await sheet().findByText('Initial quantity must be 0 or more', { selector: 'p' }),
       ).toBeInTheDocument();
       expect(state.writes).toEqual([]);
 
-      await user.clear(sheet().getByLabelText('Initial quantity'));
-      await user.type(sheet().getByLabelText('Initial quantity'), '8');
+      await user.clear(sheet().getByLabelText(/^Initial quantity/));
+      await user.type(sheet().getByLabelText(/^Initial quantity/), '8');
       await user.click(sheet().getByRole('button', { name: 'Save' }));
 
       await waitFor(() => expect(state.writes).toHaveLength(1));
@@ -977,7 +1088,7 @@ describe('Products page', () => {
       renderApp({ route: '/products' });
       await openAdd(user);
 
-      await user.click(sheet().getByRole('combobox', { name: 'Supplier' }));
+      await user.click(sheet().getByRole('combobox', { name: /^Supplier/ }));
       expect(await screen.findByRole('option', { name: 'Acme Tools' })).toBeInTheDocument();
       expect(screen.queryByRole('option', { name: /Old Mill/ })).not.toBeInTheDocument();
     });
@@ -1029,9 +1140,9 @@ describe('Products page', () => {
       expect(sheet().getByLabelText('Title')).toHaveValue('Claw Hammer');
       expect(sheet().getByLabelText('SKU')).toHaveValue('HAM-001');
       expect(sheet().getByLabelText('Price')).toHaveValue('12.5');
-      expect(sheet().queryByLabelText('Initial quantity')).not.toBeInTheDocument();
+      expect(sheet().queryByLabelText(/^Initial quantity/)).not.toBeInTheDocument();
       expect(sheet().getByRole('combobox', { name: 'Category' })).toHaveTextContent('Tools');
-      expect(sheet().getByRole('combobox', { name: 'Supplier' })).toHaveTextContent('Acme Tools');
+      expect(sheet().getByRole('combobox', { name: /^Supplier/ })).toHaveTextContent('Acme Tools');
 
       await user.clear(sheet().getByLabelText('Title'));
       await user.type(sheet().getByLabelText('Title'), 'Steel Claw Hammer');
@@ -1070,7 +1181,7 @@ describe('Products page', () => {
       await row('Ream');
       await chooseRowAction(user, 'More actions for Ream', 'Edit Ream');
 
-      expect(await sheet().findByRole('combobox', { name: 'Supplier' })).toHaveTextContent(
+      expect(await sheet().findByRole('combobox', { name: /^Supplier/ })).toHaveTextContent(
         'Old Mill Paper Co. (inactive)',
       );
     });
@@ -1102,6 +1213,77 @@ describe('Products page in Persian', () => {
     const hammerRow = within(await row('Claw Hammer'));
     expect(hammerRow.getByText('۴۰')).toBeInTheDocument();
     expect(hammerRow.getByText(/۱۲٫۵۰/)).toBeInTheDocument();
-    expect(screen.getByText(/صفحه ۱ از ۱/)).toBeInTheDocument();
+    expect(screen.getByText(/۱ نتیجه/)).toBeInTheDocument();
+  });
+});
+
+describe('Products page on a phone', () => {
+  let restore = () => {};
+  beforeEach(() => {
+    restore = mockMobile();
+  });
+  afterEach(() => restore());
+
+  it('shows each product as a card with its quantity, price, category and actions', async () => {
+    productsApi([hammer, glue]);
+    renderApp({ route: '/products' });
+
+    const card = within((await screen.findByText('Claw Hammer')).closest('li'));
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(card.getByText('HAM-001')).toBeInTheDocument();
+    expect(card.getByText('In stock')).toBeInTheDocument();
+    expect(card.getByText('$12.50')).toBeInTheDocument();
+    expect(card.getByText('Tools')).toBeInTheDocument();
+    expect(card.getByText('40')).toBeInTheDocument();
+    expect(
+      card.getByRole('button', { name: 'Increase quantity of Claw Hammer' }),
+    ).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'Adjust stock of Claw Hammer' })).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'More actions for Claw Hammer' })).toBeInTheDocument();
+  });
+
+  it('sorts from the Sort by select', async () => {
+    const state = productsApi([hammer, glue]);
+    const user = userEvent.setup();
+    renderApp({ route: '/products' });
+    await screen.findByText('Claw Hammer');
+
+    await user.selectOptions(screen.getByLabelText('Sort by'), 'price:desc');
+
+    await waitFor(() => expect(lastList(state)).toMatchObject({ sortBy: 'price', order: 'desc' }));
+  });
+
+  it('keeps the search and puts the filters in a sheet, with how many are active', async () => {
+    const state = productsApi([hammer]);
+    const user = userEvent.setup();
+    renderApp({ route: `/products?category=${TOOLS_ID}&status=low_stock` });
+    await screen.findByText('Claw Hammer');
+
+    expect(screen.getByRole('searchbox', { name: 'Search products' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Category' })).not.toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /^Filters/ });
+    expect(button).toHaveTextContent('2');
+
+    await user.click(button);
+    const sheet = within(await screen.findByRole('dialog', { name: 'Filters' }));
+    expect(sheet.getByRole('combobox', { name: 'Category' })).toBeInTheDocument();
+    expect(sheet.getByRole('combobox', { name: 'Supplier' })).toBeInTheDocument();
+    expect(sheet.getByRole('combobox', { name: 'Stock status' })).toBeInTheDocument();
+
+    await user.click(sheet.getByRole('button', { name: 'Clear filters' }));
+    await waitFor(() => expect(lastList(state)).not.toHaveProperty('category'));
+    expect(lastList(state)).not.toHaveProperty('status');
+    await user.click(sheet.getByRole('button', { name: 'Apply' }));
+    expect(screen.getByRole('button', { name: /^Filters/ })).not.toHaveTextContent('2');
+  });
+
+  it('keeps Add product in the page header', async () => {
+    productsApi([hammer]);
+    renderApp({ route: '/products' });
+
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Products' });
+    expect(
+      within(heading.closest('div').parentElement).getByRole('button', { name: 'Add product' }),
+    ).toBeInTheDocument();
   });
 });

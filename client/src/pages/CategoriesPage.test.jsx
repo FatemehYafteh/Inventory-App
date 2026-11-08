@@ -67,8 +67,23 @@ describe('Categories page', () => {
 
     const toolsCard = await card('Tools');
     expect(within(toolsCard).getByText('Hand tools')).toBeInTheDocument();
-    expect(within(toolsCard).getByText('3 products')).toBeInTheDocument();
-    expect(within(await card('Books')).getByText('0 products')).toBeInTheDocument();
+    // A used category shows its count as a small badge.
+    const badge = within(toolsCard).getByText('3 products');
+    expect(badge).toHaveClass('rounded-md', 'border');
+    // An empty one says so instead of "0 products".
+    const booksCard = await card('Books');
+    expect(within(booksCard).getByText('No products yet')).toBeInTheDocument();
+    expect(within(booksCard).queryByText('0 products')).not.toBeInTheDocument();
+  });
+
+  it('describes the page under its title', async () => {
+    categoriesApi([tools]);
+    renderApp({ route: '/categories' });
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Categories' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Browse products by category.')).toBeInTheDocument();
   });
 
   it('links each card to the Products page filtered by that category', async () => {

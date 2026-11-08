@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/data-table/DataTable';
+import { MovementCard } from '@/components/movements/MovementCard';
 import { MovementTypeBadge } from '@/components/movements/MovementTypeBadge';
 import { movementNote } from '@/components/movements/movementNote';
+import { signedChange as signed } from '@/components/movements/signedChange';
 import { Badge } from '@/components/ui/badge';
 import { formatDateTime, formatNumber } from '@/lib/format';
 
@@ -11,13 +13,6 @@ const noSortChange = () => {};
 
 const dash = <span className="text-muted-foreground">—</span>;
 const wrap = '[overflow-wrap:anywhere]';
-
-/** A signed change as text, so the direction never depends on colour: +5, −2. */
-function signed(t, change) {
-  return change > 0
-    ? t('movements.plus', { n: formatNumber(change) })
-    : t('movements.minus', { n: formatNumber(Math.abs(change)) });
-}
 
 function buildColumns(t) {
   const column = (id, cell) => ({
@@ -113,6 +108,7 @@ export function MovementTable({
       error={error}
       emptyMessage={emptyMessage}
       toolbar={toolbar}
+      renderCard={(movement) => <MovementCard movement={movement} />}
     />
   );
 }

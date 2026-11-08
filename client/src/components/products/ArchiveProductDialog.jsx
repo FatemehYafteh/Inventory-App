@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { TBdi } from '@/components/BidiText';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,7 @@ export function ArchiveProductDialog({ product, onConfirm, onCancel, onCloseAuto
       <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle className="[overflow-wrap:anywhere]">
-            {t('products.archive.title', { title: product.title })}
+            <TBdi i18nKey="products.archive.title" values={{ title: product.title }} />
           </AlertDialogTitle>
           <AlertDialogDescription>{t('products.archive.description')}</AlertDialogDescription>
         </AlertDialogHeader>
