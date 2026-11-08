@@ -9,7 +9,7 @@ import {
 import { DataTableColumnHeader } from '@/components/data-table/DataTableColumnHeader';
 import { DataTablePagination } from '@/components/data-table/DataTablePagination';
 import { FormAlert } from '@/components/form/FormAlert';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useIsCompact } from '@/hooks/useMediaQuery';
 import { translateMessage } from '@/lib/errors';
 import {
   Table,
@@ -90,7 +90,7 @@ export function DataTable({
   renderCard,
 }) {
   const { t } = useTranslation();
-  const showCards = useIsMobile() && Boolean(renderCard);
+  const showCards = useIsCompact() && Boolean(renderCard);
   const table = useTable({
     features,
     columns,
@@ -124,7 +124,7 @@ export function DataTable({
               {status}
             </div>
           ) : (
-            <ul aria-busy={isLoading} className="flex flex-col gap-3">
+            <ul aria-busy={isLoading} className="grid gap-3 md:grid-cols-2">
               {rows.map((row) => (
                 <li
                   key={row.id}
