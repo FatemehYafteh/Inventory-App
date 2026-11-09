@@ -20,12 +20,19 @@ export function formatNumber(value) {
   return formatter('number', (locale) => new Intl.NumberFormat(locale)).format(value);
 }
 
-/** A price as US dollars, e.g. `$1,234.50`. The PRD names no currency; change it here. */
+/**
+ * A price in Iranian Rial: a whole number (the Rial has no minor unit, so a fraction is rounded)
+ * in the current language's digits and separators, then the unit, e.g. `1,250,000 Rial` or
+ * `۱٬۲۵۰٬۰۰۰ ریال`. A no-break space keeps the unit on the same line as the number. The number and
+ * the unit are built apart, instead of with Intl's currency style, so the unit is always after the
+ * number and its label is a translation (common.currency.unit) like every other text.
+ */
 export function formatPrice(value) {
-  return formatter(
-    'currency',
-    (locale) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }),
+  const number = formatter(
+    'price',
+    (locale) => new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }),
   ).format(value);
+  return `${number}\u00a0${i18n.t('common.currency.unit')}`;
 }
 
 /** A day of the month in the current calendar and digits: `14`, or `۲۲` (Mehr) in Persian. */

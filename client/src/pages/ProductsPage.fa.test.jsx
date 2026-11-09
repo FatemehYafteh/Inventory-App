@@ -79,7 +79,9 @@ describe('Products page texts in Persian', () => {
     expect(screen.getByRole('combobox', { name: 'وضعیت موجودی' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'پاک کردن فیلترها' })).toBeInTheDocument();
     expect(screen.getByLabelText('نمایش بایگانی‌شده‌ها')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'تعدیل موجودی Claw Hammer' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: 'تعدیل موجودی Claw Hammer' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'کاهش موجودی Claw Hammer' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /قیمت/ })).toBeInTheDocument();
 

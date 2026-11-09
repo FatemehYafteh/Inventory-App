@@ -4,7 +4,15 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
-  { ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**'] },
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/coverage/**',
+      'e2e/test-results/**',
+      'e2e/playwright-report/**',
+    ],
+  },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx}'],
@@ -18,7 +26,7 @@ export default [
     },
   },
   {
-    files: ['server/**/*.js', 'shared/**/*.js', 'api/**/*.js', '*.config.js'],
+    files: ['server/**/*.js', 'shared/**/*.js', 'api/**/*.js', '*.config.js', 'e2e/**/*.{js,mjs}'],
     languageOptions: { globals: globals.node },
   },
   {

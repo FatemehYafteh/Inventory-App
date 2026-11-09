@@ -1,4 +1,5 @@
 import { m } from '@inventory/shared/errorCodes';
+import { MAX_QUANTITY } from '@inventory/shared/schemas';
 import mongoose from 'mongoose';
 import { Product } from '../models/Product.js';
 import { StockMovement, reasonAndNote } from '../models/StockMovement.js';
@@ -22,14 +23,19 @@ function fixedDelta(type, quantity) {
   }
 }
 
-/** Why an update matched nothing, read inside the same transaction. */
-async function refusal(productId, session) {
+const tooLarge = () => new AppError(400, 'STOCK_TOTAL_TOO_LARGE', m.STOCK_TOTAL_TOO_LARGE);
+
+/**
+ * Why an update matched nothing, read inside the same transaction. `adding` is true for a
+ * receive or increment, whose guard is the upper limit rather than the lower one.
+ */
+async function refusal(productId, session, adding = false) {
   const product = await Product.findById(productId).session(session);
   if (!product) return notFound();
   if (product.isArchived) {
     return new AppError(409, 'PRODUCT_ARCHIVED', m.PRODUCT_ARCHIVED_RESTORE_FIRST);
   }
-  return new AppError(400, 'INSUFFICIENT_STOCK', m.STOCK_INSUFFICIENT);
+  return adding ? tooLarge() : new AppError(400, 'INSUFFICIENT_STOCK', m.STOCK_INSUFFICIENT);
 }
 
 /**
@@ -55,6 +61,7 @@ export async function changeStock(productId, user, { type, quantity, note }) {
           .select('quantity')
           .session(session);
         if (!current) throw await refusal(productId, session);
+        if (quantity > MAX_QUANTITY) throw tooLarge();
         delta = quantity - current.quantity;
         if (delta === 0) {
           const message = m.STOCK_NO_CHANGE;
@@ -63,6 +70,10 @@ export async function changeStock(productId, user, { type, quantity, note }) {
         guard = { quantity: current.quantity };
       } else if (delta < 0) {
         guard = { quantity: { $gte: -delta } };
+      } else {
+        // Same atomic guard as above, for the top: the total can never pass MAX_QUANTITY, even
+        // when receives race.
+        guard = { quantity: { $lte: MAX_QUANTITY - delta } };
       }
 
       const product = await Product.findOneAndUpdate(
@@ -70,7 +81,7 @@ export async function changeStock(productId, user, { type, quantity, note }) {
         { $inc: { quantity: delta } },
         { new: true, session },
       );
-      if (!product) throw await refusal(productId, session);
+      if (!product) throw await refusal(productId, session, type !== 'adjust' && delta > 0);
 
       const [movement] = await StockMovement.create(
         [

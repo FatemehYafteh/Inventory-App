@@ -114,7 +114,7 @@ describe('DashboardPage', () => {
     const card = (label) => within(summary).getByText(label).parentElement.parentElement;
     expect(within(card('Active products')).getByText('1,234')).toBeInTheDocument();
     expect(within(card('Total units')).getByText('5,678')).toBeInTheDocument();
-    expect(within(card('Inventory value')).getByText('$98,765.50')).toBeInTheDocument();
+    expect(within(card('Inventory value')).getByText('98,766 Rial')).toBeInTheDocument();
     expect(within(card('Low stock')).getByText('1')).toBeInTheDocument();
     expect(within(card('Out of stock')).getByText('1')).toBeInTheDocument();
   });
@@ -328,7 +328,7 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('Nothing needs restocking.')).toBeInTheDocument();
     expect(screen.getByText('No stock movements yet.')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'View all low stock' })).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Inventory summary')).toHaveTextContent('$0.00');
+    expect(screen.getByLabelText('Inventory summary')).toHaveTextContent('0 Rial');
   });
 
   it('shows an error when the dashboard cannot be loaded', async () => {

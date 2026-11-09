@@ -9,8 +9,21 @@ shared/   Zod schemas used by both (added in milestone 1)
 docs/     PRD and sub-PRDs (start at docs/prds/README.md)
 ```
 
+> **Email is not set up yet.** The deployed app runs with `EMAIL_DELIVERY=log`, which sends nothing.
+> Until an email provider is configured (`BREVO_API_KEY` with `EMAIL_FROM`, or `SMTP_*`) and
+> `EMAIL_DELIVERY` is set to `send`:
+>
+> - a new email sign-up cannot verify its address, so it cannot log in;
+> - "Forgot password" emails never arrive, so a forgotten password cannot be reset by the user;
+> - the verification and account-link emails of Telegram sign-ups never arrive.
+>
+> Signing in with Telegram, and the seeded accounts, work. In production the server also **never
+> writes an email's link to the log**, on purpose: the link would let anyone who can read the logs
+> take over that account. In development the full email (link included) is still logged.
+> Set the provider before real users sign up. See "Vercel environment variables" below.
+
 ## Run locally
-Requires Node 20.6+.
+Requires Node 22 (the version CI and Vercel use; see `engines` in `package.json`).
 
 ```sh
 npm install
@@ -26,7 +39,7 @@ The database runs on :27018 because 27017 is often taken by an installed MongoDB
 
 > **Warning:** `npm run seed:reset -w server` deletes **every user, session and sign-in too**, not only the demo data, so real accounts are gone afterwards. To refresh only the demo catalog, use `npm run seed:demo-reset -w server` below.
 
-`npm run seed:demo-reset -w server` deletes and reseeds only products, stock movements, categories and suppliers. It keeps every user, refresh-token session, email token and status change, and creates no user. The stock history is attributed to existing active users with a verified email and a name (admins first, up to three); if there is none it stops before deleting anything. It refuses to run in production.
+`npm run seed:demo-reset -w server` (it needs `DEMO_MODE=true`, for example in `server/.env`; otherwise it refuses before touching the database) deletes and reseeds only products, stock movements, categories and suppliers. It keeps every user, refresh-token session, email token and status change, and creates no user. The stock history is attributed to existing active users with a verified email and a name (admins first, up to three); if there is none it stops before deleting anything. It refuses to run in production.
 
 Locally, seeded accounts share the password `inventory-demo-2026` (override with `SEED_PASSWORD`). Any database that is not on your machine, such as Atlas, needs its own `SEED_PASSWORD` of at least 12 characters; the seed refuses the default password there:
 
@@ -45,10 +58,17 @@ Locally, seeded accounts share the password `inventory-demo-2026` (override with
 ```sh
 npm test        # server (in-memory replica set) and client tests
 npm run lint
+npm run test:e2e   # a real browser: sign in, add a product, receive and ship stock, sign out
 ```
 
+`npm run test:e2e` builds the client and runs it, with the real API and an in-memory MongoDB, in
+Chromium (see `e2e/`). Install the browser once with `npx playwright install chromium`. It needs
+ports 4000 and 5173 free (stop `npm run dev` first) and refuses to reuse a server already running
+there, so it can never touch your own development database. After a failed run, open the report with
+`npx playwright show-report e2e/playwright-report`.
+
 ## Deployment
-Free tier only, no credit card: the web app **and** the API on **Vercel**, the database on **MongoDB Atlas** (`M0`, already a replica set). Email is off for now (`EMAIL_DELIVERY=log`): verification and reset emails, with their links, are written to the Vercel function logs. Brevo's HTTPS API is supported for when a provider is available.
+Free tier only, no credit card: the web app **and** the API on **Vercel**, the database on **MongoDB Atlas** (`M0`, already a replica set). Email is off for now (`EMAIL_DELIVERY=log`): in production the server logs only that an email was held back (recipient and subject), **never its body**, because the body holds one-time reset and verification links that would let anyone with log access take over an account. So with no provider, email sign-up verification and password reset cannot complete: use the seeded accounts (or Telegram sign-in) for a demo, and set `BREVO_API_KEY` (or SMTP) with `EMAIL_DELIVERY=send` before real users sign up. In development the full email, links included, is still logged.
 
 ```
 browser  ──> Vercel ── static files (client/dist)
@@ -63,8 +83,41 @@ Everything is served from one address, so the `SameSite=Strict` cookies and the 
   `NODE_ENV=production`, `BOT_MODE=webhook`, `TRUST_PROXY=1`, `COOKIE_SECURE=true`, `EMAIL_DELIVERY=log`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (`npm run secret:generate -w server`), `CLIENT_ORIGIN` and `APP_URL` (the Vercel address), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `ADMIN_EMAILS`. Optional: `VITE_DEMO_EMAIL` and `VITE_DEMO_PASSWORD` show a demo account box on the login page. Put the same email in `DEMO_EMAILS`, so visitors using the demo account cannot reject or demote real users (the server refuses it, and the Users page shows those actions disabled). The demo account also sees other users' emails and Telegram usernames masked, and its search matches names only. Redeploy after changing any of them.
 - Demo data: in GitHub, Actions > **Seed demo data** > Run workflow, and type `SEED` in the confirm field (needs the repository secrets `MONGODB_URI` and `SEED_PASSWORD`). It runs `server/scripts/seed.js` on GitHub's servers and only adds what is missing. Running it from your own machine also works (`npm run seed -w server` with `MONGODB_URI` pointing at Atlas) where DNS answers SRV lookups. `npm run seed:reset -w server` wipes every seeded collection, **users included**: do not point it at a database with real accounts.
 - Database maintenance: Actions > **Database maintenance** > Run workflow, pick a task and type `RUN` (needs `MONGODB_URI`). `migrate-initial-reason` gives old "Initial stock" movements the `initial` reason; `sync-indexes` makes the indexes match the schemas and drops unused ones (such as the single-field product indexes replaced by compound ones). Locally: `npm run db:migrate-initial-reason -w server`, `npm run db:sync-indexes -w server`.
-- Reset demo data: Actions > **Reset demo data** > Run workflow, and type `RESET` in the confirm field (same `MONGODB_URI` secret). It runs `npm run seed:demo-reset` logic (`server/scripts/seed-demo-reset.js`) on GitHub's servers: products, movements, categories and suppliers are deleted and reseeded, and **all users and their sessions are kept**.
-- Rate limits are kept in memory, so on serverless each instance counts on its own; they are looser than on a single server.
+- Reset demo data: Actions > **Reset demo data** > Run workflow, and type `RESET` in the confirm field (same `MONGODB_URI` secret). It also needs the repository **variable** `DEMO_MODE` set to `true` (Settings > Secrets and variables > Actions > Variables): a deliberate switch to set only while the database holds demo data. Without it the workflow stops at its first step, and the script refuses on its own too. Delete the variable once real data is in the database. It runs `npm run seed:demo-reset` logic (`server/scripts/seed-demo-reset.js`) on GitHub's servers: products, movements, categories and suppliers are deleted and reseeded, and **all users and their sessions are kept**.
+- Health checks: `GET /api/health` says the process is up and never touches the database. `GET /api/health/ready` also pings MongoDB (3 s limit) and answers `503` when it is down, so point an uptime monitor or load balancer at `/api/health/ready` to catch a database outage. Both are public and cheap; the ready check is limited to 120 a minute per IP.
+- If the database is unreachable the API answers `503 SERVICE_UNAVAILABLE` (with `Retry-After`) and recovers by itself when it returns, with no restart.
+
+## Known limitations
+What a careful reviewer would still point out, in plain words, and what would fix it. None of them
+stops the app from working today.
+
+1. **Nothing protects the production data yet.**
+   - The "Reset demo data" workflow deletes every product, stock movement, category and supplier.
+     It now refuses unless the repository variable `DEMO_MODE` is `true`, but if real stock and
+     demo data share one database, a reset run on purpose still erases the real stock.
+   - There is no written backup or restore plan (the free Atlas tier may not include automated
+     backups: check), and nothing watches the app or reports its errors.
+   - Email is off (see the note at the top), so password reset and email sign-up cannot finish.
+   - **What would fix it:** keep demo data and real data in separate databases (or remove
+     `DEMO_MODE` once real data arrives); turn on backups (a paid Atlas tier, or a scheduled
+     export) and try one restore; point an uptime checker at `/api/health/ready` and add error
+     tracking; set up an email provider.
+2. **The tests prove less than their number suggests.**
+   - About 1,500 tests check the screens and the server separately. The screen tests answer
+     from pretend (mocked) server replies, so they cannot notice if the real server changes.
+   - A small browser test now covers one main flow (sign in, add a product, receive and ship
+     stock, sign out) against the real server, and CI runs the production build.
+   - **What would fix it:** grow the browser tests to the other flows (register and approval,
+     editing and archiving, Persian and right-to-left, the phone layout), and check that the
+     mocked replies match what the real API sends.
+3. **Some reads get slower as the data grows.**
+   - With 100,000 products, search and the stock-status filters take about 0.2 to 0.5 seconds and
+     the dashboard about 0.3 seconds, because they read every product. Stock movements only ever
+     grow. The supplier list on the product form shows only the first 100 suppliers.
+   - That is fine for a small business. It was measured with one user, never with many at once.
+   - **What would fix it:** faster search (a text index or a stored search field), a stored and
+     indexed stock status, cached dashboard totals, a supplier picker you can search, archiving
+     old movements, and a test with many users at the same time.
 
 ## Git workflow
 - `main` is always working. Do not commit to it directly.

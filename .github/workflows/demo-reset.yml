@@ -1,6 +1,10 @@
 # Replaces the demo catalog in the production database (Atlas), from GitHub's servers.
 # Run it from the Actions tab: "Reset demo data" > Run workflow, and type RESET to confirm.
-# Needs the repository secret MONGODB_URI (Settings > Secrets and variables > Actions).
+# Needs the repository secret MONGODB_URI (Settings > Secrets and variables > Actions > Secrets)
+# AND the repository variable DEMO_MODE set to true (the Variables tab of the same page).
+# DEMO_MODE is a deliberate switch: set it only while the database holds demo data, and delete it
+# (or set anything else) once real data is in there. Without it the workflow stops at the first
+# step, before any code is fetched and before the database is touched.
 # Deletes and reseeds products, stock movements, categories and suppliers. Every user, session
 # and sign-in is kept (unlike `npm run seed:reset -w server`, which deletes users too).
 name: Reset demo data
@@ -31,6 +35,18 @@ jobs:
           echo "Type RESET in the confirm field to run this workflow."
           exit 1
 
+      - name: Check that this is a demo deployment (DEMO_MODE=true)
+        env:
+          DEMO_MODE: ${{ vars.DEMO_MODE }}
+        run: |
+          if [ "$DEMO_MODE" != "true" ]; then
+            echo "Refusing to reset: the repository variable DEMO_MODE is not 'true'."
+            echo "This workflow deletes every product, movement, category and supplier."
+            echo "Set DEMO_MODE=true (Settings > Secrets and variables > Actions > Variables)"
+            echo "only while the database holds demo data."
+            exit 1
+          fi
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -47,6 +63,8 @@ jobs:
         env:
           NODE_ENV: development
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          # The script checks this too, so it refuses even if the step above were ever removed.
+          DEMO_MODE: ${{ vars.DEMO_MODE }}
           # The reset never signs tokens or builds links; loadConfig only needs valid values.
           JWT_ACCESS_SECRET: seed-only-placeholder-not-used-anywhere-000
           JWT_REFRESH_SECRET: seed-only-placeholder-not-used-anywhere-111

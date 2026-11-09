@@ -52,12 +52,7 @@ describe('loadConfig', () => {
   });
 
   it('accepts a Brevo API key instead of SMTP in production', () => {
-    const {
-      SMTP_HOST: _host,
-      SMTP_USER: _user,
-      SMTP_PASS: _pass,
-      ...rest
-    } = production;
+    const { SMTP_HOST: _host, SMTP_USER: _user, SMTP_PASS: _pass, ...rest } = production;
     const config = loadConfig({ ...rest, BREVO_API_KEY: 'xkeysib-123' });
     expect(config.brevo).toEqual({ apiKey: 'xkeysib-123', from: 'no-reply@example.com' });
     expect(config.smtp).toBeNull();
@@ -147,6 +142,14 @@ describe('loadConfig', () => {
     );
     expect(loadConfig({ ...production, TRUST_PROXY: '0' }).trustProxy).toBe(0);
     expect(loadConfig({ ...base, VERCEL: '1', TRUST_PROXY: '0' }).trustProxy).toBe(0);
+  });
+
+  it('refuses NODE_ENV=test on Vercel, where the x-test-user sign-in header would be live', () => {
+    expect(() => loadConfig({ ...base, NODE_ENV: 'test', VERCEL: '1' })).toThrow(
+      /NODE_ENV: must not be "test" on Vercel/,
+    );
+    expect(loadConfig({ ...base, NODE_ENV: 'test' }).isTest).toBe(true);
+    expect(loadConfig({ ...base, NODE_ENV: 'development', VERCEL: '1' }).isTest).toBe(false);
   });
 
   it('uses short database timeouts and a small pool unless set', () => {

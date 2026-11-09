@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import { m } from '../errorCodes.js';
+import { MAX_QUANTITY } from './stock.js';
+
+// Far above any real price; keeps `value * 100` in the rounding below finite.
+const MAX_PRICE = 1_000_000_000_000;
 
 const emptyToUndefined = (value) => value || undefined;
 
@@ -47,18 +51,21 @@ const price = z
   .number({ required_error: m.PRICE_REQUIRED, invalid_type_error: m.PRICE_REQUIRED })
   .finite(m.PRICE_REQUIRED)
   .min(0, m.PRICE_NEGATIVE)
+  .max(MAX_PRICE, m.PRICE_TOO_LARGE)
   .transform((value) => Math.round(value * 100) / 100);
 
 const reorderLevel = z
   .number({ invalid_type_error: m.REORDER_LEVEL_NOT_INTEGER })
   .int(m.REORDER_LEVEL_NOT_INTEGER)
-  .min(0, m.REORDER_LEVEL_NEGATIVE);
+  .min(0, m.REORDER_LEVEL_NEGATIVE)
+  .max(MAX_QUANTITY, m.QUANTITY_TOO_LARGE);
 
 // Only on create: it becomes the first "Initial stock" receive. Zero means no movement.
 const initialQuantity = z
   .number({ invalid_type_error: m.INITIAL_QUANTITY_NOT_INTEGER })
   .int(m.INITIAL_QUANTITY_NOT_INTEGER)
-  .min(0, m.INITIAL_QUANTITY_NEGATIVE);
+  .min(0, m.INITIAL_QUANTITY_NEGATIVE)
+  .max(MAX_QUANTITY, m.QUANTITY_TOO_LARGE);
 
 // Strict: quantity is changed only by stock actions, and archiving has its own endpoints.
 const STRICT_MESSAGE = m.PRODUCT_UNKNOWN_FIELDS;

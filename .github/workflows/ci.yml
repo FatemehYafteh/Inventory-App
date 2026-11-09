@@ -39,5 +39,57 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # The same command Vercel runs (vercel.json buildCommand), so a change that breaks the
+      # production build fails here, on the pull request, and not on the deploy.
+      - name: Production build (client)
+        run: npm run build -w client
+
       - name: Tests (shared, server, client)
         run: npm test
+
+  # A real browser against the production build and the real API with an in-memory MongoDB:
+  # sign in, add a product, receive and ship stock, sign out (see e2e/). A separate job, so the
+  # fast checks above stay fast and a browser problem is easy to tell from a unit-test failure.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache the MongoDB binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      # The browser build is tied to the Playwright version in package-lock.json.
+      - name: Cache the browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install the browser and its system libraries
+        run: npx playwright install --with-deps chromium
+
+      # Builds the client first (npm run build -w client), then runs the suite.
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Keep the report and traces when a test fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7

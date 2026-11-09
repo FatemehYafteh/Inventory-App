@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
+import { QueryClient } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import i18n, { LANGUAGE_STORAGE_KEY, initialLanguage } from '@/i18n';
 import { renderApp } from '@/test/render';
@@ -116,7 +117,12 @@ describe('Language when signing in', () => {
   async function chooseEnglishAndSignIn() {
     await i18n.changeLanguage('fa');
     const user = userEvent.setup();
-    renderApp({ route: '/login' });
+    // The app keeps the session fresh for 30 s; with the test default of 0, mounting the dashboard would
+    // refetch it and the stored language would override the one chosen here.
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
+    });
+    renderApp({ route: '/login', queryClient });
     await user.click(await screen.findByRole('button', { name: 'English' }));
     await user.type(screen.getByLabelText('Email'), 'ana@example.com');
     await user.type(screen.getByLabelText('Password'), 'a-long-password');
@@ -165,4 +171,3 @@ describe('Language when signing in', () => {
     expect(i18n.language).toBe('en');
   });
 });
-

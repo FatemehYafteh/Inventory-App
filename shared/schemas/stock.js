@@ -11,9 +11,13 @@ const note = z
 
 // Receive and ship need an amount above zero; adjust is the new total, so zero is allowed.
 // Increment and decrement always move by one, so any `quantity` sent with them is ignored.
+// The cap keeps a typo (or 1e300) from corrupting a total; it is far above any real stock level.
+export const MAX_QUANTITY = 1_000_000_000;
+
 const quantity = z
   .number({ invalid_type_error: m.QUANTITY_NOT_INTEGER })
   .int(m.QUANTITY_NOT_INTEGER)
+  .max(MAX_QUANTITY, m.QUANTITY_TOO_LARGE)
   .optional();
 
 /** The body of `POST /products/:id/stock`. Unknown keys such as `performedBy` are dropped. */

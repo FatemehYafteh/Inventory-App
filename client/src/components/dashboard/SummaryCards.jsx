@@ -1,4 +1,4 @@
-import { Boxes, CircleDollarSign, Clock, Package, PackageX, TriangleAlert } from 'lucide-react';
+import { Banknote, Boxes, Clock, Package, PackageX, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -16,24 +16,28 @@ const TONES = {
 function SummaryCard({ label, value, Icon, tone = 'neutral', highlight = false, children }) {
   const colours = TONES[tone];
   return (
-    <Card className="flex min-w-0 flex-col gap-1.5 p-3 sm:gap-2 sm:p-4">
-      <div className="flex items-center gap-2">
-        <span className={cn('shrink-0 rounded-md p-1 sm:p-1.5', colours.tile)}>
-          <Icon className="size-3.5 sm:size-4" aria-hidden="true" />
-        </span>
-        <dt className="min-w-0 text-xs text-muted-foreground sm:text-sm">{label}</dt>
-      </div>
-      {/* `anywhere` lets a very large figure wrap inside the card instead of overflowing it. */}
-      <dd
-        className={cn(
-          'text-lg font-semibold leading-tight tabular-nums [overflow-wrap:anywhere] sm:text-2xl',
-          highlight && colours.value,
-        )}
-      >
-        {value}
-      </dd>
-      {children}
-    </Card>
+    // A list item, not a dl/dt/dd: the icon wrapper and the optional link inside the card are not
+    // allowed between a dl and its terms, and a screen reader reads "Label, value" for the item.
+    <li className="min-w-0">
+      <Card className="flex h-full min-w-0 flex-col gap-1.5 p-3 sm:gap-2 sm:p-4">
+        <div className="flex items-center gap-2">
+          <span className={cn('shrink-0 rounded-md p-1 sm:p-1.5', colours.tile)}>
+            <Icon className="size-3.5 sm:size-4" aria-hidden="true" />
+          </span>
+          <p className="min-w-0 text-xs text-muted-foreground sm:text-sm">{label}</p>
+        </div>
+        {/* `anywhere` lets a very large figure wrap inside the card instead of overflowing it. */}
+        <p
+          className={cn(
+            'text-lg font-semibold leading-tight tabular-nums [overflow-wrap:anywhere] sm:text-2xl',
+            highlight && colours.value,
+          )}
+        >
+          {value}
+        </p>
+        {children}
+      </Card>
+    </li>
   );
 }
 
@@ -45,7 +49,7 @@ function SummaryCard({ label, value, Icon, tone = 'neutral', highlight = false, 
 export function SummaryCards({ summary, pending }) {
   const { t } = useTranslation();
   return (
-    <dl
+    <ul
       aria-label={t('dashboard.summaryLabel')}
       className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-6"
     >
@@ -62,7 +66,7 @@ export function SummaryCards({ summary, pending }) {
       <SummaryCard
         label={t('dashboard.cards.inventoryValue')}
         value={formatPrice(summary.inventoryValue)}
-        Icon={CircleDollarSign}
+        Icon={Banknote}
       />
       <SummaryCard
         label={t('dashboard.cards.lowStock')}
@@ -92,6 +96,6 @@ export function SummaryCards({ summary, pending }) {
           </Link>
         </SummaryCard>
       )}
-    </dl>
+    </ul>
   );
 }

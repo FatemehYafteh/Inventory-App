@@ -61,7 +61,7 @@
     "supplier": "تأمین‌کننده",
     "noSupplier": "بدون تأمین‌کننده",
     "inactiveSupplier": "{{name}} (غیرفعال)",
-    "price": "قیمت",
+    "price": "قیمت (ریال)",
     "reorderLevel": "نقطه سفارش",
     "reorderHint": "وقتی موجودی به این عدد یا کمتر برسد، «موجودی کم» نمایش داده می‌شود.",
     "initialQuantity": "تعداد اولیه",

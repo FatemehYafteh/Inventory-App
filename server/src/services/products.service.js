@@ -12,6 +12,17 @@ function notFound() {
   return new AppError(404, 'NOT_FOUND', m.PRODUCT_NOT_FOUND);
 }
 
+/**
+ * The list sort. The id breaks ties so pages never repeat or skip a row, and it follows the
+ * direction of the sort: an index on (field, _id) can then be read backwards for a descending
+ * list. With `_id` always ascending, a descending list could not use the index and the database
+ * read and sorted every active product in memory on each request.
+ */
+export function listSort(sortBy, order) {
+  const direction = order === 'desc' ? -1 : 1;
+  return { [sortBy]: direction, _id: direction };
+}
+
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -78,7 +89,7 @@ export async function listProducts(user, query) {
   const [products, total] = await Promise.all([
     withRelations(
       find
-        .sort({ [sortBy]: order === 'desc' ? -1 : 1, _id: 1 })
+        .sort(listSort(sortBy, order))
         .skip((page - 1) * limit)
         .limit(limit),
     ),
@@ -118,7 +129,7 @@ export async function* productCsvRows(user, query, { maxRows = MAX_CSV_ROWS } = 
   }
   const find = Product.find(filterFor(query));
   if (sortBy === 'title') find.collation(CASE_INSENSITIVE);
-  const cursor = withRelations(find.sort({ [sortBy]: order === 'desc' ? -1 : 1, _id: 1 }))
+  const cursor = withRelations(find.sort(listSort(sortBy, order)))
     .limit(maxRows)
     .batchSize(500)
     .cursor();

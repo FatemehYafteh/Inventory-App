@@ -236,9 +236,8 @@ export function ProductForm({
               <TextField
                 id="product-price"
                 dir="ltr"
-                prefix="$"
                 label={t('products.form.price')}
-                inputMode="decimal"
+                inputMode="numeric"
                 autoComplete="off"
                 error={errors.price}
                 {...register('price', { setValueAs: parseNumberInput })}

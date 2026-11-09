@@ -47,7 +47,14 @@ export function createMailer(
 
     if (!transporter) {
       if (config.isTest) outbox.push(message);
-      else logger.info(`[mail] To: ${to}\n[mail] Subject: ${subject}\n${text}\n`);
+      else if (config.isProduction) {
+        // The body holds one-time links (password reset, verification). Anyone who can read the
+        // logs could use them to take over an account, so production never writes the body.
+        logger.info(
+          `[mail] Not sent, no email provider is configured. To: ${to}. Subject: ${subject}. ` +
+            'The body is not logged in production.',
+        );
+      } else logger.info(`[mail] To: ${to}\n[mail] Subject: ${subject}\n${text}\n`);
       return;
     }
 

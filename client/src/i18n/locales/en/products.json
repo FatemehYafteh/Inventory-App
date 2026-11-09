@@ -61,7 +61,7 @@
     "supplier": "Supplier",
     "noSupplier": "No supplier",
     "inactiveSupplier": "{{name}} (inactive)",
-    "price": "Price",
+    "price": "Price (Rial)",
     "reorderLevel": "Reorder level",
     "reorderHint": "Low stock is shown when the quantity is at or below this.",
     "initialQuantity": "Initial quantity",

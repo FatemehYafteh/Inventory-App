@@ -8,7 +8,8 @@ import {
   TruckIcon,
   UsersIcon,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { RouteFallback } from '@/components/RouteFallback';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -101,7 +102,10 @@ export function AppLayout() {
           tabIndex={-1}
           className="mx-auto max-w-[90rem] px-4 py-6 outline-none"
         >
-          <Outlet />
+          {/* A page that is still downloading shows inside the shell, so the menu never vanishes. */}
+          <Suspense fallback={<RouteFallback inline />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

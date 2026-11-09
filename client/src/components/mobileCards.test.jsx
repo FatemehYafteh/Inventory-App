@@ -130,7 +130,7 @@ describe('Dashboard summary cards on a phone', () => {
 
     const grid = screen.getByLabelText('Inventory summary');
     expect(grid).toHaveClass('grid-cols-2', 'sm:gap-4');
-    const value = screen.getByText('$9,876,543,210.50');
+    const value = screen.getByText('9,876,543,211 Rial');
     expect(value).toHaveClass('text-lg', 'sm:text-2xl', '[overflow-wrap:anywhere]');
     expect(value.closest('div')).toHaveClass('p-3', 'sm:p-4');
   });
