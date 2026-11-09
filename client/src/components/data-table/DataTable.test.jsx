@@ -123,6 +123,8 @@ describe('DataTable', () => {
     const { rerender } = render(<Harness data={noRows} rowCount={0} isLoading />);
     expect(screen.getByRole('status')).toHaveTextContent('Loading…');
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
+    // Placeholder rows keep the layout; they are hidden from screen readers.
+    expect(document.querySelectorAll('tbody tr[aria-hidden="true"]')).toHaveLength(5);
 
     rerender(<Harness data={noRows} rowCount={0} emptyMessage="No products found." />);
     expect(screen.getByText('No products found.')).toBeInTheDocument();

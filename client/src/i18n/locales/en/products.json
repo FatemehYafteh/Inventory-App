@@ -4,7 +4,9 @@
     "description": "Find products and check their stock.",
     "add": "Add product",
     "emptyFiltered": "No products match your filters.",
-    "empty": "No products yet."
+    "empty": "No products yet.",
+    "showAll": "Show all products",
+    "addFirst": "Add your first product"
   },
   "filters": {
     "searchLabel": "Search products",

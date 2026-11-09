@@ -10,10 +10,14 @@ client/src/
   components/products/    ProductTable, ProductFilters, StockAdjustDialog, StockHistoryDialog, ProductForm
   components/categories/  CategoryCard, CategoryForm
   components/suppliers/   SupplierTable, SupplierForm
+  components/users/       UsersTable (cards on small screens), UserDrawer, Reject/ChangeRole dialogs
+  components/PageMeta.jsx tab title and robots noindex per route (see lib/pageMeta.js)
   pages/                  one file per route
-  lib/                    api client, queryClient, auth context, route guards, utils
-  hooks/                  useProducts, useCategories, useSuppliers, useMovements, useStockMutation, ...
-  mocks/                  MSW handlers (used until the real API exists)
+  lib/                    api client, queryClient, auth, guards, and the TanStack Query hooks per
+                          area (products.js, users.js, movements.js, ...), demo.js, pageMeta.js
+  hooks/useMediaQuery.js  useIsMobile (below 768px: filters in a bottom sheet),
+                          useIsCompact (below 1024px: tables become cards)
+  test/                   render helper, MSW server, mobile.js (mockMobile, mockTablet)
 ```
 
 ## Conventions
@@ -33,4 +37,4 @@ client/src/
 
 ## Testing
 - Vitest + React Testing Library + MSW. Test forms (validation messages), table sorting/filter wiring, the inline +/- behavior, and route guards.
-- While the real API is not ready, build against MSW handlers that follow the exact shapes in `docs/PRD.md` section 6. Remove mocks only in the integration task.
+- Tests mock the API with MSW handlers (`src/test/server.js`) that follow the shapes in `docs/PRD.md` section 6. Use `mockMobile()` / `mockTablet()` from `src/test/mobile.js` for the card and sheet layouts.

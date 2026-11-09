@@ -182,6 +182,16 @@ export function ProductsPage() {
     order,
   })}`;
   const filtered = Boolean(search || category || supplier || status || archived);
+  const clearFilters = () => {
+    setSearchText('');
+    update({
+      search: undefined,
+      category: undefined,
+      supplier: undefined,
+      status: undefined,
+      archived: undefined,
+    });
+  };
 
   return (
     <section className="flex flex-col gap-4">
@@ -228,7 +238,20 @@ export function ProductsPage() {
         isLoading={products.isPending}
         error={products.error}
         onRetry={() => products.refetch()}
-        emptyMessage={filtered ? t('products.page.emptyFiltered') : t('products.page.empty')}
+        emptyMessage={
+          <div className="flex flex-col items-center gap-3">
+            <span>{filtered ? t('products.page.emptyFiltered') : t('products.page.empty')}</span>
+            {filtered ? (
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                {t('products.page.showAll')}
+              </Button>
+            ) : (
+              <Button size="sm" onClick={() => openForm(null)}>
+                {t('products.page.addFirst')}
+              </Button>
+            )}
+          </div>
+        }
         toolbar={
           <ProductFilters
             searchText={searchText}
@@ -242,16 +265,7 @@ export function ProductsPage() {
             suppliers={suppliers.data?.items ?? []}
             onChange={update}
             canClear={filtered}
-            onClear={() => {
-              setSearchText('');
-              update({
-                search: undefined,
-                category: undefined,
-                supplier: undefined,
-                status: undefined,
-                archived: undefined,
-              });
-            }}
+            onClear={clearFilters}
           />
         }
       />

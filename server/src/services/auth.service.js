@@ -32,7 +32,9 @@ function invalidCredentials() {
 async function recordFailedLogin(userId) {
   const lockUntil = new Date(Date.now() + LOCK_DURATION_MS);
   const reachedLimit = { $gte: ['$failedLoginCount', MAX_FAILED_LOGINS] };
-  await User.updateOne({ _id: userId }, [
+  // An update pipeline through the driver collection: Mongoose 9 refuses pipelines unless
+  // told to, and the driver call behaves the same in Mongoose 8 and 9.
+  await User.collection.updateOne({ _id: userId }, [
     { $set: { failedLoginCount: { $add: [{ $ifNull: ['$failedLoginCount', 0] }, 1] } } },
     {
       $set: {

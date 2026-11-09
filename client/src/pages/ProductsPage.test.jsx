@@ -522,6 +522,22 @@ describe('Products page', () => {
     expect(screen.getByRole('button', { name: 'Clear filters' })).toBeDisabled();
   });
 
+  it('offers a way out of an empty list: show all, or add the first product', async () => {
+    const state = productsApi([]);
+    const user = userEvent.setup();
+    const { unmount } = renderApp({ route: '/products?search=zzz' });
+    await screen.findByText('No products match your filters.');
+
+    await user.click(screen.getByRole('button', { name: 'Show all products' }));
+    await waitFor(() => expect(lastList(state)).not.toHaveProperty('search'));
+    unmount();
+
+    productsApi([]);
+    renderApp({ route: '/products' });
+    await user.click(await screen.findByRole('button', { name: 'Add your first product' }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  });
+
   it('shows an error when the products cannot be loaded', async () => {
     productsApi([], { failList: true });
     renderApp({ route: '/products' });
